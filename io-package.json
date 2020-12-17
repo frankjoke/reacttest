@@ -1,0 +1,79 @@
+{
+    "common": {
+        "name": "reacttest",
+        "version": "0.0.1",
+        "news": {
+            "0.0.1": {
+                "en": "initial release",
+                "de": "Erstveröffentlichung",
+                "ru": "Начальная версия",
+                "pt": "lançamento inicial",
+                "nl": "Eerste uitgave",
+                "fr": "Première version",
+                "it": "Versione iniziale",
+                "es": "Versión inicial",
+                "pl": "Pierwsze wydanie",
+                "zh-cn": "首次出版"
+            }
+        },
+        "title": "ReactTest",
+        "titleLang": {
+            "en": "ReactTest",
+            "de": "ReactTest",
+            "ru": "ReactTest",
+            "pt": "ReactTest",
+            "nl": "ReactTest",
+            "fr": "ReactTest",
+            "it": "ReactTest",
+            "es": "ReactTest",
+            "pl": "ReactTest",
+            "zh-cn": "ReactTest"
+        },
+        "desc": {
+            "en": "testing adapter with react interface",
+            "de": "Testadapter mit Reaktionsschnittstelle",
+            "ru": "тестовый адаптер с интерфейсом реакции",
+            "pt": "adaptador de teste com interface de reação",
+            "nl": "testadapter met react-interface",
+            "fr": "adaptateur de test avec interface de réaction",
+            "it": "adattatore di test con interfaccia React",
+            "es": "adaptador de prueba con interfaz de reacción",
+            "pl": "adapter testowy z interfejsem reagowania",
+            "zh-cn": "带React接口的测试适配器"
+        },
+        "authors": [
+            "frankjoke <frankjoke@hotmail.com>"
+        ],
+        "keywords": [
+            "ioBroker",
+            "template",
+            "Smart Home",
+            "home automation"
+        ],
+        "license": "MIT",
+        "platform": "Javascript/Node.js",
+        "main": "main.js",
+        "icon": "reacttest.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/frankjoke/ioBroker.reacttest/master/admin/reacttest.png",
+        "readme": "https://github.com/frankjoke/ioBroker.reacttest/blob/master/README.md",
+        "loglevel": "info",
+        "mode": "daemon",
+        "type": "logic",
+        "compact": true,
+        "connectionType": "local",
+        "dataSource": "push",
+        "materialize": true,
+        "dependencies": [
+            {
+                "js-controller": ">=2.0.0"
+            }
+        ]
+    },
+    "native": {
+        "option1": true,
+        "option2": "42"
+    },
+    "objects": [],
+    "instanceObjects": []
+}
