@@ -11,6 +11,11 @@
     "Smart Home",
     "home automation"
   ],
+  "contributors": [
+    "bluefox <dogafox@gmail.com>",
+    "AlCalzone <d.griesel@gmx.net>",
+    "Apollon77 <iobroker@fischer-ka.de>"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/frankjoke/ioBroker.reacttest.git"
