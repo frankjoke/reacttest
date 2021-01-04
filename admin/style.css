@@ -29,4 +29,13 @@ label > i[title] {
     white-space: nowrap;
 }
 
+code {
+    background-color: pink;
+    padding: 2px 8px important!;
+}
+
+[role=tooltip] {
+    font-size: 4em;
+    /* CSS goes here */
+  }
 /* Add your styles here */
