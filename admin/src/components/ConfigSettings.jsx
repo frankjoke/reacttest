@@ -1,12 +1,19 @@
 import React from "react";
 import { withStyles, makeStyles } from "@material-ui/core/styles";
-import { connect } from "react-redux";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
 import ConfigItem from "./ConfigItem";
-import { withSnackbar } from "notistack";
 //import InputChips from "./InputChips";
 //import ChipInput from "material-ui-chip-input";
-import { Components, styles, t, splitProps, isPartOf } from "./Components";
+import {
+  Components,
+  styles,
+  t,
+  splitProps,
+  isPartOf,
+  bindActionCreators,
+  ioBroker,
+  connect,
+} from "./Components";
 import {
   Avatar,
   AppBar,
@@ -20,10 +27,8 @@ import {
   Grid,
   Divider,
 } from "@material-ui/core";
-import { bindActionCreators } from "redux";
-import { ioBroker } from "../rtk/reducers";
 import { config } from "chai";
-import { isNotEmittedStatement } from "typescript";
+//import { isNotEmittedStatement } from "typescript";
 
 /**
  * @typedef {object} SettingsProps
@@ -85,7 +90,7 @@ class ConfigSettings extends React.Component {
       });
       return ret;
     }
-    console.log("config:", config);
+//    console.log("config:", config);
     const conf = (config && config.configTool) || [];
     const res = translateConfig(conf).map((p) => {
       let { spacing, ...other } = p;
@@ -255,15 +260,13 @@ class ConfigSettings extends React.Component {
 }
 
 export default withStyles(styles)(
-  withSnackbar(
-    connect(
-      (state) => {
-        const { ...all } = state;
-        return { ...all };
-      },
-      (dispatch) => ({
-        ...bindActionCreators(ioBroker.actions, dispatch),
-      })
-    )(ConfigSettings)
-  )
+  connect(
+    (state) => {
+      const { ...all } = state;
+      return { ...all };
+    },
+    (dispatch) => ({
+      ...bindActionCreators(ioBroker.actions, dispatch),
+    })
+  )(ConfigSettings)
 );

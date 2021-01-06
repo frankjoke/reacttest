@@ -1,11 +1,20 @@
 import React from "react";
-import { withStyles, makeStyles } from "@material-ui/core/styles";
-import I18n from "@iobroker/adapter-react/i18n";
-import GenericApp from "@iobroker/adapter-react/GenericApp";
-import { Components, styles, splitProps, defaultProps, t, isPartOf } from "./Components";
+//import { withStyles, makeStyles } from "@material-ui/core/styles";
+//import I18n from "@iobroker/adapter-react/i18n";
+//import GenericApp from "@iobroker/adapter-react/GenericApp";
+import Components, {
+  styles,
+  splitProps,
+  defaultProps,
+  t,
+  isPartOf,
+  bindActionCreators,
+  ioBroker,
+  connect,
+  HtmlComponent,
+} from "./Components";
 import InputChips from "./InputChips";
 import ConfigTable from "./ConfigTable";
-import HtmlComponent from "./HtmlComponent";
 import { withSnackbar } from "notistack";
 import {
   Typography,
@@ -19,13 +28,10 @@ import {
   TextField,
   TextareaAutosize,
 } from "@material-ui/core";
-import { config } from "chai";
-import { createSolutionBuilderWithWatch, isNoSubstitutionTemplateLiteral } from "typescript";
-import { restore } from "sinon";
-import { SIGTSTP } from "constants";
-import { bindActionCreators } from "redux";
-import { ioBroker } from "../rtk/reducers";
-import { connect } from "react-redux";
+//import { config } from "chai";
+//import { createSolutionBuilderWithWatch, isNoSubstitutionTemplateLiteral } from "typescript";
+//import { restore } from "sinon";
+//import { SIGTSTP } from "constants";
 
 /**
  * @typedef {object} SettingsProps
@@ -49,7 +55,6 @@ class ConfigItem extends React.Component {
     this.state = this.createState(props);
     this.error = false;
     this.errorString = "";
-    this.processRules(props, this.state);
     //    this.renderItem(this.state.item);
   }
 
@@ -66,29 +71,62 @@ class ConfigItem extends React.Component {
     const { field, ...pitem } = props.item;
     const { rules, ieval, convertold, ...items } = pitem;
     const { onClick } = items;
-    if (onClick)
-      items.onClick =
-        onClick && typeof onClick !== "function"
-          ? this.makeFunction(onClick, this, "item", "native")
-          : onClick;
+    const that = this;
+
+    function processRules(rules) {
+      //    if (state.ieval)
+      //      state.ieval(state.item, props.inative);
+      const values = (Array.isArray(rules) && rules) || (rules && [rules]) || null;
+      return values && values.map((i) => that.makeFunction(i, that, "$", "t"));
+    }
+
+    const state = {};
+
+    if (onClick && typeof onClick !== "function") {
+      if (typeof onClick === "string") {
+        const fun = this.makeFunction(onClick, this, "event", "props", "C");
+        items.onClick = ((e) => {
+          try {
+            fun(e,this.props, Components);
+          } catch (e) {
+            console.log(`onClick error ${e} in function generatied from: '${onClick}'`);
+            React.logSnackbar("error;onClick error %s in function generated from: %s", e, onClick);
+          }
+        }).bind(this);
+      }
+    }
     //    const { items, split } = splitProps(pitems, "xs|xl|sm|md|lg");
     //    if (!split.sm && cols) split.sm = cols;
     //    if (!split.sm) split.sm = 3;
-    this.opvalue = props.native;
+    if (convertold) {
+      const fun =
+        typeof convertold !== "function"
+          ? this.makeFunction(convertold, this, "$", "props", "C")
+          : convertold;
+      let res = undefined;
+      try {
+        res = fun(props.value, props, Components);
+      } catch (e) {
+        React.logSnackbar("error;convertold error %s", e);
+      }
+      if (res != null && res != undefined && res !== props.value) {
+        console.log("convertOld:", this.props.attr, props.value, res);
+        this.props.updateInativeValue({ attr: this.props.attr, value: res });
+      }
+      //          this.props.updateInativeValue({ attr: this.props.attr, value:res });
+    }
+
+    //    this.opvalue = props.native;
     return {
       item: { ...items },
       field,
       itype: items.itype,
       ieval:
-        ieval && typeof ieval !== "function"
-          ? this.makeFunction(ieval, this, "item", "inative")
+        ieval && typeof ieval === "string"
+          ? this.makeFunction(ieval, this, "$", "props", "C")
           : ieval,
-      convertold:
-        convertold && typeof convertold !== "function"
-          ? this.makeFunction(convertold, this, "item", "inative")
-          : convertold,
       select: items.select,
-      rules: this.processRules(rules),
+      rules: processRules(rules),
     };
   }
 
@@ -101,22 +139,17 @@ class ConfigItem extends React.Component {
     }
     return newState;
   }
-
- */ processRules(
-    rules
-  ) {
-    //    if (state.ieval)
-    //      state.ieval(state.item, props.inative);
-    if (!rules) return null;
-    const values = Array.isArray(rules) ? rules : [rules];
-    return values.map((i) => this.makeFunction(i, this, "$", "t"));
-  }
+ */
 
   setErr(err) {
     this.error = !!err;
     this.errorString = this.error ? err : "";
     //    this.setState({errorString: this.errorString});
     return this.errorString;
+  }
+
+  getKey(index) {
+    return this.props.index + (index !== undefined ? `/${index}` : "");
   }
 
   checkRules(value) {
@@ -224,27 +257,35 @@ class ConfigItem extends React.Component {
         let b = rule[rule.length - 1];
         b = b.startsWith("return ") || b.startsWith("{") ? b : `return ${b};`;
         rule[rule.length - 1] = b;
+        const t = t;
+        const React = React;
         const f = new Function(...rule);
         return f.bind(that);
       } catch (e) {
         console.log(`makeFunction error ${e} in function generation with: ${rule}`);
+        React.logSnackbar("error;makeFunction error %s in function generation with: %s", e, rule);
       }
     } else console.log("makeFunction - Invalid function content in rule:", rule);
     return null;
   }
 
-  stringToArrayWith(val, what) {
-    what = what || ",";
-    if (typeof val === "string") {
-      const ret = val.split(",").map((i) => i.trim());
-      if (ret.length == 1 && !ret[0]) ret.splice(0, 1);
-      // console.log(val, ret);
-      return ret;
-    }
-    return val;
+  stringToArrayComma(value = []) {
+    //    const { value } = this.props;
+    const res = this.stringToArray(value);
+    //    console.log("stringToArray", value, res);
+    return res;
   }
 
-  uniqueTableRule(val) {
+  stringToArray(val, what = ",") {
+    if (typeof val !== "string") return val;
+    const ret = val.split(what).map((i) => i.trim());
+    if (ret.length == 1 && !ret[0]) ret.splice(0, 1);
+    console.log(val, ret);
+    return ret;
+  }
+
+  uniqueTableRule(val, ...args) {
+    console.log("uniqueTableRule", val, ...args);
     const { table, field } = this.props;
     if (!table || !field) return true;
     const v = ("" + val).trim();
@@ -259,10 +300,6 @@ class ConfigItem extends React.Component {
       !!val.match(/^[\u00C0-\u017Fa-zA-Z0-9_\-\@\$\/]+$/) ||
       t("Only letters, numbers and `_ - @ $ /` are allowed!")
     );
-  }
-
-  getKey(index) {
-    return this.props.index + (index !== undefined ? `/${index}` : "");
   }
 
   text(item) {
@@ -390,14 +427,12 @@ class ConfigItem extends React.Component {
       const def = { value: "", label: "" };
       if (typeof sel === "string") {
         if (sel.indexOf("|"))
-          sel = sel
-            .split("|")
-            .map((i) => {
-              const sp = i.split("=");
-              if (sp.length == 2) return { value: sp[0], label: t(sp[1]) };
-              else if (sp.length == 1) return { value: sp[0], label: sp[0] };
-              else return def;
-            });
+          sel = sel.split("|").map((i) => {
+            const sp = i.split("=");
+            if (sp.length == 2) return { value: sp[0], label: t(sp[1]) };
+            else if (sp.length == 1) return { value: sp[0], label: sp[0] };
+            else return def;
+          });
         else if (sel.startsWith("{")) {
           const fun = this.makeFunction(sel, this, "item", "inative");
           let rsel = null;
@@ -437,16 +472,6 @@ class ConfigItem extends React.Component {
       </FormControl>
     );
     return Components.AddIcon(prependIcon, Components.AddTooltip(tooltip, sw));
-  }
-
-  stringToArrayWith(val, what = ",") {
-    if (typeof val === "string") {
-      const ret = val.split(what).map((i) => i.trim());
-      if (ret.length == 1 && !ret[0]) ret.splice(0, 1);
-      // console.log(val, ret);
-      return ret;
-    }
-    return Array.isArray(val) ? val : val !== undefined && val !== null ? [val] : [];
   }
 
   chips(item) {
@@ -589,8 +614,16 @@ class ConfigItem extends React.Component {
   }
   render() {
     //    if (!itemR) return itemR = this.state.item;
-    console.log(this.props.index);
-    const { itype, ...item } = this.state.item;
+    //    console.log(this.props.index);
+    const { ieval, itype, item } = this.state;
+    if (typeof ieval === "function") {
+      try {
+        ieval(this.props.value, this.props, Components);
+      } catch (e) {
+        React.logSnackbar("error;ieval error %s", e);
+        console.log("ieval error:", e);
+      }
+    }
     if (
       isPartOf(
         itype,
@@ -599,21 +632,19 @@ class ConfigItem extends React.Component {
       typeof this[itype] === "function"
     )
       return this[itype](item);
-    return <span>{this.props.index + ":" + JSON.stringify(this.state.item, null, 2)}</span>;
+    return <span>{this.props.index + ":" + JSON.stringify(item, null, 2)}</span>;
   }
 }
 
-export default withSnackbar(
-  connect(
-    (state) => {
-      const { ...all } = state;
-      return { ...all };
-    },
-    (dispatch) => {
-      const { updateInativeValue } = ioBroker.actions;
-      return {
-        ...bindActionCreators({ updateInativeValue }, dispatch),
-      };
-    }
-  )(ConfigItem)
-);
+export default connect(
+  (state) => {
+    const { ...all } = state;
+    return { ...all };
+  },
+  (dispatch) => {
+    const { updateInativeValue } = ioBroker.actions;
+    return {
+      ...bindActionCreators({ updateInativeValue }, dispatch),
+    };
+  }
+)(ConfigItem);

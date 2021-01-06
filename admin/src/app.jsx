@@ -1,22 +1,24 @@
 import React from "react";
-import { connect } from "react-redux";
 //import { createSelector } from '@reduxjs/toolkit';
 import { withStyles } from "@material-ui/core/styles";
 //import "@babel/polyfill";
 import GenericApp from "@iobroker/adapter-react/GenericApp";
 import ConfigSettings from "./components/ConfigSettings";
 //import { isThrowStatement } from "typescript";
+import { useSnackbar } from "notistack";
 import ConfigFixed from "../assets/config.json";
-import { withSnackbar } from "notistack";
 import { config } from "chai";
-import { bindActionCreators } from "redux";
-import { ioBroker } from "./rtk/reducers";
-/**
- * @type {(_theme: Theme) => import("@material-ui/styles").StyleRules}
- */
-const styles = (_theme) => ({
-  root: {},
-});
+import { withSnackbar } from "notistack";
+import {
+  Components,
+  styles,
+  t,
+  splitProps,
+  isPartOf,
+  bindActionCreators,
+  ioBroker,
+  connect,
+} from "./Components/Components";
 
 class App extends GenericApp {
   constructor(props) {
@@ -38,6 +40,10 @@ class App extends GenericApp {
     };
     super(props, extendedProps);
     props.setAdapterName(props.adapterName);
+    React.setSnackbarProvider(
+      this.props.enqueueSnackbar.bind(this),
+      this.props.closeSnackbar.bind(this)
+    );
   }
 
   loadJson(file) {
@@ -54,7 +60,7 @@ class App extends GenericApp {
         return null;
       })
       .then((r) => {
-        if (r) console.log("Found", file, ":", r);
+//        if (r) console.log("Found", file, ":", r);
         return r;
       });
   }
@@ -104,7 +110,7 @@ class App extends GenericApp {
   }
 
   showError(message) {
-    this.props.enqueueSnackbar(message,{variant:"error", autoHideDuration:15000});
+    this.props.enqueueSnackbar(message, { variant: "error", autoHideDuration: 15000 });
   }
 
   render() {
@@ -131,7 +137,9 @@ class App extends GenericApp {
 
 console.log("ioBroker", ioBroker);
 
-export default withStyles(styles)(
+export default withStyles((_theme) => ({
+  root: {},
+}))(
   withSnackbar(
     connect(
       (state) => {

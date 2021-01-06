@@ -2,25 +2,76 @@ import React from "react";
 import { Tooltip, Button, Icon, Grid } from "@material-ui/core";
 import I18n from "@iobroker/adapter-react/i18n";
 import cx from "classnames";
+import { bindActionCreators } from "redux";
+import { ioBroker } from "../rtk/reducers";
+import { connect } from "react-redux";
 //import { resolveModuleNameFromCache } from "typescript";
+/* 
+let enqueueSnackbar = () => console.log("enqueueSnackbar not defined yet!");
+let closeSnackbar = () => console.log("closeSnackbar not defined yet!");
 
+function setSnackbarProvider(def) {
+  console.log("setSnackbarProvider:", def);
+  enqueueSnackbar = def.enqueueSnackbar;
+  closeSnackbar = def.closeSnackbar;
+}
+ */
 const notFoundI18n = {};
 
 function t(text, ...rest) {
+  function dummy(text) {
+    while(text.indexOf("%s")>=0) {
+      text = text.replace("%s",rest.shift());
+    }
+    return text;
+  }
   if (Array.isArray(text)) return text.map((i) => t(i, ...rest));
   if (text.startsWith("!")) return text.slice(1);
   if (notFoundI18n[text]) {
     ++notFoundI18n[text];
     return text;
   }
-  const tt = I18n.t(text, ...rest);
+//  const tt = I18n.t(text, ...rest);
+  const tt = dummy(text);
   if (!tt || tt == text)
     if (notFoundI18n[text]) ++notFoundI18n[text];
     else notFoundI18n[text] = 1;
-  return tt ? tt : text;
+  return tt || text;
 }
 
+React.logSnackbar = (text, ...args) => {
+  const st = text.split(";");
+  let variant = undefined;
+  if (st.length > 1) {
+    text = st.slice(1).join(";");
+    variant = st[0].trim().toLowerCase();
+  }
+  const options = { variant };
+  if (variant == "error") 
+    options.autoHideDuration = 20000; 
+  text = t(text, ...args);
+  console.log("logSnackbar", variant, text);
+  React.enqueueSnackbar(text, options);
+}
+
+React.enqueueSnackbar = () => console.log("enqueueSnackbar not defined yet!");
+React.closeSnackbar = () => console.log("closeSnackbar not defined yet!");
+React.setSnackbarProvider = (enqueueSnackbar, closeSnackbar) => {
+  React.enqueueSnackbar = enqueueSnackbar;
+  React.closeSnackbar = closeSnackbar;
+//  console.log("setSnackbarProvider:", React.enqueueSnackbar, React.closeSnackbar);
+};
+
 const Components = {
+  t,
+  ioBroker,
+  connect,
+  bindActionCreators,
+  React,
+  splitProps,
+  defaultProps,
+  isPartOf,
+  notFoundI18n,
   AddIcon(icon, item) {
     return icon ? (
       <Grid container spacing={1} alignItems="center" justify="flex-start">
@@ -35,11 +86,12 @@ const Components = {
   },
 
   AddTooltip(tooltip, item, key) {
-    return tooltip ? (
-      <Tooltip key={key} title={<h3>{tooltip}</h3>}>
-        {item}
-      </Tooltip>
-    ) : (
+    return (
+      (tooltip && (
+        <Tooltip key={key} title={<h3>{tooltip}</h3>}>
+          {item}
+        </Tooltip>
+      )) ||
       item
     );
   },
@@ -47,11 +99,15 @@ const Components = {
   IButton(props) {
     const { tooltip, size, icon, ...passThroughProps } = props;
     const { disabled } = passThroughProps;
-    const {onClick} = props;
-    const style = onClick ? {style:{cursor:"pointer"}} : {};
+    const { onClick } = props;
+    const style = onClick ? { style: { cursor: "pointer" } } : {};
     if (size) passThroughProps.fontSize = size;
-    const sw = <Icon {...style} {...passThroughProps}>{icon}</Icon>;
-    return disabled ? sw : Components.AddTooltip(tooltip, sw);
+    const sw = (
+      <Icon {...style} {...passThroughProps}>
+        {icon}
+      </Icon>
+    );
+    return (disabled && sw) || Components.AddTooltip(tooltip, sw);
   },
 
   TButton(props) {
@@ -65,10 +121,27 @@ const Components = {
       startIcon,
     });
     const sw = <Button {...nprops}>{!narrow ? label : null}</Button>;
-    return disabled ? sw : Components.AddTooltip(tooltip, sw);
+    return (disabled && sw) || Components.AddTooltip(tooltip, sw);
   },
 };
 
+class HtmlComponent extends React.Component {
+  constructor(props) {
+    super(props);
+    this.divRef = React.createRef();
+    const { html, ...rest } = props;
+    this.myHTML = html;
+    this.rest = rest;
+  }
+
+  componentDidMount() {
+    this.divRef.current.innerHTML = this.myHTML;
+  }
+
+  render() {
+    return <div ref={this.divRef} {...this.rest}></div>;
+  }
+}
 /**
  * @type {() => Record<string, import("@material-ui/core/styles/withStyles").CreateCSSProperties>}
  */
@@ -252,7 +325,7 @@ const styles = (theme) => {
       marginBottom: 5,
     },
   };
-//  console.log("StyleIC:", theme, res);
+  //  console.log("StyleIC:", theme, res);
   return res;
 };
 
@@ -282,4 +355,18 @@ function isPartOf(val, list) {
   return list.indexOf(val) >= 0;
 }
 
-export { Components, styles, splitProps, defaultProps, t, isPartOf, notFoundI18n };
+export {
+  Components,
+  styles,
+  splitProps,
+  defaultProps,
+  t,
+  isPartOf,
+  notFoundI18n,
+  bindActionCreators,
+  ioBroker,
+  connect,
+  HtmlComponent,
+};
+
+export default Components;

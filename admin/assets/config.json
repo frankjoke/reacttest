@@ -23,7 +23,13 @@
                     "label": "Password",
                     "itype": "password",
                     "hint": "password with minimal 5 letter length",
-                    "rules": "{return typeof $ === 'string && $.length>=5 || t('should be at least 5 letters long!')}",
+                    "rules": [
+                        "{return typeof $ === 'string' && $.length>=5 || t('should be at least 5 letters long!')}",
+                        {
+                            "regexp": "/((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^\\w\\s]).{8,40})/",
+                            "message": "need to include one lower case, one upper case, one number and one special character at least 8 and maximal 40 characters long!"
+                        }
+                    ],
                     "placeholder": "enter password here",
                     "field": "password",
                     "prependIcon": "vpn_key",
@@ -55,7 +61,7 @@
                     "size": "large",
                     "color": "error",
                     "tooltip": "This is a testicon, you may ann and onClick :)",
-                    "onClick": "{this.props.enqueueSnackbar('Info!',{variant:'info'});}",
+                    "onClick": "{C.React.logSnackbar('info;'+C.t('translated icon clicked!'));}",
                     "noGrid": true
                 },
                 {
@@ -86,7 +92,7 @@
                         }
                     ],
                     "cols": 5,
-                    "convertold": "stringToArrayWith"
+                    "convertold": "stringToArrayComma"
                 },
                 {
                     "itype": "divider"
@@ -97,7 +103,7 @@
                     "field": "debug",
                     "tooltip": "Switch debug mode of adapter on or off",
                     "click": "return (this.$app.debugLevel = this.cItem.debug)",
-                    "convertold": "(this.$set(conf,'debug', this.$app.debugLevel), conf.debug)",
+                    "convertoldx": "(this.$set(conf,'debug', this.$app.debugLevel), conf.debug)",
                     "disabled": false,
                     "prependIcon": "bug_report",
                     "color": "secondary",
@@ -109,7 +115,6 @@
                     "field": "debug",
                     "tooltip": "test Checkbox debug mode of adapter on or off",
                     "onClick": "return (this.$app.debugLevel = this.cItem.debug)",
-                    "convertold": "(this.$set(conf,'debug', this.$app.debugLevel), conf.debug)",
                     "disabled": false,
                     "labelPlacement": "start",
                     "prependIcon": "bug_report",
@@ -124,7 +129,7 @@
                     "label": "Start Device Scan",
                     "tooltip": "Start a complete device scan",
                     "field": "debug",
-                    "onClick": "{this.props.enqueueSnackbar('Error!',{variant:'error', autoHideDuration:15000});}",
+                    "onClick": "{C.React.logSnackbar('success;I clicked the button!');}",
                     "icon": "touch_app",
                     "size": "large",
                     "variant": "contained",
@@ -190,7 +195,7 @@
                             "tooltip": "enable device poll",
                             "sortable": false,
                             "width": "3%",
-                            "convertold": "(this.$set(conf,'poll', conf.poll || conf.poll===undefined), conf.poll)",
+                            "convertold": "(props.value || props.value===undefined)",
                             "color": "primary"
                         },
                         {
@@ -254,7 +259,7 @@
                             "align": "left",
                             "sortable": false,
                             "width": "75%",
-                            "convertold": "stringToArrayWith"
+                            "convertold": "stringToArrayComma"
                         }
                     ]
                 },
@@ -285,7 +290,7 @@
                             "align": "left",
                             "sortable": false,
                             "width": "45%",
-                            "convertold": "stringToArrayWith"
+                            "convertold": "stringToArrayComma"
                         },
                         {
                             "headerName": "Off",
@@ -294,7 +299,7 @@
                             "align": "center",
                             "sortable": false,
                             "width": "30%",
-                            "convertold": "stringToArrayWith"
+                            "convertold": "stringToArrayComma"
                         }
                     ]
                 }

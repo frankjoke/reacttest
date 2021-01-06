@@ -1,3 +1,86 @@
+@font-face {
+  font-family: "Material Icons";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/MaterialIcons-Regular.bcffbc15.eot");
+  /* For IE6-8 */
+  src: local("Material Icons"), local("MaterialIcons-Regular"), url("/MaterialIcons-Regular.11799939.woff2") format("woff2"), url("/MaterialIcons-Regular.6924d4ac.woff") format("woff"), url("/MaterialIcons-Regular.a71f6b9a.ttf") format("truetype");
+}
+
+.material-icons, .material-icons-outlined, .material-icons-round, .material-icons-sharp, .material-icons-two-tone {
+  font-family: "Material Icons";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+  /* Support for IE. */
+  font-feature-settings: 'liga';
+}
+
+@font-face {
+  font-family: "Material Icons Outlined";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/MaterialIconsOutlined-Regular.68ca9ac5.eot");
+  /* For IE6-8 */
+  src: local("Material Icons Outlined"), local("MaterialIconsOutlined-Regular"), url("/MaterialIconsOutlined-Regular.35d4e60b.woff2") format("woff2"), url("/MaterialIconsOutlined-Regular.366b5928.woff") format("woff"), url("/MaterialIconsOutlined-Regular.7576fe65.otf") format("opentype");
+}
+
+.material-icons-outlined {
+  font-family: "Material Icons Outlined";
+}
+
+@font-face {
+  font-family: "Material Icons Round";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/MaterialIconsRound-Regular.ee2d1100.eot");
+  /* For IE6-8 */
+  src: local("Material Icons Round"), local("MaterialIconsRound-Regular"), url("/MaterialIconsRound-Regular.581b1b3a.woff2") format("woff2"), url("/MaterialIconsRound-Regular.8b394589.woff") format("woff"), url("/MaterialIconsRound-Regular.7569ed63.otf") format("opentype");
+}
+
+.material-icons-round {
+  font-family: "Material Icons Round";
+}
+
+@font-face {
+  font-family: "Material Icons Sharp";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/MaterialIconsSharp-Regular.6fb553eb.eot");
+  /* For IE6-8 */
+  src: local("Material Icons Sharp"), local("MaterialIconsSharp-Regular"), url("/MaterialIconsSharp-Regular.4a4e596d.woff2") format("woff2"), url("/MaterialIconsSharp-Regular.1cabb04e.woff") format("woff"), url("/MaterialIconsSharp-Regular.de064785.otf") format("opentype");
+}
+
+.material-icons-sharp {
+  font-family: "Material Icons Sharp";
+}
+
+@font-face {
+  font-family: "Material Icons Two Tone";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/MaterialIconsTwoTone-Regular.90014a5e.eot");
+  /* For IE6-8 */
+  src: local("Material Icons Two Tone"), local("MaterialIconsTwoTone-Regular"), url("/MaterialIconsTwoTone-Regular.61536f45.woff2") format("woff2"), url("/MaterialIconsTwoTone-Regular.3347babf.woff") format("woff"), url("/MaterialIconsTwoTone-Regular.6a1e07d4.otf") format("opentype");
+}
+
+.material-icons-two-tone {
+  font-family: "Material Icons Two Tone";
+}
+
 /**
  * Copyright 2018-2020 bluefox <dogafox@gmail.com>
  *

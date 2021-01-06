@@ -1,6 +1,17 @@
 import React from "react";
 import { withStyles, makeStyles } from "@material-ui/core/styles";
-import { Components, styles, splitProps, defaultProps, t, isPartOf } from "./Components";
+import {
+  Components,
+  styles,
+  splitProps,
+  defaultProps,
+  t,
+  isPartOf,
+  logSnackbar,
+  connect,
+  ioBroker,
+  bindActionCreators,
+} from "./Components";
 import {
   Icon,
   AppBar,
@@ -16,9 +27,6 @@ import {
   TablePagination,
 } from "@material-ui/core";
 import ConfigItem from "./ConfigItem";
-import { connect } from "react-redux";
-import { ioBroker } from "../rtk/reducers";
-import { bindActionCreators } from "redux";
 /* import { config } from "chai";
 import { createSolutionBuilderWithWatch, isNoSubstitutionTemplateLiteral } from "typescript";
 import { restore } from "sinon";

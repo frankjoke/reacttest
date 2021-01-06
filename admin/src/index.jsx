@@ -1,4 +1,5 @@
 import React from "react";
+import 'material-icons/iconfont/material-icons.css';
 import ReactDOM from "react-dom";
 import { MuiThemeProvider } from "@material-ui/core/styles";
 import theme from "@iobroker/adapter-react/Theme";
