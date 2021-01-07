@@ -3,14 +3,13 @@ import React from "react";
 import { withStyles } from "@material-ui/core/styles";
 //import "@babel/polyfill";
 import GenericApp from "@iobroker/adapter-react/GenericApp";
-import ConfigSettings from "./components/ConfigSettings";
+import ConfigSettings from "./Components/ConfigSettings";
 //import { isThrowStatement } from "typescript";
 import { useSnackbar } from "notistack";
 import ConfigFixed from "../assets/config.json";
 import { config } from "chai";
 import { withSnackbar } from "notistack";
-import {
-  Components,
+import Iob, {
   styles,
   t,
   splitProps,
@@ -18,7 +17,7 @@ import {
   bindActionCreators,
   ioBroker,
   connect,
-} from "./Components/Components";
+} from "./components/Iob";
 
 class App extends GenericApp {
   constructor(props) {
@@ -40,7 +39,7 @@ class App extends GenericApp {
     };
     super(props, extendedProps);
     props.setAdapterName(props.adapterName);
-    React.setSnackbarProvider(
+    Iob.setSnackbarProvider(
       this.props.enqueueSnackbar.bind(this),
       this.props.closeSnackbar.bind(this)
     );

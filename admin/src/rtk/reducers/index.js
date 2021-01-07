@@ -28,7 +28,7 @@ const ioBroker = createSlice({
         }
         const attr = attrs.shift();
         if (!attrs.length) {
-          console.log(`UpdateLast ${attr} ${obj[attr]} ${value}`);
+//          console.log(`UpdateLast ${attr} ${obj[attr]} ${value}`);
           if (value && (typeof value === "object" || Array.isArray(value))) {
             if (JSON.stringify(obj[attr]) !== JSON.stringify(value)) {
               obj[attr] = value;
@@ -50,7 +50,7 @@ const ioBroker = createSlice({
       }
 
       const {attr, value} = action.payload;
-      console.log(`About to change ${attr} to ${value}`)
+//      console.log(`About to change ${attr} to ${value}`)
       if (_updateNativeValue(native, attr, value)) {
         const changed = state.inativeOld != JSON.stringify(native);
         //        this.setState({ native, changed }, cb);

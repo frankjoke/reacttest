@@ -2,7 +2,7 @@ import React from "react";
 //import { withStyles, makeStyles } from "@material-ui/core/styles";
 //import I18n from "@iobroker/adapter-react/i18n";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
-import Components, {
+import Iob, {
   styles,
   splitProps,
   defaultProps,
@@ -12,7 +12,7 @@ import Components, {
   ioBroker,
   connect,
   HtmlComponent,
-} from "./Components";
+} from "./Iob";
 import InputChips from "./InputChips";
 import ConfigTable from "./ConfigTable";
 import { withSnackbar } from "notistack";
@@ -47,7 +47,7 @@ import {
  */
 
 /**
- * @extends {React.Component<SettingsProps, SettingsState>}
+ * @extends {Iob.Component<SettingsProps, SettingsState>}
  */
 class ConfigItem extends React.Component {
   constructor(props) {
@@ -68,8 +68,7 @@ class ConfigItem extends React.Component {
   }
 
   createState(props) {
-    const { field, ...pitem } = props.item;
-    const { rules, ieval, convertold, ...items } = pitem;
+    const { field, rules, ieval, iselect, convertold, ...items } = props.item;
     const { onClick } = items;
     const that = this;
 
@@ -80,17 +79,28 @@ class ConfigItem extends React.Component {
       return values && values.map((i) => that.makeFunction(i, that, "$", "t"));
     }
 
+    function makeSel(sel, char) {
+      const def = { value: "", label: "" };
+
+      return sel.split(char).map((i) => {
+        const sp = i.split("=").map((i) => i.trim());
+        if (sp.length == 2) return { value: sp[0], label: t(sp[1]) };
+        else if (sp.length == 1) return { value: sp[0], label: sp[0] };
+        else return def;
+      });
+    }
+
     const state = {};
 
     if (onClick && typeof onClick !== "function") {
       if (typeof onClick === "string") {
-        const fun = this.makeFunction(onClick, this, "event", "props", "C");
+        const fun = this.makeFunction(onClick, this, "event", "props", "Iob");
         items.onClick = ((e) => {
           try {
-            fun(e,this.props, Components);
+            fun(e, this.props, Iob);
           } catch (e) {
             console.log(`onClick error ${e} in function generatied from: '${onClick}'`);
-            React.logSnackbar("error;onClick error %s in function generated from: %s", e, onClick);
+            Iob.logSnackbar("error;onClick error %s in function generated from: %s", e, onClick);
           }
         }).bind(this);
       }
@@ -101,20 +111,41 @@ class ConfigItem extends React.Component {
     if (convertold) {
       const fun =
         typeof convertold !== "function"
-          ? this.makeFunction(convertold, this, "$", "props", "C")
+          ? this.makeFunction(convertold, this, "$", "props", "Iob")
           : convertold;
       let res = undefined;
       try {
-        res = fun(props.value, props, Components);
+        res = fun(props.value, props, Iob);
       } catch (e) {
-        React.logSnackbar("error;convertold error %s", e);
+        Iob.logSnackbar("error;convertold error %s", e);
       }
       if (res != null && res != undefined && res !== props.value) {
-        console.log("convertOld:", this.props.attr, props.value, res);
+        //        console.log("convertOld:", this.props.attr, props.value, res);
         this.props.updateInativeValue({ attr: this.props.attr, value: res });
       }
       //          this.props.updateInativeValue({ attr: this.props.attr, value:res });
     }
+
+    let sel = iselect;
+    if (sel && !Array.isArray(sel)) {
+      //      console.log("select=", sel, this.props.settings.props.ipAddresses);
+      if (typeof sel === "string") {
+        if (sel.startsWith("|")) sel = makeSel(sel.slice(1), "|");
+        else if (sel.startsWith("{")) {
+          let fun = undefined,
+            rsel = null;
+          try {
+            fun = this.makeFunction(sel, this, "$", "props", "Iob");
+            rsel = fun(this.props.value, this.props, Iob);
+            //            console.log("select executed get function:", sel, rsel);
+            if (Array.isArray(rsel)) sel = rsel;
+          } catch (e) {
+            console.log("got select function error:", e);
+          }
+        } else sel = makeSel(sel, ";");
+        state.iselect = sel;
+      }
+    } else if (sel) state.iselect = [sel];
 
     //    this.opvalue = props.native;
     return {
@@ -123,10 +154,10 @@ class ConfigItem extends React.Component {
       itype: items.itype,
       ieval:
         ieval && typeof ieval === "string"
-          ? this.makeFunction(ieval, this, "$", "props", "C")
+          ? this.makeFunction(ieval, this, "$", "props", "Iob")
           : ieval,
-      select: items.select,
       rules: processRules(rules),
+      ...state,
     };
   }
 
@@ -263,7 +294,7 @@ class ConfigItem extends React.Component {
         return f.bind(that);
       } catch (e) {
         console.log(`makeFunction error ${e} in function generation with: ${rule}`);
-        React.logSnackbar("error;makeFunction error %s in function generation with: %s", e, rule);
+        Iob.logSnackbar("error;makeFunction error %s in function generation with: %s", e, rule);
       }
     } else console.log("makeFunction - Invalid function content in rule:", rule);
     return null;
@@ -280,7 +311,7 @@ class ConfigItem extends React.Component {
     if (typeof val !== "string") return val;
     const ret = val.split(what).map((i) => i.trim());
     if (ret.length == 1 && !ret[0]) ret.splice(0, 1);
-    console.log(val, ret);
+    //    console.log(val, ret);
     return ret;
   }
 
@@ -373,7 +404,7 @@ class ConfigItem extends React.Component {
         ) : null}
       </FormControl>
     );
-    return Components.AddIcon(prependIcon, sw);
+    return Iob.AddIcon(prependIcon, sw);
   }
 
   switch(item) {
@@ -390,7 +421,7 @@ class ConfigItem extends React.Component {
         labelPlacement={labelPlacement || "end"}
       />
     );
-    return Components.AddTooltip(tooltip, Components.AddIcon(prependIcon, sw));
+    return Iob.AddTooltip(tooltip, Iob.AddIcon(prependIcon, sw));
   }
 
   checkbox(item) {
@@ -414,39 +445,14 @@ class ConfigItem extends React.Component {
         color={color}
       />
     );
-    return Components.AddTooltip(tooltip, Components.AddIcon(prependIcon, sw));
+    return Iob.AddTooltip(tooltip, Iob.AddIcon(prependIcon, sw));
   }
 
-  select(item) {
-    const { label, prependIcon, required, hint, select, defaultValue, tooltip, ...rest } = item;
+  iselect(item) {
+    const { label, prependIcon, required, hint, defaultValue, tooltip, ...rest } = item;
     const key = this.getKey();
     const items = defaultProps(rest, { size: "medium", color: "primary", key });
-    let sel = this.state.select;
-    if (!Array.isArray(select)) {
-      //      console.log("select=", sel, this.props.settings.props.ipAddresses);
-      const def = { value: "", label: "" };
-      if (typeof sel === "string") {
-        if (sel.indexOf("|"))
-          sel = sel.split("|").map((i) => {
-            const sp = i.split("=");
-            if (sp.length == 2) return { value: sp[0], label: t(sp[1]) };
-            else if (sp.length == 1) return { value: sp[0], label: sp[0] };
-            else return def;
-          });
-        else if (sel.startsWith("{")) {
-          const fun = this.makeFunction(sel, this, "item", "inative");
-          let rsel = null;
-          try {
-            rsel = fun(item, this.props.native);
-            //            console.log("select executed get function:", sel, rsel);
-            if (Array.isArray(rsel)) sel = rsel;
-          } catch (e) {
-            console.log("got select function error:", e);
-          }
-        } else sel = [{ value: sel, label: sel }];
-      }
-    }
-    if (!Array.isArray(sel)) sel = sel = [{ value: "", label: "...loading" }];
+    const { iselect = [{ value: "", label: "...loading" }] } = this.state;
     //  console.log("select:", sel, items);
     const sw = (
       <FormControl required /* className={classes.formControl} */>
@@ -462,7 +468,7 @@ class ConfigItem extends React.Component {
           name={label}
           inputProps={{ id: key }}
         >
-          {sel.map((i, index) => (
+          {iselect.map((i, index) => (
             <option value={i.value} key={`_${index}_${i.value}_`}>
               {i.label}
             </option>
@@ -471,7 +477,7 @@ class ConfigItem extends React.Component {
         {hint ? <FormHelperText>{hint}</FormHelperText> : null}
       </FormControl>
     );
-    return Components.AddIcon(prependIcon, Components.AddTooltip(tooltip, sw));
+    return Iob.AddIcon(prependIcon, Iob.AddTooltip(tooltip, sw));
   }
 
   chips(item) {
@@ -481,7 +487,7 @@ class ConfigItem extends React.Component {
     let sel = this.props.value;
     if (!Array.isArray(sel)) {
       if (typeof sel === "string") {
-        sel = this.stringToArrayWith(sel);
+        sel = this.stringToArrayComma(sel);
       } else sel = [];
     }
     //    console.log("chips:", sel, items);
@@ -503,7 +509,7 @@ class ConfigItem extends React.Component {
         {...items}
       />
     );
-    return Components.AddIcon(prependIcon, sw);
+    return Iob.AddIcon(prependIcon, sw);
   }
 
   table(item) {
@@ -527,7 +533,7 @@ class ConfigItem extends React.Component {
     //    const { tooltip, label, ...rest } = item;
     const key = this.getKey();
     const items = defaultProps(item, { size: "medium", color: "primary", key });
-    return <Components.IButton key={key} {...items} />;
+    return <Iob.IButton key={key} {...items} />;
   }
 
   button(item) {
@@ -535,7 +541,7 @@ class ConfigItem extends React.Component {
     //    const { tooltip, label, ...rest } = item;
     const key = this.getKey();
     const items = defaultProps(item, { size: "medium", color: "primary", key });
-    return <Components.TButton key={key} {...items} />;
+    return <Iob.TButton key={key} {...items} />;
   }
 
   password(item) {
@@ -553,7 +559,7 @@ class ConfigItem extends React.Component {
     if (value === null || value === undefined) value = "";
     const inputProps = rest.inputProps || {};
     if (hint || this.errorString) rest.helperText = this.error ? this.errorString : hint;
-    return Components.AddIcon(
+    return Iob.AddIcon(
       prependIcon,
       <TextField
         value={value}
@@ -614,20 +620,20 @@ class ConfigItem extends React.Component {
   }
   render() {
     //    if (!itemR) return itemR = this.state.item;
-    //    console.log(this.props.index);
+    console.log(this.props.index);
     const { ieval, itype, item } = this.state;
     if (typeof ieval === "function") {
       try {
-        ieval(this.props.value, this.props, Components);
+        ieval(this.props.value, this.props, Iob);
       } catch (e) {
-        React.logSnackbar("error;ieval error %s", e);
+        Iob.logSnackbar("error;ieval error %s", e);
         console.log("ieval error:", e);
       }
     }
     if (
       isPartOf(
         itype,
-        "text|html|number|string|password|switch|button|checkbox|select|chips|table|textarea|icon"
+        "text|html|number|string|password|switch|button|checkbox|iselect|chips|table|textarea|icon"
       ) &&
       typeof this[itype] === "function"
     )

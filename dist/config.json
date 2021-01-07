@@ -61,13 +61,13 @@
                     "size": "large",
                     "color": "error",
                     "tooltip": "This is a testicon, you may ann and onClick :)",
-                    "onClick": "{C.React.logSnackbar('info;'+C.t('translated icon clicked!'));}",
+                    "onClick": "{Iob.logSnackbar('info;'+Iob.t('translated icon clicked!'));}",
                     "noGrid": true
                 },
                 {
                     "label": "Use specific interface",
-                    "itype": "select",
-                    "select": "{return this.props.settings.props.ipAddresses && this.props.settings.props.ipAddresses.map(i => ({value:i.address, label:i.name}))}",
+                    "itype": "iselect",
+                    "iselect": "{return props.settings.props.ipAddresses && props.settings.props.ipAddresses.map(i => ({value:i.address, label:i.name}))}",
                     "hint": "IP interface to use, default 0.0.0.0 for all",
                     "field": "interface",
                     "native": true,
@@ -129,7 +129,7 @@
                     "label": "Start Device Scan",
                     "tooltip": "Start a complete device scan",
                     "field": "debug",
-                    "onClick": "{C.React.logSnackbar('success;I clicked the button!');}",
+                    "onClick": "{Iob.logSnackbar('success;I clicked the button!');}",
                     "icon": "touch_app",
                     "size": "large",
                     "variant": "contained",
@@ -337,7 +337,7 @@
                     "style": {
                         "width": "98%"
                     },
-                    "ieval": "{item.text = item.text.replace(/myhost:/g,this.$store.state.iobrokerHostConnection ? this.$store.state.iobrokerHostConnection.hostname + ':' : 'my.iobroker.host:').replace(/\\:port\\//g,`:${conf.port}/`)}",
+                    "ievalx": "{item.text = item.text.replace(/myhost:/g,this.$store.state.iobrokerHostConnection ? this.$store.state.iobrokerHostConnection.hostname + ':' : 'my.iobroker.host:').replace(/\\:port\\//g,`:${conf.port}/`)}",
                     "cols": 6,
                     "sm": 8
                 },
@@ -351,7 +351,7 @@
                     "style": {
                         "width": "98%"
                     },
-                    "ieval": "{item.text = item.text.replace(/myhost:/g,this.$store.state.iobrokerHostConnection ? this.$store.state.iobrokerHostConnection.hostname + ':' : 'my.iobroker.host:').replace(/\\:port\\//g,`:${conf.port}/`)}",
+                    "ievalx": "{item.text = item.text.replace(/myhost:/g,this.$store.state.iobrokerHostConnection ? this.$store.state.iobrokerHostConnection.hostname + ':' : 'my.iobroker.host:').replace(/\\:port\\//g,`:${conf.port}/`)}",
                     "cols": 3,
                     "sm": 4
                 },
@@ -411,9 +411,9 @@
                         },
                         {
                             "headerName": "Method",
-                            "itype": "select",
+                            "itype": "iselect",
                             "tooltip": "please select methot for path (GET,PUT or POST)",
-                            "select": "GET|PUT|POST",
+                            "iselect": "|GET|PUT|POST",
                             "field": "method",
                             "align": "center",
                             "defaultValue": "GET",

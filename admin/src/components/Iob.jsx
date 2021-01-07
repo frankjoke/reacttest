@@ -20,8 +20,8 @@ const notFoundI18n = {};
 
 function t(text, ...rest) {
   function dummy(text) {
-    while(text.indexOf("%s")>=0) {
-      text = text.replace("%s",rest.shift());
+    while (text.indexOf("%s") >= 0) {
+      text = text.replace("%s", rest.shift());
     }
     return text;
   }
@@ -31,7 +31,7 @@ function t(text, ...rest) {
     ++notFoundI18n[text];
     return text;
   }
-//  const tt = I18n.t(text, ...rest);
+  //  const tt = I18n.t(text, ...rest);
   const tt = dummy(text);
   if (!tt || tt == text)
     if (notFoundI18n[text]) ++notFoundI18n[text];
@@ -39,21 +39,7 @@ function t(text, ...rest) {
   return tt || text;
 }
 
-React.logSnackbar = (text, ...args) => {
-  const st = text.split(";");
-  let variant = undefined;
-  if (st.length > 1) {
-    text = st.slice(1).join(";");
-    variant = st[0].trim().toLowerCase();
-  }
-  const options = { variant };
-  if (variant == "error") 
-    options.autoHideDuration = 20000; 
-  text = t(text, ...args);
-  console.log("logSnackbar", variant, text);
-  React.enqueueSnackbar(text, options);
-}
-
+/* 
 React.enqueueSnackbar = () => console.log("enqueueSnackbar not defined yet!");
 React.closeSnackbar = () => console.log("closeSnackbar not defined yet!");
 React.setSnackbarProvider = (enqueueSnackbar, closeSnackbar) => {
@@ -61,8 +47,8 @@ React.setSnackbarProvider = (enqueueSnackbar, closeSnackbar) => {
   React.closeSnackbar = closeSnackbar;
 //  console.log("setSnackbarProvider:", React.enqueueSnackbar, React.closeSnackbar);
 };
-
-const Components = {
+ */
+const Iob = {
   t,
   ioBroker,
   connect,
@@ -72,6 +58,37 @@ const Components = {
   defaultProps,
   isPartOf,
   notFoundI18n,
+
+  setSnackbarProvider(enqueueSnackbar, closeSnackbar) {
+    Iob.enqueueSnackbar = enqueueSnackbar;
+    Iob.closeSnackbar = closeSnackbar;
+    //  console.log("setSnackbarProvider:", React.enqueueSnackbar, React.closeSnackbar);
+  },
+
+  logSnackbar(text, ...args) {
+    const st = text.split(";");
+    let variant = undefined;
+    if (st.length > 1) {
+      text = st.slice(1).join(";");
+      variant = st[0].trim().toLowerCase();
+    }
+    const options = { variant };
+    text = t(text, ...args);
+    if (variant == "error") {
+      options.autoHideDuration = 20000;
+      console.log("logSnackbar", variant, text);
+    }
+    Iob.enqueueSnackbar(text, options);
+  },
+
+  enqueueSnackbar() {
+    console.log("enqueueSnackbar not defined yet!");
+  },
+
+  closeSnackbar() {
+    console.log("enqueueSnackbar not defined yet!");
+  },
+
   AddIcon(icon, item) {
     return icon ? (
       <Grid container spacing={1} alignItems="center" justify="flex-start">
@@ -107,7 +124,7 @@ const Components = {
         {icon}
       </Icon>
     );
-    return (disabled && sw) || Components.AddTooltip(tooltip, sw);
+    return (disabled && sw) || Iob.AddTooltip(tooltip, sw);
   },
 
   TButton(props) {
@@ -121,7 +138,7 @@ const Components = {
       startIcon,
     });
     const sw = <Button {...nprops}>{!narrow ? label : null}</Button>;
-    return (disabled && sw) || Components.AddTooltip(tooltip, sw);
+    return (disabled && sw) || Iob.AddTooltip(tooltip, sw);
   },
 };
 
@@ -356,7 +373,7 @@ function isPartOf(val, list) {
 }
 
 export {
-  Components,
+  Iob,
   styles,
   splitProps,
   defaultProps,
@@ -369,4 +386,4 @@ export {
   HtmlComponent,
 };
 
-export default Components;
+export default Iob;

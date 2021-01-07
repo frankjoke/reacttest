@@ -17,7 +17,7 @@ import {
 } from "@material-ui/core";
 import { withStyles, makeStyles } from "@material-ui/core/styles";
 import blue from "@material-ui/core/colors/blue";
-import { Components, splitProps, styles, defaultProps, t, isPartOf } from "./Components";
+import Iob, { splitProps, styles, defaultProps, t, isPartOf } from "./Iob";
 import cx from "classnames";
 
 const variantComponent = {

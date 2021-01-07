@@ -4,8 +4,7 @@ import { withStyles, makeStyles } from "@material-ui/core/styles";
 import ConfigItem from "./ConfigItem";
 //import InputChips from "./InputChips";
 //import ChipInput from "material-ui-chip-input";
-import {
-  Components,
+import Iob ,{
   styles,
   t,
   splitProps,
@@ -13,7 +12,7 @@ import {
   bindActionCreators,
   ioBroker,
   connect,
-} from "./Components";
+} from "./Iob";
 import {
   Avatar,
   AppBar,
@@ -101,7 +100,7 @@ class ConfigSettings extends React.Component {
   }
 
   handleTabChange(e, t) {
-    console.log(e, t);
+//    console.log(e, t);
     this.setState({ tab: t, page: this.state.config[t] });
   }
 
@@ -117,7 +116,7 @@ class ConfigSettings extends React.Component {
         <Typography variant="subtitle2" color="inherit">
           &nbsp;v{this.props.instanceConfig.common.version}&nbsp;&nbsp;
         </Typography>
-        {Components.AddTooltip(
+        {Iob.AddTooltip(
           t("Open Readme"),
           <IconButton
             edge="start"
@@ -137,21 +136,21 @@ class ConfigSettings extends React.Component {
   renderConfigSave() {
     return (
       <>
-        <Components.TButton
+        <Iob.TButton
           tooltip="Save config to file"
           icon="save_alt"
           onClick={() => this.props.app.onSave(false)}
           narrow={this.props.narrowWidth}
           label="ra_Save Config"
         />
-        <Components.TButton
+        <Iob.TButton
           tooltip="Load config from file"
           icon="system_update_alt"
           onClick={() => this.props.app.onSave(false)}
           narrow={this.props.narrowWidth}
           label="ra_Load Config"
         />
-        <Components.TButton
+        <Iob.TButton
           tooltip="Save config"
           disabled={!this.props.changed}
           icon="save"
@@ -159,7 +158,7 @@ class ConfigSettings extends React.Component {
           narrow={this.props.narrowWidth}
           label="ra_Save"
         />
-        <Components.TButton
+        <Iob.TButton
           tooltip="Save & Close"
           disabled={!this.props.changed}
           icon="settings_power"
@@ -167,7 +166,7 @@ class ConfigSettings extends React.Component {
           narrow={this.props.narrowWidth}
           label="ra_Save and close"
         />
-        <Components.TButton
+        <Iob.TButton
           tooltip="Cancel & Close"
           color="inherit"
           className={this.props.classes.menuButton}
@@ -204,7 +203,7 @@ class ConfigSettings extends React.Component {
                     value={index}
                   />
                 );
-                return Components.AddTooltip(p.tooltip, tab, key);
+                return Iob.AddTooltip(p.tooltip, tab, key);
               })}
             </Tabs>
             <div style={{ flexGrow: 1 }} />

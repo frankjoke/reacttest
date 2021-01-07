@@ -1,7 +1,6 @@
 import React from "react";
 import { withStyles, makeStyles } from "@material-ui/core/styles";
-import {
-  Components,
+import Iob, {
   styles,
   splitProps,
   defaultProps,
@@ -11,7 +10,7 @@ import {
   connect,
   ioBroker,
   bindActionCreators,
-} from "./Components";
+} from "./Iob";
 import {
   Icon,
   AppBar,
@@ -88,12 +87,12 @@ class ConfigTable extends React.Component {
               </Typography>
             )}
             <div style={{ flexGrow: 1 }} />
-            <Components.TButton
+            <Iob.TButton
               icon="add"
               label={t("add item to %s", label)}
               color="inherit"
               onClick={this.addRow}
-            ></Components.TButton>
+            ></Iob.TButton>
           </Toolbar>
         </AppBar>
         {this.renderTable(drest, columns, rows, key)}
@@ -172,7 +171,7 @@ class ConfigTable extends React.Component {
                       );
                     })}
                     <TableCell align="center" padding="none">
-                      <Components.IButton
+                      <Iob.IButton
                         color="error"
                         tooltip={t("delete table row")}
                         icon="delete_forever"
