@@ -2,19 +2,10 @@ import React from "react";
 //import { withStyles, makeStyles } from "@material-ui/core/styles";
 //import I18n from "@iobroker/adapter-react/i18n";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
-import Iob, {
-  styles,
-  splitProps,
-  defaultProps,
-  t,
-  isPartOf,
-  bindActionCreators,
-  ioBroker,
-  connect,
-  HtmlComponent,
-} from "./Iob";
+import { Iob, splitProps, defaultProps, t, isPartOf, HtmlComponent, connect } from "./Iob";
 import InputChips from "./InputChips";
 import ConfigTable from "./ConfigTable";
+import ConfigLog from "./ConfigLog";
 import { withSnackbar } from "notistack";
 import {
   Typography,
@@ -121,9 +112,9 @@ class ConfigItem extends React.Component {
       }
       if (res != null && res != undefined && res !== props.value) {
         //        console.log("convertOld:", this.props.attr, props.value, res);
-        this.props.updateInativeValue({ attr: this.props.attr, value: res });
+        Iob.setStore.updateInativeValue({ attr: this.props.attr, value: res });
       }
-      //          this.props.updateInativeValue({ attr: this.props.attr, value:res });
+      //          Iob.setStore.updateInativeValue({ attr: this.props.attr, value:res });
     }
 
     let sel = iselect;
@@ -210,7 +201,7 @@ class ConfigItem extends React.Component {
     const _value = value;
     if (this.check(value)) value = this.change(value);
     console.log(_value, value, this.state.ovalue, this.props.attr, this.errorString);
-    this.props.updateInativeValue({ attr: this.props.attr, value });
+    Iob.setStore.updateInativeValue({ attr: this.props.attr, value });
     this.setState({ value });
   }
 
@@ -415,7 +406,7 @@ class ConfigItem extends React.Component {
     const sw = (
       <FormControlLabel
         control={
-          <Switch {...items} checked={!!this.props.value} onChange={(e) => this.onChangeEvent(e)} />
+          <Switch {...items} checked={!!this.props.value} onChange={(e) => this.onChangeEvent(e)}/>
         }
         label={label}
         labelPlacement={labelPlacement || "end"}
@@ -571,6 +562,10 @@ class ConfigItem extends React.Component {
     );
   }
 
+  log(item) {
+    return <ConfigLog item={this.state.item} />;
+  }
+
   number(item) {
     let { min, max, fixed, zero, ...items } = item;
     min = typeof min === "number" ? min : Number.NEGATIVE_INFINITY;
@@ -620,7 +615,7 @@ class ConfigItem extends React.Component {
   }
   render() {
     //    if (!itemR) return itemR = this.state.item;
-    console.log(this.props.index);
+    //    console.log(this.props.index);
     const { ieval, itype, item } = this.state;
     if (typeof ieval === "function") {
       try {
@@ -633,7 +628,7 @@ class ConfigItem extends React.Component {
     if (
       isPartOf(
         itype,
-        "text|html|number|string|password|switch|button|checkbox|iselect|chips|table|textarea|icon"
+        "text|html|number|string|password|switch|button|checkbox|iselect|chips|table|textarea|icon|log"
       ) &&
       typeof this[itype] === "function"
     )
@@ -642,15 +637,11 @@ class ConfigItem extends React.Component {
   }
 }
 
-export default connect(
+/* export default connect(
   (state) => {
     const { ...all } = state;
     return { ...all };
-  },
-  (dispatch) => {
-    const { updateInativeValue } = ioBroker.actions;
-    return {
-      ...bindActionCreators({ updateInativeValue }, dispatch),
-    };
   }
 )(ConfigItem);
+ */
+export default ConfigItem;

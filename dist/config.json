@@ -1,7 +1,6 @@
 {
     "configTool": [
         {
-            "label": "Config",
             "icon": "settings",
             "tooltip": "Basic adapter config",
             "spacing": 1,
@@ -17,7 +16,8 @@
                     "fixed": true,
                     "prependIcon": "hourglass_empty",
                     "defaultValue": "30",
-                    "cols": 3
+                    "cols": 3,
+                    "xl": 2
                 },
                 {
                     "label": "Password",
@@ -34,7 +34,8 @@
                     "field": "password",
                     "prependIcon": "vpn_key",
                     "cols": 3,
-                    "fullWidth": true
+                    "fullWidth": true,
+                    "xl": 2
                 },
                 {
                     "label": "Text Label",
@@ -47,7 +48,8 @@
                     ],
                     "variant": "body2",
                     "lvariant": "h6",
-                    "cols": 2
+                    "cols": 3,
+                    "xl": 2
                 },
                 {
                     "itype": "text",
@@ -57,12 +59,15 @@
                 },
                 {
                     "itype": "icon",
-                    "icon": "settings",
+                    "icon": "translate",
                     "size": "large",
                     "color": "error",
-                    "tooltip": "This is a testicon, you may ann and onClick :)",
-                    "onClick": "{Iob.logSnackbar('info;'+Iob.t('translated icon clicked!'));}",
+                    "tooltip": "This is a testicon, you may click on it and copy not implemented translations to clipboard :)",
+                    "onClick": "{Iob.logSnackbar('info;Copy to clipboard: %s', Iob.copyToClipboad(Iob.notFoundI18n));}",
                     "noGrid": true
+                },
+                {
+                    "itype": "divider"
                 },
                 {
                     "label": "Use specific interface",
@@ -74,7 +79,8 @@
                     "defaultValue": "0.0.0.0",
                     "multiple": false,
                     "prependIcon": "router",
-                    "cols": 6
+                    "cols": 6,
+                    "xl": 4
                 },
                 {
                     "itype": "vdivider"
@@ -92,10 +98,8 @@
                         }
                     ],
                     "cols": 5,
-                    "convertold": "stringToArrayComma"
-                },
-                {
-                    "itype": "divider"
+                    "convertold": "stringToArrayComma",
+                    "xl": 3
                 },
                 {
                     "itype": "switch",
@@ -140,9 +144,10 @@
                     "itype": "table",
                     "field": "devList",
                     "icon": "format_list_bulleted",
-                    "dyisable-sort": true,
-                    "items-per-page": 15,
+                    "disableSort": true,
+                    "pageSize": 10,
                     "cols": 12,
+                    "xl": 6,
                     "items": [
                         {
                             "headerName": "Name",
@@ -221,8 +226,9 @@
                 },
                 {
                     "itype": "log",
-                    "showMax": 20,
-                    "cols": 12
+                    "pageSize": 25,
+                    "cols": 12,
+                    "xl": 6
                 }
             ]
         },

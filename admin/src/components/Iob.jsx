@@ -1,25 +1,19 @@
 import React from "react";
-import { Tooltip, Button, Icon, Grid } from "@material-ui/core";
+import { Tooltip, Button, Icon, Grid, useScrollTrigger, Zoom, Fab } from "@material-ui/core";
 import I18n from "@iobroker/adapter-react/i18n";
 import cx from "classnames";
 import { bindActionCreators } from "redux";
-import { ioBroker } from "../rtk/reducers";
+import store, { ioBroker } from "../store/ioBroker";
 import { connect } from "react-redux";
-//import { resolveModuleNameFromCache } from "typescript";
-/* 
-let enqueueSnackbar = () => console.log("enqueueSnackbar not defined yet!");
-let closeSnackbar = () => console.log("closeSnackbar not defined yet!");
+import { SnackbarProvider, withSnackbar } from "notistack";
+import { isConstructorDeclaration } from "typescript";
+import Utils from "@iobroker/adapter-react/Components/Utils";
+import { useSnackbar } from "notistack";
 
-function setSnackbarProvider(def) {
-  console.log("setSnackbarProvider:", def);
-  enqueueSnackbar = def.enqueueSnackbar;
-  closeSnackbar = def.closeSnackbar;
-}
- */
 const notFoundI18n = {};
 
 function t(text, ...rest) {
-  function dummy(text) {
+  function parameters(text) {
     while (text.indexOf("%s") >= 0) {
       text = text.replace("%s", rest.shift());
     }
@@ -29,43 +23,74 @@ function t(text, ...rest) {
   if (text.startsWith("!")) return text.slice(1);
   if (notFoundI18n[text]) {
     ++notFoundI18n[text];
-    return text;
-  }
-  //  const tt = I18n.t(text, ...rest);
-  const tt = dummy(text);
-  if (!tt || tt == text)
-    if (notFoundI18n[text]) ++notFoundI18n[text];
-    else notFoundI18n[text] = 1;
-  return tt || text;
+    return parameters(text);
+  } else notFoundI18n[text] = 1;
+  return parameters(text);
 }
 
-/* 
-React.enqueueSnackbar = () => console.log("enqueueSnackbar not defined yet!");
-React.closeSnackbar = () => console.log("closeSnackbar not defined yet!");
-React.setSnackbarProvider = (enqueueSnackbar, closeSnackbar) => {
-  React.enqueueSnackbar = enqueueSnackbar;
-  React.closeSnackbar = closeSnackbar;
-//  console.log("setSnackbarProvider:", React.enqueueSnackbar, React.closeSnackbar);
+function splitProps(from, list) {
+  list = typeof list == "string" ? list.split("|") : list || [];
+  from = from || {};
+  const items = {};
+  const split = {};
+
+  Object.keys(from).map((item) => {
+    if (list.indexOf(item) >= 0) split[item] = from[item];
+    else items[item] = from[item];
+  });
+
+  return { items, split };
+}
+
+function defaultProps(props, def) {
+  return Object.assign({}, def, props);
+}
+
+function isPartOf(val, list) {
+  if (!Array.isArray(list)) {
+    if (typeof list !== "string") return false;
+    list = list.split("|");
+  }
+  return list.indexOf(val) >= 0;
+}
+
+SnackbarProvider.$snackbarProvider = {
+  enqueueSnackbar: (message, opts) =>
+    console.log("enqueueSnackbar not defined yet!", message, opts),
+
+  closeSnackbar: (message, opts) => console.log("closeSnackbar not defined yet!", message, opts),
 };
- */
+
+let scrollTopIndex = 0;
+
 const Iob = {
   t,
   ioBroker,
+  store,
   connect,
-  bindActionCreators,
-  React,
   splitProps,
   defaultProps,
   isPartOf,
+  //  Scrollbar: OverlayScrollbarsComponent,
   notFoundI18n,
+  boundActionCreators: bindActionCreators(ioBroker.actions, store.dispatch),
 
-  setSnackbarProvider(enqueueSnackbar, closeSnackbar) {
-    Iob.enqueueSnackbar = enqueueSnackbar;
-    Iob.closeSnackbar = closeSnackbar;
-    //  console.log("setSnackbarProvider:", React.enqueueSnackbar, React.closeSnackbar);
+  get getState() {
+    return store.getState();
   },
 
-  logSnackbar(text, ...args) {
+  get setStore() {
+    return Iob.boundActionCreators;
+  },
+
+  MySnackbar() {
+    SnackbarProvider.$snackbarProvider = useSnackbar();
+    return null;
+  },
+  enqueueSnackbar: (message, opts) =>
+    SnackbarProvider.$snackbarProvider.enqueueSnackbar(message, opts),
+  closeSnackbar: (message, opts) => SnackbarProvider.$snackbarProvider.closeSnackbar(message, opts),
+  logSnackbar: (text, ...args) => {
     const st = text.split(";");
     let variant = undefined;
     if (st.length > 1) {
@@ -81,15 +106,43 @@ const Iob = {
     Iob.enqueueSnackbar(text, options);
   },
 
-  enqueueSnackbar() {
-    console.log("enqueueSnackbar not defined yet!");
+  copyToClipboad: (text) => {
+    if (typeof text !== "string") text = !text ? "" : JSON.stringify(text);
+    Utils.copyToClipboard(text);
+    return text;
   },
 
-  closeSnackbar() {
-    console.log("enqueueSnackbar not defined yet!");
+  ScrollTop: (props) => {
+    const { children, window } = props;
+    const trigger = useScrollTrigger({
+      target: window ? window() : undefined,
+      disableHysteresis: true,
+      threshold: 100,
+    });
+    return (
+      <Zoom in={trigger}>
+        <Fab
+          color="secondary"
+          size="small"
+          aria-label="scroll back to top"
+          href="#top"
+          style={{
+            margin: 0,
+            top: "auto",
+            right: 10,
+            bottom: 5,
+            left: "auto",
+            position: "fixed",
+            cursor: "pointer",
+          }}
+        >
+          <Icon>keyboard_arrow_up</Icon>
+        </Fab>
+      </Zoom>
+    );
   },
 
-  AddIcon(icon, item) {
+  AddIcon: (icon, item) => {
     return icon ? (
       <Grid container spacing={1} alignItems="center" justify="flex-start">
         <Grid item>
@@ -102,10 +155,10 @@ const Iob = {
     );
   },
 
-  AddTooltip(tooltip, item, key) {
+  AddTooltip: (tooltip, item, key) => {
     return (
       (tooltip && (
-        <Tooltip key={key} title={<h3>{tooltip}</h3>}>
+        <Tooltip key={key} title={tooltip}>
           {item}
         </Tooltip>
       )) ||
@@ -113,7 +166,7 @@ const Iob = {
     );
   },
 
-  IButton(props) {
+  IButton: (props) => {
     const { tooltip, size, icon, ...passThroughProps } = props;
     const { disabled } = passThroughProps;
     const { onClick } = props;
@@ -127,7 +180,7 @@ const Iob = {
     return (disabled && sw) || Iob.AddTooltip(tooltip, sw);
   },
 
-  TButton(props) {
+  TButton: (props) => {
     const { tooltip, disabled, narrow, icon, ...passThroughProps } = props;
     passThroughProps.disabled = disabled;
     const label = passThroughProps.label;
@@ -166,8 +219,9 @@ const styles = (theme) => {
   const light = theme.palette.type === "light";
   const bottomLineColor = light ? "rgba(0, 0, 0, 0.42)" : "rgba(255, 255, 255, 0.7)";
 
-  const res = {
+  return {
     root: {},
+
     inputRoot: {
       display: "inline-flex",
       flexWrap: "wrap",
@@ -324,14 +378,14 @@ const styles = (theme) => {
     column: {
       display: "inline-block",
       verticalAlign: "top",
-      marginRight: 20,
+      marginRight: 10,
     },
     columnLogo: {
       width: 350,
       marginRight: 0,
     },
     columnSettings: {
-      width: "calc(100% - 370px)",
+      //      width: "calc(100% - 370px)",
     },
     code: {
       backgroundColor: "pink",
@@ -339,38 +393,11 @@ const styles = (theme) => {
     },
     controlElement: {
       //background: "#d2d2d2",
-      marginBottom: 5,
+      //      marginBottom: 5,
     },
   };
   //  console.log("StyleIC:", theme, res);
-  return res;
 };
-
-function splitProps(from, list) {
-  list = typeof list == "string" ? list.split("|") : list || [];
-  from = from || {};
-  const nitems = {};
-  const split = {};
-
-  Object.keys(from).map((item) => {
-    if (list.indexOf(item) >= 0) split[item] = from[item];
-    else nitems[item] = from[item];
-  });
-
-  return { items: nitems, split };
-}
-
-function defaultProps(props, def) {
-  return Object.assign({}, def, props);
-}
-
-function isPartOf(val, list) {
-  if (!Array.isArray(list)) {
-    if (typeof list !== "string") return false;
-    list = list.split("|");
-  }
-  return list.indexOf(val) >= 0;
-}
 
 export {
   Iob,

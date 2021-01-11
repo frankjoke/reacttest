@@ -1,6 +1,7 @@
 import React from "react";
 import { withStyles, makeStyles } from "@material-ui/core/styles";
-import Iob, {
+import {
+  Iob,
   styles,
   splitProps,
   defaultProps,
@@ -209,7 +210,7 @@ class ConfigTable extends React.Component {
     const { page, pageSize } = this.state;
     const { attr, rows = [] } = this.props;
     const item = index + page * pageSize;
-    this.props.updateInativeValue({
+    Iob.setStore.updateInativeValue({
       attr,
       value: rows.slice(0, item).concat(rows.slice(item + 1)),
     });
@@ -255,7 +256,7 @@ class ConfigTable extends React.Component {
     });
     const nrows = rows.concat(newItem);
     const len = nrows.length;
-    this.props.updateInativeValue({
+    Iob.setStore.updateInativeValue({
       attr,
       value: nrows,
     });
@@ -267,9 +268,4 @@ class ConfigTable extends React.Component {
   };
 }
 
-export default connect(null, (dispatch) => {
-  const { updateInativeValue } = ioBroker.actions;
-  return {
-    ...bindActionCreators({ updateInativeValue }, dispatch),
-  };
-})(ConfigTable);
+export default ConfigTable;

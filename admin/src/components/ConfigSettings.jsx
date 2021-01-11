@@ -4,20 +4,13 @@ import { withStyles, makeStyles } from "@material-ui/core/styles";
 import ConfigItem from "./ConfigItem";
 //import InputChips from "./InputChips";
 //import ChipInput from "material-ui-chip-input";
-import Iob ,{
-  styles,
-  t,
-  splitProps,
-  isPartOf,
-  bindActionCreators,
-  ioBroker,
-  connect,
-} from "./Iob";
+import { Iob, styles, t, splitProps, isPartOf } from "./Iob";
 import {
   Avatar,
   AppBar,
   Toolbar,
   Typography,
+  Container,
   Paper,
   Icon,
   IconButton,
@@ -25,6 +18,7 @@ import {
   Tab,
   Grid,
   Divider,
+  CssBaseline,
 } from "@material-ui/core";
 import { config } from "chai";
 //import { isNotEmittedStatement } from "typescript";
@@ -47,7 +41,6 @@ import { config } from "chai";
 class ConfigSettings extends React.Component {
   constructor(props) {
     super(props);
-    this.oConfig = props.configPage;
     this.classes = props.classes;
     //    const nconf = ConfigSettings.transformConfig(props.configPage);
     this.state = {
@@ -89,7 +82,7 @@ class ConfigSettings extends React.Component {
       });
       return ret;
     }
-//    console.log("config:", config);
+    //    console.log("config:", config);
     const conf = (config && config.configTool) || [];
     const res = translateConfig(conf).map((p) => {
       let { spacing, ...other } = p;
@@ -100,7 +93,7 @@ class ConfigSettings extends React.Component {
   }
 
   handleTabChange(e, t) {
-//    console.log(e, t);
+    //    console.log(e, t);
     this.setState({ tab: t, page: this.state.config[t] });
   }
 
@@ -108,7 +101,7 @@ class ConfigSettings extends React.Component {
     return (
       <>
         <Paper elevation={0} variant="outlined">
-          <Avatar src="./reacttest.png" variant="square" />
+          <Avatar src="./reacttestr.png" variant="square" />
         </Paper>
         <Typography variant="h6" color="inherit">
           &nbsp;&nbsp;{this.props.adapterName}.{this.props.instance}&nbsp;
@@ -182,8 +175,10 @@ class ConfigSettings extends React.Component {
   render() {
     if (!this.state.page || !this.state.page.items || !this.state.page.items.length) return null;
     return (
-      <div className={this.props.classes.tab}>
-        <AppBar position="static">
+      //      <div className={this.props.classes.tab}>
+      <React.Fragment>
+        <CssBaseline />
+        <AppBar position="sticky" style={{ position: "fixed !important" }}>
           <Toolbar variant="dense">
             {this.renderToolbarAdapter()}
             <div style={{ flexGrow: 1 }} />
@@ -210,62 +205,66 @@ class ConfigSettings extends React.Component {
             {this.renderConfigSave()}
           </Toolbar>
         </AppBar>
-        <Paper elevation={2} style={{ padding: "4px 4px", margin: "3px 3px" }}>
-          <Grid container spacing={this.state.page.spacing || 2}>
-            {this.state.page.items.map((item, index) => {
-              const { cols, ...rest } = item;
-              const isdivider = isPartOf(rest.itype, "divider|vdivider");
-              const { items, split } = splitProps(rest, "xs|xl|sm|md|lg|noGrid");
-              if (!split.sm && cols) split.sm = cols;
-              if (!split.sm) split.sm = 3;
-              const noGrid = split.noGrid;
-              delete split.noGrid;
-              const key = `${this.state.tab}/${index}/${items.itype}`;
-              const configItem = (
-                <ConfigItem
-                  key={key}
-                  item={items}
-                  index={key}
-                  native={this.props.inative}
-                  app={this.props.app}
-                  attr={item.field}
-                  field={item.field}
-                  value={this.props.inative[item.field]}
-                  settings={this}
-                  itype={items.itype}
-                />
-              );
-              return isdivider ? (
-                rest.itype == "divider" ? (
-                  <Grid item xs={12} key={key + "d"}>
-                    <Divider variant="fullWidth" />
-                  </Grid>
-                ) : (
-                  <Divider key={key + "v"} orientation="vertical" flexItem></Divider>
-                )
-              ) : noGrid ? (
-                configItem
-              ) : (
-                <Grid item {...split} key={key}>
-                  {configItem}
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Paper>
-      </div>
+        <Iob.ScrollTop />
+
+        <Container maxWidth={false} disableGutters>
+          <Paper elevation={2} style={{ padding: "4px 4px", margin: "3px 3px" }}>
+            <Grid
+              container
+              spacing={this.state.page.spacing || 2}
+              style={{ paddingTop: "4px", paddingBottom: "16px" }}
+            >
+              {this.state.page.items.map((item, index) => {
+                const { cols, noGrid, ...rest } = item;
+                const { items, split } = splitProps(rest, "xs|xl|sm|md|lg");
+                if (!split.sm && cols) split.sm = cols;
+                if (!split.sm) split.sm = 2;
+                const key = `${this.state.tab}/${index}/${items.itype}`;
+                let configItem;
+                switch (rest.itype) {
+                  case "divider":
+                    return (
+                      <Grid item sm={12} key={key + "d"}>
+                        <Divider variant="fullWidth" />
+                      </Grid>
+                    );
+                  case "vdivider":
+                    return <Divider key={key + "v"} orientation="vertical" flexItem></Divider>;
+                  default:
+                    configItem = (
+                      <ConfigItem
+                        key={key + "C"}
+                        item={items}
+                        index={key}
+                        native={this.props.inative}
+                        app={this.props.app}
+                        attr={item.field}
+                        field={item.field}
+                        value={this.props.inative[item.field]}
+                        settings={this}
+                        itype={items.itype}
+                      />
+                    );
+                    return noGrid ? (
+                      configItem
+                    ) : (
+                      <Grid item {...split} key={key}>
+                        {configItem}
+                      </Grid>
+                    );
+                }
+              })}
+            </Grid>
+          </Paper>
+        </Container>
+      </React.Fragment>
     );
   }
 }
 
 export default withStyles(styles)(
-  connect(
-    (state) => {
-      const { ...all } = state;
-      return { ...all };
-    },
-    (dispatch) => ({
-      ...bindActionCreators(ioBroker.actions, dispatch),
-    })
-  )(ConfigSettings)
+  Iob.connect((state) => {
+    const { ...all } = state;
+    return { ...all };
+  })(ConfigSettings)
 );

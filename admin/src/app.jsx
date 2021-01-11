@@ -1,23 +1,12 @@
 import React from "react";
-//import { createSelector } from '@reduxjs/toolkit';
 import { withStyles } from "@material-ui/core/styles";
 //import "@babel/polyfill";
 import GenericApp from "@iobroker/adapter-react/GenericApp";
 import ConfigSettings from "./Components/ConfigSettings";
 //import { isThrowStatement } from "typescript";
-import { useSnackbar } from "notistack";
 import ConfigFixed from "../assets/config.json";
 import { config } from "chai";
-import { withSnackbar } from "notistack";
-import Iob, {
-  styles,
-  t,
-  splitProps,
-  isPartOf,
-  bindActionCreators,
-  ioBroker,
-  connect,
-} from "./components/Iob";
+import Iob from "./components/Iob";
 
 class App extends GenericApp {
   constructor(props) {
@@ -38,11 +27,10 @@ class App extends GenericApp {
       },
     };
     super(props, extendedProps);
-    props.setAdapterName(props.adapterName);
-    Iob.setSnackbarProvider(
-      this.props.enqueueSnackbar.bind(this),
-      this.props.closeSnackbar.bind(this)
-    );
+    this.logs = [];
+    this.adapterLogTimeout = null;
+    Iob.setStore.setAdapterName(props.adapterName);
+    Iob.setStore.setadapterInstance(this.instanceId.split(".").slice(2).join("."));
   }
 
   loadJson(file) {
@@ -59,57 +47,77 @@ class App extends GenericApp {
         return null;
       })
       .then((r) => {
-//        if (r) console.log("Found", file, ":", r);
+        //        if (r) console.log("Found", file, ":", r);
         return r;
       });
   }
 
   onConnectionReady() {
     // executed when connection is ready
+    //    console.log(this.instance, this.instanceId, this, this.socket);
+    const logHandler = (message) => {
+      //      console.log("logHandler", message);
+      this.logs.push(message);
+      if (this.logs.length == 1 && !this.adapterLogTimeout)
+        this.adapterLogTimeout = setTimeout(() => {
+          this.adapterLogTimeout = null;
+          Iob.setStore.updateAdapterLog(this.logs);
+          this.logs = [];
+        }, 100);
+    };
+    this.socket.registerLogHandler(logHandler);
     this.getSystemConfig()
       .then((sc) => {
         //        this.setState({ systemConfig: sc });
-        this.props.setSystemConfig(sc);
-        this.props.enqueueSnackbar("SystemConfig", { variant: "success" });
+        Iob.setStore.setSystemConfig(sc);
+        Iob.logSnackbar("success;SystemConfig loaded");
       })
-      .catch((e) => console.log("catch SystemConfig:", e))
+      .catch((e) => {
+        console.log("catch SystemConfig:", e);
+        Iob.logSnackbar("error;system config not loaded %s", e);
+      })
       .then(() =>
         this.socket
           .getObject(this.instanceId)
           .then((i) => {
             //        this.setState({ instanceConfig: i });
-            this.props.setInstanceConfig(i);
-            this.props.enqueueSnackbar("instanceConfig", { variant: "success" });
+            Iob.setStore.setInstanceConfig(i);
+            Iob.logSnackbar("success;instanceConfig loaded");
             if (i.native) {
-              this.props.setInative(i.native);
-              this.props.enqueueSnackbar("inative", { variant: "success" });
-            }
+              Iob.setStore.setInative(i.native);
+              Iob.logSnackbar("success;inative loaded");
+            } else Iob.logSnackbar("error;inative not loaded %s", e);
           })
-          .catch((e) => console.log("catch InstanceConfig:", e))
+          .catch((e) => {
+            console.log("catch InstanceConfig:", e);
+            Iob.logSnackbar("error;loading instance config: %s", e);
+          })
       )
       .then(() =>
         this.getIpAddresses()
           .then((r) => {
             //            this.setState({ ipAddresses: r });
-            this.props.setIpAddresses(r);
-            this.props.enqueueSnackbar("IpAddresses", { variant: "success" });
+            Iob.setStore.setIpAddresses(r);
+            Iob.logSnackbar("success;IpAddresses loaded");
           })
-          .catch((e) => console.log("catch IpAddresses:", e))
+          .catch((e) => {
+            console.log("catch IpAddresses:", e);
+            Iob.logSnackbar("error;ipAddress not loaded %s", e);
+          })
       )
       .then(() => this.loadJson("config.json"))
       .then(
         (r) => {
           if (!r) r = ConfigFixed;
           //        this.setState({ configPage: r });
-          this.props.setConfigPage(r);
-          this.props.enqueueSnackbar("configPage", { variant: "success" });
+          Iob.setStore.setConfigPage(r);
+          Iob.logSnackbar("success;config.json loaded");
         },
-        (e) => console.log("catch config.json:", e)
+        (e) => {
+          console.log("catch config.json:", e);
+          Iob.logSnackbar("error;config.json not loaded %s", e);
+        }
       );
-  }
-
-  showError(message) {
-    this.props.enqueueSnackbar(message, { variant: "error", autoHideDuration: 15000 });
   }
 
   render() {
@@ -134,20 +142,11 @@ class App extends GenericApp {
   }
 }
 
-console.log("ioBroker", ioBroker);
-
 export default withStyles((_theme) => ({
   root: {},
 }))(
-  withSnackbar(
-    connect(
-      (state) => {
-        const { ...all } = state;
-        return { ...all };
-      },
-      (dispatch) => ({
-        ...bindActionCreators(ioBroker.actions, dispatch),
-      })
-    )(App)
-  )
+  Iob.connect((state) => {
+    const { ...all } = state;
+    return { ...all };
+  })(App)
 );
