@@ -78,7 +78,7 @@
     "runLocal:parcel": "parcel index.html --open",
     "watch:parcel": "parcel admin/src/index.jsx -d admin/build",
     "build:parcel": "parcel build admin/src/index.jsx -d admin/build",
-    "buildLocal:Parcel": "parcel build admin/index_m.html -d dist1",
+    "buildLocal:Parcel": "parcel build admin/index_m.html -d admin/build",
     "test:js": "mocha --config test/mocharc.custom.json \"{!(node_modules|test)/**/*.test.js,*.test.js,test/**/test!(PackageFiles|Startup).js}\"",
     "test:package": "mocha test/package --exit",
     "test:unit": "mocha test/unit --exit",
