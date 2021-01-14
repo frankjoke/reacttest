@@ -1,4 +1,20 @@
 {
+    "configTooly": [
+        {
+            "icon": "settings",
+            "spacing": 1,
+            "items": [
+                {
+                    "itype": "icon",
+                    "icon": "translate",
+                    "size": "large",
+                    "color": "error",
+                    "onClick": "{Iob.logSnackbar('info;!copyToClipboadS %s', Iob.copyToClipboad(Iob.notFoundI18n));}",
+                    "noGrid": true
+                }
+            ]
+        }
+    ],
     "configTool": [
         {
             "icon": "settings",
@@ -63,7 +79,7 @@
                     "size": "large",
                     "color": "error",
                     "tooltip": "This is a testicon, you may click on it and copy not implemented translations to clipboard :)",
-                    "onClick": "{Iob.logSnackbar('info;Copy to clipboard: %s', Iob.copyToClipboad(Iob.notFoundI18n));}",
+                    "onClick": "{Iob.logSnackbar('info;!copyToClipboadS %s', Iob.copyToClipboad(Iob.notFoundI18n));}",
                     "noGrid": true
                 },
                 {
@@ -338,12 +354,15 @@
                         "is supported.",
                         "!<br>",
                         "By entering the below URL in your browser (changing iobroker-server to your server name or ip) you can test the 'Test' entry:",
-                        "!<br><a target='_blank' rel='noopener noreferrer' href='http://myhost:port/Test?what=ok&length_$m=12&temp_$%C2%B0F=13&speed_$mp/h=88'>http://myhost:port/Test?what=ok&length_$m=12&temp_$%C2%B0F=13&speed_$mp/h=88</a>"
+                        "!<br><a target='_blank' rel='noopener noreferrer' href='http://MyHost:MyPort/Test?what=ok&length_$m=12&temp_$%C2%B0F=13&speed_$mp/h=88'>http://MyHost:MyPort/Test?what=ok&length_$m=12&temp_$%C2%B0F=13&speed_$mp/h=88</a>"
                     ],
                     "style": {
                         "width": "98%"
                     },
-                    "ievalx": "{item.text = item.text.replace(/myhost:/g,this.$store.state.iobrokerHostConnection ? this.$store.state.iobrokerHostConnection.hostname + ':' : 'my.iobroker.host:').replace(/\\:port\\//g,`:${conf.port}/`)}",
+                    "changeItems": [
+                        "{items.text = items.text.map(i => i.replace(/MyHost/g,Iob.getStore.serverName.host))}",
+                        "{items.text = items.text.map(i => i.replace(/MyPort/g,Iob.getStore.inative.port))}"
+                    ],
                     "cols": 6,
                     "sm": 8
                 },
@@ -352,12 +371,12 @@
                     "itype": "html",
                     "text": [
                         "The external device can connect to the adapter's server using following example:",
-                        "!<br>`http://myhost:port/<code>path</code>?data=...`"
+                        "!<br>`http://MyHost:MyPort/&nbsp;<code>path</code>&nbsp;?data=...`"
                     ],
+                    "changeItems": "{items.text = items.text.map(i => i.replace(/MyPort/g,Iob.getStore.inative.port))}",
                     "style": {
                         "width": "98%"
                     },
-                    "ievalx": "{item.text = item.text.replace(/myhost:/g,this.$store.state.iobrokerHostConnection ? this.$store.state.iobrokerHostConnection.hostname + ':' : 'my.iobroker.host:').replace(/\\:port\\//g,`:${conf.port}/`)}",
                     "cols": 3,
                     "sm": 4
                 },
@@ -453,9 +472,12 @@
         "getMissing": {
             "en": "Missing text",
             "de": "FehlendeTexte"
+        },
+        "Enabled": {
+            "en": "Enabled",
+            "de": "Aktiviert"
         }
     },
-    "icon": "broadlink2.png",
     "readme": {
         "en": "README.md"
     }

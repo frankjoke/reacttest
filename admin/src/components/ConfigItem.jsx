@@ -59,9 +59,23 @@ class ConfigItem extends React.Component {
   }
 
   createState(props) {
-    const { field, rules, ieval, iselect, convertold, ...items } = props.item;
+    const { field, rules, ieval, iselect, convertold, changeItems, ...items } = props.item;
     const { onClick } = items;
     const that = this;
+
+    if (changeItems) {
+      const commands = Array.isArray(changeItems) ? changeItems : [changeItems];
+      for (const cmd of commands) {
+        const fun =
+          typeof cmd === "string" ? this.makeFunction(cmd, this, "$", "items", "Iob") : cmd;
+        let res = undefined;
+        try {
+          res = fun(props.value, items, Iob);
+        } catch (e) {
+          Iob.logSnackbar("error;changeItems error %s", e);
+        }
+      }
+    }
 
     function processRules(rules) {
       //    if (state.ieval)
@@ -138,15 +152,20 @@ class ConfigItem extends React.Component {
       }
     } else if (sel) state.iselect = [sel];
 
+    let neval = ieval;
+    if (ieval) {
+      if (!Array.isArray(ieval)) neval = [ieval];
+      neval = neval.map((ei) =>
+        ei && typeof ei === "string" ? this.makeFunction(ei, this, "$", "items", "Iob") : ei
+      );
+    }
+//    console.log(this.getKey(), Iob.type(this.props.value));
     //    this.opvalue = props.native;
     return {
       item: { ...items },
       field,
       itype: items.itype,
-      ieval:
-        ieval && typeof ieval === "string"
-          ? this.makeFunction(ieval, this, "$", "props", "Iob")
-          : ieval,
+      ieval: neval,
       rules: processRules(rules),
       ...state,
     };
@@ -358,6 +377,29 @@ class ConfigItem extends React.Component {
     });
   }
 
+  html(item) {
+    const { items, split } = splitProps(item, "label|text");
+//    console.log("html:", split);
+    if (Array.isArray(split.text)) split.text = split.text.join("");
+    if (!split.text && !split.label && this.props.value !== undefined && this.props.value !== null)
+      split.text = this.props.value.toString();
+    return Object.keys(split).map((n, index) => {
+      switch (n) {
+        case "label":
+          return (
+            <Typography key={this.getKey(index)} {...items} variant={items.lvariant || "subtitle1"}>
+              {split.label}
+              <br />
+            </Typography>
+          );
+        case "text":
+          return <HtmlComponent key={this.getKey(index)} {...items} html={split.text} />;
+        default:
+          return null;
+      }
+    });
+  }
+
   textarea(item) {
     const {
       prependIcon,
@@ -406,7 +448,7 @@ class ConfigItem extends React.Component {
     const sw = (
       <FormControlLabel
         control={
-          <Switch {...items} checked={!!this.props.value} onChange={(e) => this.onChangeEvent(e)}/>
+          <Switch {...items} checked={!!this.props.value} onChange={(e) => this.onChangeEvent(e)} />
         }
         label={label}
         labelPlacement={labelPlacement || "end"}
@@ -592,39 +634,19 @@ class ConfigItem extends React.Component {
     return this.string(items);
   }
 
-  html(item) {
-    const { items, split } = splitProps(item, "label|text");
-    if (Array.isArray(split.text)) split.text = split.text.join("");
-    if (!split.text && !split.label && this.props.value !== undefined && this.props.value !== null)
-      split.text = this.props.value.toString();
-    return Object.keys(split).map((n, index) => {
-      switch (n) {
-        case "label":
-          return (
-            <Typography key={this.getKey(index)} {...items} variant={items.lvariant || "subtitle1"}>
-              {split.label}
-              <br />
-            </Typography>
-          );
-        case "text":
-          return <HtmlComponent key={this.getKey(index)} {...items} html={split.text} />;
-        default:
-          return null;
-      }
-    });
-  }
   render() {
     //    if (!itemR) return itemR = this.state.item;
     //    console.log(this.props.index);
     const { ieval, itype, item } = this.state;
-    if (typeof ieval === "function") {
-      try {
-        ieval(this.props.value, this.props, Iob);
-      } catch (e) {
-        Iob.logSnackbar("error;ieval error %s", e);
-        console.log("ieval error:", e);
-      }
-    }
+    if (Array.isArray(ieval))
+      for (const ei of ieval)
+        try {
+          ieval(this.props.value, item, Iob);
+        } catch (e) {
+          Iob.logSnackbar("error;ieval error %s", e);
+          console.log("ieval error:", e);
+        }
+
     if (
       isPartOf(
         itype,

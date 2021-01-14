@@ -1,5 +1,10 @@
 {
-    "reacttest adapter settings": "Adaptereinstellungen für reacttest",
-    "option1": "Option 1",
-    "option2": "Option 2"
+  "reacttest adapter settings": "Adaptereinstellungen für reacttest",
+  "option1": "Option 1",
+  "option2": "Option 2",
+  "delete table row": "Tabellenzeile löschen",
+  "Time": "Zeit",
+  "key": "Schlüssel",
+  "copyToClipboadS": "Ins Clipboard kopieren %s {0}",
+  "Open Readme": "Readme-Datei Öffnen"
 }

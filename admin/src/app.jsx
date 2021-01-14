@@ -28,9 +28,12 @@ class App extends GenericApp {
     };
     super(props, extendedProps);
     this.logs = [];
+    this.sstates = [];
     this.adapterLogTimeout = null;
+    Iob.mergeTranslations(extendedProps.translations);
     Iob.setStore.setAdapterName(props.adapterName);
-    Iob.setStore.setadapterInstance(this.instanceId.split(".").slice(2).join("."));
+    this.adapterInstance = this.instanceId.split(".").slice(2).join(".");
+    Iob.setStore.setAdapterInstance(this.adapterInstance);
   }
 
   loadJson(file) {
@@ -65,7 +68,27 @@ class App extends GenericApp {
           this.logs = [];
         }, 100);
     };
+    const stateHandler = (id, state) => {
+      //      console.log("logHandler", message);
+      this.sstates.push({id, state});
+      console.log("subscribedState:", id, state);
+      if (this.sstates.length == 1 && !this.statesTimeout)
+        this.statesTimeout = setTimeout(() => {
+          this.statesTimeout = null;
+          Iob.setStore.updateAdapterStates(this.sstates);
+          this.sstates = [];
+        }, 100);
+    };
+    Iob.addConnection(this.socket);
+    this.socket.subscribeState(this.adapterInstance + "*", stateHandler);
+    this.socket.subscribeState("system.adapter." + this.adapterInstance + "*", stateHandler);
+
     this.socket.registerLogHandler(logHandler);
+    const { protocol, host, port } = this.socket.props;
+    const serverName = `${protocol || "http:"}//${host || "localhost"}${port ? ":" + port : ""}`;
+    //    console.log("serverName:", serverName);
+    Iob.logSnackbar("Info;!getWebServerName %s", serverName);
+    Iob.setStore.setServerName({ serverName, protocol, host, port });
     this.getSystemConfig()
       .then((sc) => {
         //        this.setState({ systemConfig: sc });
@@ -75,6 +98,16 @@ class App extends GenericApp {
       .catch((e) => {
         console.log("catch SystemConfig:", e);
         Iob.logSnackbar("error;system config not loaded %s", e);
+      })
+      .then(() => Iob.initI18n("de"))
+      .then(() => {
+        // console.log(
+        //   "translations:",
+        //   Iob.i18n.getDataByLanguage("en"),
+        //   Iob.i18n.getDataByLanguage("de")
+        // );
+        Iob.changeLanguage("de");
+        this.forceUpdate();
       })
       .then(() =>
         this.socket
@@ -111,7 +144,14 @@ class App extends GenericApp {
           if (!r) r = ConfigFixed;
           //        this.setState({ configPage: r });
           Iob.setStore.setConfigPage(r);
-          Iob.logSnackbar("success;config.json loaded");
+          const translation = this.props.configPage.translation;
+          if (typeof translation === "object") {
+            Iob.logSnackbar(
+              "info;!translation loaded: %s",
+              JSON.stringify(Iob.mergeCombinedTranslation(translation))
+            );
+          }
+          //          Iob.logSnackbar("success;config.json loaded");
         },
         (e) => {
           console.log("catch config.json:", e);

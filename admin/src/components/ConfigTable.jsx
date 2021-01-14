@@ -2,15 +2,11 @@ import React from "react";
 import { withStyles, makeStyles } from "@material-ui/core/styles";
 import {
   Iob,
-  styles,
   splitProps,
   defaultProps,
   t,
   isPartOf,
   logSnackbar,
-  connect,
-  ioBroker,
-  bindActionCreators,
 } from "./Iob";
 import {
   Icon,

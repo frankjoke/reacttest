@@ -21,8 +21,32 @@ const ioBroker = createSlice({
     inativeOld: "",
     adapterInstance: "iot.0",
     adapterLog: [],
+    serverName: "http://localhost",
+    displayLanguage: "en",
+    adapterStates: {},
+    adapterStatus: {},
   },
   reducers: {
+    updateAdapterStates(state, action) {
+      for (const ust of action.payload) state.adapterStates[ust.id] = ust.state;
+      const sai = "system.adapter." + state.adapterInstance
+      let alive = state.adapterStates[sai + ".alive"];
+      alive = alive && alive.val;
+      let connected = state.adapterStates[sai + ".connected"];
+      connected = connected && connected.val;
+      let connection =
+        state.adapterStates[state.iobrokerAdapterInstance + ".info.connection"];
+      connection = !connection || connection.val;
+      const status = alive ? (connection ? 2 : 0) : 0;
+      const r = {
+        alive,
+        connected,
+        connection,
+        status,
+      };
+      if (JSON.stringify(r) != JSON.stringify(state.adapterStatus))
+        state.adapterStatus = r;
+    },
     updateInativeValue(state, action) {
       const native = JSON.parse(JSON.stringify(state.inative));
 
@@ -97,8 +121,14 @@ const ioBroker = createSlice({
     setInativeChanged(state, action) {
       state.inativeChanged = !!action.payload;
     },
-    setadapterInstance(state, action) {
+    setServerName(state, action) {
+      state.serverName = action.payload;
+    },
+    setAdapterInstance(state, action) {
       state.adapterInstance = action.payload;
+    },
+    setaDisplayLanguage(state, action) {
+      state.displayLanguage = action.payload;
     },
     setInativeOld(state, action) {
       state.inativeOld = JSON.stringify(action.payload);

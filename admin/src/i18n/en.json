@@ -1,5 +1,12 @@
 {
-    "reacttest adapter settings": "Adapter settings for reacttest",
-    "option1": "option1",
-    "option2": "option2"
+  "reacttest adapter settings": "Adapter settings for reacttest",
+  "option1": "option1",
+  "option2": "option2",
+  "delete table row": "delete table row",
+  "Time": "Time",
+  "Message": "Message",
+  "Severity": "Severity",
+  "key": "key",
+  "copyToClipboadS": "copy to clipboad %s",
+  "Open Readme": "Open Readme"
 }

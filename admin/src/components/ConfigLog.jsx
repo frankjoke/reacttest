@@ -193,7 +193,7 @@ class ConfigLog extends React.Component {
               &nbsp;{t("Log from %s", this.props.adapterInstance)}
             </Typography>
             <div style={{ flexGrow: 1 }} />
-            <Icon style={{paddingRight:"30px"}}>find_in_page</Icon>
+            <Icon style={{paddingRight:"30px"}}>filter_alt</Icon>
             <InputBase
               value={filter}
               placeholder={t("Filter log report")}

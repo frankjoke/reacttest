@@ -26,7 +26,7 @@ function build() {
           <App
             socket={{ port: 8181 }}
             onThemeChange={(_theme) => {
-              themeName = _theme;
+              themeName = _theme || themeName;
               build();
             }}
           />

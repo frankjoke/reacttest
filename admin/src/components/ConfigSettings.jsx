@@ -21,6 +21,7 @@ import {
   CssBaseline,
 } from "@material-ui/core";
 import { config } from "chai";
+import { isNoSubstitutionTemplateLiteral } from "typescript";
 //import { isNotEmittedStatement } from "typescript";
 
 /**
@@ -101,7 +102,7 @@ class ConfigSettings extends React.Component {
     return (
       <>
         <Paper elevation={0} variant="outlined">
-          <Avatar src="./reacttestr.png" variant="square" />
+          <Avatar src={"./" + Iob.getStore.instanceConfig.common.icon} variant="square" />
         </Paper>
         <Typography variant="h6" color="inherit">
           &nbsp;&nbsp;{this.props.adapterName}.{this.props.instance}&nbsp;
@@ -122,6 +123,32 @@ class ConfigSettings extends React.Component {
             <Icon color="inherit">help_outline</Icon>
           </IconButton>
         )}
+        <Iob.IButton
+          tooltip={!this.props.adapterStatus.status ? t("start adapter") : t("stop adapter")}
+          style={{
+            margin: "0px 10px",
+            color: !this.props.adapterStatus.alive
+              ? "red"
+              : this.props.adapterStatus.connected
+              ? "green"
+              : "orange",
+          }}
+          onClick={(e) => Iob.enableDisableAdapter(!this.props.adapterStatus.alive)}
+          icon={!this.props.adapterStatus.status ? "play_circle" : "pause_circle"}
+          size="large"
+        />
+        <Iob.IButton
+          disabled={!this.props.adapterStatus.status}
+          tooltip={t("restart adapter")}
+          style={{
+            margin: "0px 10px",
+            color: this.props.adapterStatus.connected
+              ? "yellow"
+              : "orange",
+          }}
+          onClick={(e) => Iob.enableDisableAdapter(!this.props.adapterStatus.alive)}
+          icon={"replay"}
+        />
       </>
     );
   }

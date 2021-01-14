@@ -53,6 +53,7 @@
     "eslint": "^7.17.0",
     "eslint-plugin-react": "^7.22.0",
     "gulp": "^4.0.2",
+    "i18next": "^19.8.4",
     "material-icons": "^0.5.2",
     "mocha": "^8.2.1",
     "notistack": "^1.0.3",
