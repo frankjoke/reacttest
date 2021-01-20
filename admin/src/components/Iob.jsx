@@ -110,9 +110,10 @@ class Iob {
       return v;
     }
     const d = new Date(ts);
-    return `${digits(d.getHours())}:${digits(d.getMinutes())}:${digits(
-      d.getSeconds()
-    )}.${digits(d.getMilliseconds(), 3)}`;
+    return `${digits(d.getHours())}:${digits(d.getMinutes())}:${digits(d.getSeconds())}.${digits(
+      d.getMilliseconds(),
+      3
+    )}`;
   }
 
   static initI18n(lang) {
@@ -461,17 +462,18 @@ class Iob {
       name = "system.adapter." + name;
       state = store.adapterStates[name];
     }
-    return {state, name: state ? name : ""};
+    return { state, name: state ? name : "" };
   }
 
   static getStateValue(oname) {
-    const { state } = Iob._findStateName(oname); 
-//    console.log("getStateValue", name, state);
+    const { state } = Iob._findStateName(oname);
+    //    console.log("getStateValue", name, state);
     return state && state.val;
   }
 
   static setStateValue(oname, value) {
-    const {state, name } = Iob._findStateName(oname);
+    const { state, name } = Iob._findStateName(oname);
+    console.log("setStateValue", name, state, value);
     if (state) Iob.commandSend("setState", name, value);
   }
 

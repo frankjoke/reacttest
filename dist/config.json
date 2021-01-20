@@ -167,7 +167,7 @@
                     "itype": "$select",
                     "field": "$undefined",
                     "iselect": "||debug|info|warning|error|silly",
-                    "onClick": "{Iob.setStateValue('.logLevel', event.target.value)}",
+                    "onClick": "{Iob.setStateValue('.logLevel', event)}",
                     "convertOld": "Iob.getStateValue('.logLevel')",
                     "disabled": false,
                     "prependIcon": "playlist_add_check",

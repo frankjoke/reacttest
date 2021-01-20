@@ -278,9 +278,9 @@ class ConfigItem extends React.Component {
 
   onChangeValue(value, e) {
     if (this.check(value)) value = this.change(value);
-    //    console.log(_value, value, this.state.ovalue, this.props.attr, this.errorString);
+        console.log(value, this.state.ovalue, this.props.attr, this.errorString);
     this.setState({ value });
-    if (this.state.item.onClick) this.state.item.onClick(e || value, this.props, Iob);
+    if (this.state.item.onClick) this.state.item.onClick(value, this.props, Iob);
     if (this.props.field !== "$undefined")
       Iob.setStore.updateInativeValue({ attr: this.props.attr, value });
   }
