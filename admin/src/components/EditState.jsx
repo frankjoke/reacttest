@@ -62,7 +62,7 @@ class EditState extends React.Component {
 
  */
   onChangeEvent(val) {
-    console.log("SetState", this.name, "to", val);
+//    console.log("SetState", this.name, "to", val);
     Iob.setStateValue(this.name, { val, ack: false });
   }
 

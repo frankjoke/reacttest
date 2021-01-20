@@ -453,17 +453,26 @@ class Iob {
     return text;
   }
 
-  static getStateValue(name) {
+  static _findStateName(name) {
     const store = Iob.getStore;
     if (name.startsWith(".")) name = store.adapterInstance + name;
-    const value = store.adapterStates[name];
-    return value && value.val;
+    let state = store.adapterStates[name];
+    if (!state) {
+      name = "system.adapter." + name;
+      state = store.adapterStates[name];
+    }
+    return {state, name: state ? name : ""};
   }
 
-  static setStateValue(name, value) {
-    const store = Iob.getStore;
-    if (name.startsWith(".")) name = store.adapterInstance + name;
-    Iob.commandSend("setState", name, value);
+  static getStateValue(oname) {
+    const { state } = Iob._findStateName(oname); 
+//    console.log("getStateValue", name, state);
+    return state && state.val;
+  }
+
+  static setStateValue(oname, value) {
+    const {state, name } = Iob._findStateName(oname);
+    if (state) Iob.commandSend("setState", name, value);
   }
 
   static styles(theme) {

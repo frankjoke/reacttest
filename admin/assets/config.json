@@ -126,8 +126,8 @@
                     "itype": "$divider"
                 },
                 {
-                    "itype": "$switch",
                     "label": "Debug mode",
+                    "itype": "$switch",
                     "field": "debug",
                     "tooltip": "Switch debug mode of adapter on or off",
                     "disabled": false,
@@ -163,12 +163,12 @@
                     "itype": "$vdivider"
                 },
                 {
-                    "itype": "$select",
                     "label": "set log level",
+                    "itype": "$select",
                     "field": "$undefined",
                     "iselect": "||debug|info|warning|error|silly",
-                    "onClick": "{Iob.setLoglevel(event.target.value)}",
-                    "convertOld": "Iob.getStore.instanceConfig.common.loglevel",
+                    "onClick": "{Iob.setStateValue('.logLevel', event.target.value)}",
+                    "convertOld": "Iob.getStateValue('.logLevel')",
                     "disabled": false,
                     "prependIcon": "playlist_add_check",
                     "defaultValue": "",
@@ -196,7 +196,7 @@
                 {
                     "label": "WifiLampe",
                     "itype": "$state",
-                    "name": ".LB:hostName-de-9c-a5",
+                    "name": ".SP:SP3S",
                     "cols": 1
                 },
                 {
@@ -278,7 +278,6 @@
                         {
                             "headerName": "State",
                             "itype": "$state",
-                            "field": "$undefined",
                             "align": "center",
                             "ieval": "{items.name = '.'+this.props.inative.name;}",
                             "sortable": false,
