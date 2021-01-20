@@ -8,10 +8,15 @@ import ConfigFixed from "../assets/config.json";
 import { config } from "chai";
 import Iob from "./components/Iob";
 
+const tpathname = window.location.pathname.split("/");
 class App extends GenericApp {
   constructor(props) {
     const extendedProps = {
       ...props,
+      adapterName:
+        window.location.port == 1234
+          ? "broadlink2"
+          : props.adapterName || window.adapterName || tpathname[tpathname.length - 2] || "iot",
       encryptedFields: [],
       translations: {
         en: require("./i18n/en.json"),
@@ -27,12 +32,15 @@ class App extends GenericApp {
       },
     };
     super(props, extendedProps);
-    this.logs = [];
-    this.sstates = [];
+    this.storetimeouts = {};
     this.adapterLogTimeout = null;
+    Iob.app = this;
     Iob.mergeTranslations(extendedProps.translations);
-    Iob.setStore.setAdapterName(props.adapterName);
-    this.adapterInstance = this.instanceId.split(".").slice(2).join(".");
+    Iob.setStore.setAdapterName((this.adapterName = extendedProps.adapterName));
+    //    console.log(this.adapterName, extendedProps.adapterName);
+    this.adapterInstance = this.adapterName + "." + this.instance;
+    this.instanceID = "system.adapter." + this.adapterInstance;
+    //    console.log(this.adapterName, this.instanceID);
     Iob.setStore.setAdapterInstance(this.adapterInstance);
   }
 
@@ -55,35 +63,94 @@ class App extends GenericApp {
       });
   }
 
+  storeHandler(storeEntry, payload, time = 100) {
+    if (!this.storetimeouts[storeEntry])
+      this.storetimeouts[storeEntry] = { tmp: [], timeout: null };
+    const stateEntry = this.storetimeouts[storeEntry];
+
+    stateEntry.tmp.push(payload);
+    if (stateEntry.tmp.length == 1 && !stateEntry.timeout)
+      stateEntry.timeout = setTimeout(() => {
+        stateEntry.timeout = null;
+        const fun = Iob.setStore[storeEntry];
+        //        console.log(storeEntry, fun, stateEntry.tmp);
+        fun(stateEntry.tmp);
+        stateEntry.tmp = [];
+      }, time);
+  }
+
+  configSave(isClose) {
+    let oldObj;
+    this.socket
+      .getObject(this.instanceId)
+      .then((_oldObj) => {
+        oldObj = _oldObj || { native: {} };
+        const { inative } = this.props;
+        for (const a in inative) {
+          if (inative.hasOwnProperty(a)) oldObj.native[a] = inative[a];
+        }
+        /*
+            if (this.state.common) {
+                for (const b in this.state.common) {
+                    if (this.state.common.hasOwnProperty(b)) {
+                        oldObj.common[b] = this.state.common[b];
+                    }
+                }
+            }
+*/
+        Iob.setStore.setInative(inative);
+        this.onPrepareSave(oldObj.native);
+
+        return this.socket.setObject(this.instanceId, oldObj);
+      })
+      .then(() => {
+        this.savedNative = oldObj.native;
+        this.setState({ changed: false });
+        isClose && GenericApp.onClose();
+      });
+  }
+
+  setInstanceConfig(i) {
+    //        this.setState({ instanceConfig: i });
+    const native = i.native;
+    Iob.setStore.setInstanceConfig(i);
+    Iob.logSnackbar("success;instanceConfig loaded");
+    if (native) {
+      this.onPrepareLoad(native);
+      //      console.log(this.props.inative, native);
+      Iob.setStore.setInative({ iNew: native, iOld: this.props.inative });
+      Iob.logSnackbar("success;inative loaded");
+    } else Iob.logSnackbar("error;inative not loaded %s", e);
+  }
+
   onConnectionReady() {
     // executed when connection is ready
     //    console.log(this.instance, this.instanceId, this, this.socket);
-    const logHandler = (message) => {
-      //      console.log("logHandler", message);
-      this.logs.push(message);
-      if (this.logs.length == 1 && !this.adapterLogTimeout)
-        this.adapterLogTimeout = setTimeout(() => {
-          this.adapterLogTimeout = null;
-          Iob.setStore.updateAdapterLog(this.logs);
-          this.logs = [];
-        }, 100);
-    };
-    const stateHandler = (id, state) => {
-      //      console.log("logHandler", message);
-      this.sstates.push({id, state});
-      console.log("subscribedState:", id, state);
-      if (this.sstates.length == 1 && !this.statesTimeout)
-        this.statesTimeout = setTimeout(() => {
-          this.statesTimeout = null;
-          Iob.setStore.updateAdapterStates(this.sstates);
-          this.sstates = [];
-        }, 100);
-    };
     Iob.addConnection(this.socket);
-    this.socket.subscribeState(this.adapterInstance + "*", stateHandler);
-    this.socket.subscribeState("system.adapter." + this.adapterInstance + "*", stateHandler);
+    this.socket.subscribeState(this.adapterInstance + "*", (id, state) => {
+      const obj = { id, state };
+      this.storeHandler("updateAdapterStates", obj, 50);
+      Iob.emitEvent("stateChange", obj);
+    });
+    this.socket.subscribeState("system.adapter." + this.adapterInstance + "*", (id, state) => {
+      const obj = { id, state };
+      //        console.log("stateChange:", obj)
+      this.storeHandler("updateAdapterStates", obj, 50);
+      Iob.emitEvent("stateChange", obj);
+    });
+    this.socket.subscribeObject(this.adapterInstance + "*", (id, newObj, oldObj) => {
+      const obj = { id, newObj, oldObj };
+      Iob.emitEvent("objectChange", obj);
 
-    this.socket.registerLogHandler(logHandler);
+//      console.log("objectChange:", obj);
+      if (obj.id == "system.adapter." + this.adapterInstance) this.setInstanceConfig(obj.newObj);
+      this.storeHandler("updateAdapterObjects", obj, 30);
+    });
+    this.socket.registerLogHandler((message) => {
+      message.tss = Iob.timeStamp(message.ts);
+      this.storeHandler("updateAdapterLog", message, 50);
+    });
+    //    this.socket.getAdapters().then(res => console.log("adapters", res));
     const { protocol, host, port } = this.socket.props;
     const serverName = `${protocol || "http:"}//${host || "localhost"}${port ? ":" + port : ""}`;
     //    console.log("serverName:", serverName);
@@ -108,19 +175,12 @@ class App extends GenericApp {
         // );
         Iob.changeLanguage("de");
         this.forceUpdate();
+        Iob.connection.getObjects((objects) => Iob.setStore.setadapterObjects(objects));
       })
       .then(() =>
         this.socket
           .getObject(this.instanceId)
-          .then((i) => {
-            //        this.setState({ instanceConfig: i });
-            Iob.setStore.setInstanceConfig(i);
-            Iob.logSnackbar("success;instanceConfig loaded");
-            if (i.native) {
-              Iob.setStore.setInative(i.native);
-              Iob.logSnackbar("success;inative loaded");
-            } else Iob.logSnackbar("error;inative not loaded %s", e);
-          })
+          .then((i) => this.setInstanceConfig(i))
           .catch((e) => {
             console.log("catch InstanceConfig:", e);
             Iob.logSnackbar("error;loading instance config: %s", e);
@@ -152,6 +212,15 @@ class App extends GenericApp {
             );
           }
           //          Iob.logSnackbar("success;config.json loaded");
+          /*           Iob.connection
+            .getAdapters()
+            .then((r) => console.log("getAdapters:", r))
+            .then(() =>
+              Iob.connection
+                .getAdapterInstances()
+                .then((r) => console.log("getAdapterInstances:", r))
+            );
+ */
         },
         (e) => {
           console.log("catch config.json:", e);

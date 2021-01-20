@@ -2,11 +2,11 @@ import React from "react";
 //import { withStyles, makeStyles } from "@material-ui/core/styles";
 //import I18n from "@iobroker/adapter-react/i18n";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
-import { Iob, splitProps, defaultProps, t, isPartOf, HtmlComponent, connect } from "./Iob";
+import { Iob, splitProps, defaultProps, t, isPartOf, connect, makeFunction } from "./Iob";
 import InputChips from "./InputChips";
 import ConfigTable from "./ConfigTable";
 import ConfigLog from "./ConfigLog";
-import { withSnackbar } from "notistack";
+import EditState from "./EditState";
 import {
   Typography,
   Checkbox,
@@ -19,30 +19,34 @@ import {
   TextField,
   TextareaAutosize,
 } from "@material-ui/core";
+import Autocomplete, { createFilterOptions } from "@material-ui/lab/Autocomplete";
 //import { config } from "chai";
 //import { createSolutionBuilderWithWatch, isNoSubstitutionTemplateLiteral } from "typescript";
 //import { restore } from "sinon";
 //import { SIGTSTP } from "constants";
 
-/**
- * @typedef {object} SettingsProps
- * @property {Record<string, string>} classes
- * @property {Record<string, any>} inative
- * @property {Record<string, any>} item
- * @property {(field: string, value: any) => void} onChange
- */
+class HtmlComponent extends React.Component {
+  constructor(props) {
+    super(props);
+    this.divRef = React.createRef();
+    const { html, ...rest } = props;
+    this.myHTML = html;
+    this.rest = rest;
+  }
 
-/**
- * @typedef {object} SettingsState
- * @property {undefined} [dummy] Delete this and add your own state properties here
- */
+  componentDidMount() {
+    this.divRef.current.innerHTML = this.myHTML;
+  }
 
-/**
- * @extends {Iob.Component<SettingsProps, SettingsState>}
- */
+  render() {
+    return <div ref={this.divRef} {...this.rest}></div>;
+  }
+}
+
 class ConfigItem extends React.Component {
   constructor(props) {
     super(props);
+    this.events = {};
     this.state = this.createState(props);
     this.error = false;
     this.errorString = "";
@@ -58,16 +62,38 @@ class ConfigItem extends React.Component {
     return value;
   }
 
+  subscribeEvent(type = "stateChange", cb = (e) => true) {
+    if (!this.events[type]) this.events[type] = [];
+    const list = this.events[type];
+    if (list.indexOf(cb) == -1) {
+      list.push(cb);
+      Iob.addEventListener(type, cb);
+    }
+  }
+
+  componentWillUnmount() {
+    for (const [type, funlist] of Object.entries(this.events))
+      for (const fun of funlist) Iob.removeEventListener(type, fun);
+  }
   createState(props) {
-    const { field, rules, ieval, iselect, convertold, changeItems, ...items } = props.item;
-    const { onClick } = items;
+    const {
+      field,
+      rules,
+      ieval,
+      iselect,
+      convertOld,
+      changeItems,
+      onStateChange,
+      onObjectChange,
+      ...items
+    } = props.item;
+    const { onClick, onChange } = items;
     const that = this;
 
     if (changeItems) {
       const commands = Array.isArray(changeItems) ? changeItems : [changeItems];
       for (const cmd of commands) {
-        const fun =
-          typeof cmd === "string" ? this.makeFunction(cmd, this, "$", "items", "Iob") : cmd;
+        const fun = typeof cmd === "string" ? makeFunction(cmd, this, "$", "items", "Iob") : cmd;
         let res = undefined;
         try {
           res = fun(props.value, items, Iob);
@@ -77,11 +103,43 @@ class ConfigItem extends React.Component {
       }
     }
 
-    function processRules(rules) {
-      //    if (state.ieval)
-      //      state.ieval(state.item, props.inative);
-      const values = (Array.isArray(rules) && rules) || (rules && [rules]) || null;
-      return values && values.map((i) => that.makeFunction(i, that, "$", "t"));
+    if (onStateChange) {
+      const commands = Array.isArray(onStateChange) ? onStateChange : [onStateChange];
+      for (const cmd of commands) {
+        if (typeof cmd === "string") {
+          const fun = makeFunction(cmd, this, "e", "Iob");
+          const sfun = (ev) => {
+            let res = undefined;
+            try {
+              res = fun(ev, Iob);
+            } catch (e) {
+              Iob.logSnackbar("error;onStateChange error %s", e);
+            }
+            return res;
+          };
+          this.subscribeEvent("stateChange", sfun);
+          //          console.log("subscribeStateCHange", this.getKey(), cmd);
+        }
+      }
+    }
+
+    if (onObjectChange) {
+      const commands = Array.isArray(onStateChange) ? onStateChange : [onStateChange];
+      for (const cmd of commands) {
+        if (typeof cmd === "string") {
+          const fun = makeFunction(cmd, this, "e", "Iob");
+          const sfun = (ev) => {
+            let res = undefined;
+            try {
+              res = fun(ev, Iob);
+            } catch (e) {
+              Iob.logSnackbar("error;onObjectChange error %s", e);
+            }
+            return res;
+          };
+          this.subscribeEvent("objectChange", sfun);
+        }
+      }
     }
 
     function makeSel(sel, char) {
@@ -95,38 +153,37 @@ class ConfigItem extends React.Component {
       });
     }
 
-    const state = {};
+    const state = { value: props.value };
 
     if (onClick && typeof onClick !== "function") {
       if (typeof onClick === "string") {
-        const fun = this.makeFunction(onClick, this, "event", "props", "Iob");
-        items.onClick = ((e) => {
+        const fun = makeFunction(onClick, this, "event", "props", "Iob");
+        items.onClick = ((event) => {
           try {
-            fun(e, this.props, Iob);
+            fun(event, this.props, Iob);
           } catch (e) {
             console.log(`onClick error ${e} in function generatied from: '${onClick}'`);
             Iob.logSnackbar("error;onClick error %s in function generated from: %s", e, onClick);
           }
         }).bind(this);
       }
-    }
-    //    const { items, split } = splitProps(pitems, "xs|xl|sm|md|lg");
-    //    if (!split.sm && cols) split.sm = cols;
-    //    if (!split.sm) split.sm = 3;
-    if (convertold) {
+    } //    const { items, split } = splitProps(pitems, "xs|xl|sm|md|lg"); //    if (!split.sm && cols) split.sm = cols; //    if (!split.sm) split.sm = 3;
+    if (convertOld) {
       const fun =
-        typeof convertold !== "function"
-          ? this.makeFunction(convertold, this, "$", "props", "Iob")
-          : convertold;
+        typeof convertOld !== "function"
+          ? makeFunction(convertOld, this, "$", "props", "Iob")
+          : convertOld;
       let res = undefined;
       try {
-        res = fun(props.value, props, Iob);
+        res = fun(state.value, props, Iob);
       } catch (e) {
-        Iob.logSnackbar("error;convertold error %s", e);
+        Iob.logSnackbar("error;convertOld error %s", e);
       }
-      if (res != null && res != undefined && res !== props.value) {
+      if (res !== null && res !== undefined && res !== state.value) {
+        state.value = res;
         //        console.log("convertOld:", this.props.attr, props.value, res);
-        Iob.setStore.updateInativeValue({ attr: this.props.attr, value: res });
+        if (props.field !== "$undefined")
+          Iob.setStore.updateInativeValue({ attr: this.props.attr, value: res });
       }
       //          Iob.setStore.updateInativeValue({ attr: this.props.attr, value:res });
     }
@@ -140,8 +197,8 @@ class ConfigItem extends React.Component {
           let fun = undefined,
             rsel = null;
           try {
-            fun = this.makeFunction(sel, this, "$", "props", "Iob");
-            rsel = fun(this.props.value, this.props, Iob);
+            fun = makeFunction(sel, this, "$", "props", "Iob");
+            rsel = fun(state.value, this.props, Iob);
             //            console.log("select executed get function:", sel, rsel);
             if (Array.isArray(rsel)) sel = rsel;
           } catch (e) {
@@ -152,26 +209,30 @@ class ConfigItem extends React.Component {
       }
     } else if (sel) state.iselect = [sel];
 
-    let neval = ieval;
     if (ieval) {
-      if (!Array.isArray(ieval)) neval = [ieval];
-      neval = neval.map((ei) =>
-        ei && typeof ei === "string" ? this.makeFunction(ei, this, "$", "items", "Iob") : ei
+      state.ieval = (Array.isArray(ieval) ? ieval : [ieval]).map((ei) =>
+        ei && typeof ei === "string" ? makeFunction(ei, this, "$", "items", "Iob") : ei
       );
     }
-//    console.log(this.getKey(), Iob.type(this.props.value));
+
+    if (rules) {
+      //    if (state.ieval)
+      //      state.ieval(state.item, props.inative);
+      const values = (Array.isArray(rules) && rules) || (rules && [rules]) || null;
+      if (values) state.rules = values.map((i) => makeFunction(i, that, "$", "t"));
+    }
+
+    //    console.log(this.getKey(), Iob.type(this.props.value));
     //    this.opvalue = props.native;
     return {
       item: { ...items },
       field,
-      itype: items.itype,
-      ieval: neval,
-      rules: processRules(rules),
+      itype: items.itype.trim(),
       ...state,
     };
   }
 
-  /*   static getDerivedStateFromProps(props, state) {
+  static getDerivedStateFromProps(props, state) {
     let newState = null;
     //    console.log("derivedState:", state.opvalue, props.value, state.value);
     if (props.value != state.opvalue) {
@@ -180,7 +241,6 @@ class ConfigItem extends React.Component {
     }
     return newState;
   }
- */
 
   setErr(err) {
     this.error = !!err;
@@ -216,16 +276,17 @@ class ConfigItem extends React.Component {
     return found.length <= 1 || this.t("This item can only be once per table in this field!");
   }
 
-  onChangeValue(value) {
-    const _value = value;
+  onChangeValue(value, e) {
     if (this.check(value)) value = this.change(value);
-    console.log(_value, value, this.state.ovalue, this.props.attr, this.errorString);
-    Iob.setStore.updateInativeValue({ attr: this.props.attr, value });
+    //    console.log(_value, value, this.state.ovalue, this.props.attr, this.errorString);
     this.setState({ value });
+    if (this.state.item.onClick) this.state.item.onClick(e || value, this.props, Iob);
+    if (this.props.field !== "$undefined")
+      Iob.setStore.updateInativeValue({ attr: this.props.attr, value });
   }
 
   onChangeEvent(event) {
-    this.onChangeValue(event.target.value);
+    this.onChangeValue(event.target.value, event);
   }
 
   /*   componentDidMount() {
@@ -240,75 +301,6 @@ class ConfigItem extends React.Component {
       class="caption"
     />
     */
-  makeFunction(rule, that, ...args) {
-    that = that || this;
-
-    if (typeof rule == "function") return rule;
-    // else if (Array.isArray(rule)) {
-    //   rule = rule.map(i => i.trim());
-    else if (typeof rule == "object") {
-      if (typeof rule.regexp == "string") {
-        const m = rule.regexp.match(/^\/(.*)\/([gimy]*)$/);
-        const re = m ? new RegExp(...m.slice(1, 3)) : null;
-        let f;
-        let r = t(rule.message);
-        if (re) {
-          f = (v) => {
-            if (Array.isArray(v)) v = v.slice(-1)[0];
-            return !!(v || "").match(re) || r;
-          };
-        } else {
-          f = (v) => {
-            if (Array.isArray(v)) v = v.slice(-1)[0];
-            // console.log(v);
-            return (v || "").indexOf(rule.regexp) >= 0 || r;
-          };
-        }
-        return f.bind(that);
-        /*       } else if (typeof rule.number == "string") {
-        const r = this.$t(rule.number);
-        // const m = rule.fixed ? /^[\d\-+]$/ : /^[\d\-+.,e]$/i;
-        const min =
-          rule.min !== undefined && !isNaN(Number(rule.min))
-            ? Number(rule.min)
-            : Number.NEGATIVE_INFINITY;
-        const max =
-          rule.max !== undefined && !isNaN(Number(rule.max))
-            ? Number(rule.max)
-            : Number.POSITIVE_INFINITY;
-        const has = Array.isArray(rule.has) ? rule.has : [];
-        const n = rule.fixed ? parseInt : parseFloat;
-        // const m = rule.regexp.match(/^\/(.*)\/([gimy])?$/);
-        // const re = m ? new RegExp(...m.slice(1, 3)) : null;
-        // let ;
-        // let r = this.$t(rule.message);
-        const f = (v) => {
-          if (Array.isArray(v)) v = v.slice(-1)[0];
-          // console.log(v);
-          const x = n(v);
-          return (!isNaN(x) && ((x >= min && x <= max) || has.indexOf(x) >= 0)) || r;
-        };
-        return f.bind(that);
- */
-      }
-    } else if (typeof rule == "string" && rule.trim()) {
-      if (typeof that[rule] == "function") return that[rule].bind(that);
-      rule = [...args, rule.trim()];
-      try {
-        let b = rule[rule.length - 1];
-        b = b.startsWith("return ") || b.startsWith("{") ? b : `return ${b};`;
-        rule[rule.length - 1] = b;
-        const t = t;
-        const React = React;
-        const f = new Function(...rule);
-        return f.bind(that);
-      } catch (e) {
-        console.log(`makeFunction error ${e} in function generation with: ${rule}`);
-        Iob.logSnackbar("error;makeFunction error %s in function generation with: %s", e, rule);
-      }
-    } else console.log("makeFunction - Invalid function content in rule:", rule);
-    return null;
-  }
 
   stringToArrayComma(value = []) {
     //    const { value } = this.props;
@@ -343,18 +335,13 @@ class ConfigItem extends React.Component {
     );
   }
 
-  text(item) {
+  $text(item) {
     const { items, split } = splitProps(item, "label|text|html");
+    const { value } = this.state;
     if (Array.isArray(split.text)) split.text = split.text.join("");
     if (Array.isArray(split.html)) split.html = split.html.join("<br>");
-    if (
-      !split.text &&
-      !split.html &&
-      !split.label &&
-      this.props.value !== undefined &&
-      this.props.value !== null
-    )
-      split.text = this.props.value.toString();
+    if (!split.text && !split.html && !split.label && value !== undefined && value !== null)
+      split.text = value.toString();
     return Object.keys(split).map((n, index) => {
       switch (n) {
         case "label":
@@ -377,12 +364,13 @@ class ConfigItem extends React.Component {
     });
   }
 
-  html(item) {
+  $html(item) {
     const { items, split } = splitProps(item, "label|text");
-//    console.log("html:", split);
+    const { value } = this.state;
+    //    console.log("html:", split);
     if (Array.isArray(split.text)) split.text = split.text.join("");
-    if (!split.text && !split.label && this.props.value !== undefined && this.props.value !== null)
-      split.text = this.props.value.toString();
+    if (!split.text && !split.label && value !== undefined && value !== null)
+      split.text = value.toString();
     return Object.keys(split).map((n, index) => {
       switch (n) {
         case "label":
@@ -400,7 +388,7 @@ class ConfigItem extends React.Component {
     });
   }
 
-  textarea(item) {
+  $textarea(item) {
     const {
       prependIcon,
       label,
@@ -411,6 +399,7 @@ class ConfigItem extends React.Component {
       defaultValue,
       ...rest
     } = item;
+    const { value } = this.state;
     const key = this.getKey();
     const sw = (
       <FormControl required /* className={classes.formControl} */>
@@ -424,11 +413,7 @@ class ConfigItem extends React.Component {
           rowsMax={rowsMax}
           rowsMin={rowsMin}
           width="100%"
-          value={
-            typeof this.props.value === "string"
-              ? this.props.value
-              : (this.props.value && this.props.value.toString()) || ""
-          }
+          value={typeof value === "string" ? value : (value && value.toString()) || ""}
           onChange={(e) => this.onChangeEvent(e)}
           {...rest}
         />
@@ -440,15 +425,15 @@ class ConfigItem extends React.Component {
     return Iob.AddIcon(prependIcon, sw);
   }
 
-  switch(item) {
-    this.change = (value) => !this.props.value;
+  $switch(item) {
+    this.change = (value) => !this.state.value;
     const { tooltip, label, labelPlacement, prependIcon, ...rest } = item;
     const key = this.getKey();
     const items = defaultProps(rest, { size: "medium", color: "primary", key });
     const sw = (
       <FormControlLabel
         control={
-          <Switch {...items} checked={!!this.props.value} onChange={(e) => this.onChangeEvent(e)} />
+          <Switch {...items} checked={!!this.state.value} onChange={(e) => this.onChangeEvent(e)} />
         }
         label={label}
         labelPlacement={labelPlacement || "end"}
@@ -457,8 +442,8 @@ class ConfigItem extends React.Component {
     return Iob.AddTooltip(tooltip, Iob.AddIcon(prependIcon, sw));
   }
 
-  checkbox(item) {
-    this.change = (value) => !this.props.value;
+  $checkbox(item) {
+    this.change = (value) => !this.state.value;
     const { tooltip, label, labelPlacement, prependIcon, ...rest } = item;
     const key = this.getKey();
     const { color, ...items } = defaultProps(rest, { size: "medium", color: "primary", key });
@@ -468,8 +453,8 @@ class ConfigItem extends React.Component {
         control={
           <Checkbox
             {...items}
-            checked={!!this.props.value}
-            onChange={(e) => this.onChangeEvent(e)}
+            checked={!!this.state.value}
+            onChange={(e) => this.onChangeValue(!this.state.value)}
             color={color}
           />
         }
@@ -481,43 +466,76 @@ class ConfigItem extends React.Component {
     return Iob.AddTooltip(tooltip, Iob.AddIcon(prependIcon, sw));
   }
 
-  iselect(item) {
-    const { label, prependIcon, required, hint, defaultValue, tooltip, ...rest } = item;
+  $select(item) {
+    const {
+      label,
+      prependIcon,
+      required,
+      hint,
+      defaultValue,
+      tooltip,
+      fullWidth = true,
+      ...rest
+    } = item;
     const key = this.getKey();
     const items = defaultProps(rest, { size: "medium", color: "primary", key });
     const { iselect = [{ value: "", label: "...loading" }] } = this.state;
-    //  console.log("select:", sel, items);
+    const oselect = {};
+    iselect.map(i => oselect[i.value] = i.label)
+    const value = this.state.value || "";
+    //    console.log("select:", `'${value}'`, key, iselect, items);
     const sw = (
-      <FormControl required /* className={classes.formControl} */>
+      <Autocomplete
+        value={value}
+        options={iselect}
+        id={key}
+        disableClearable
+        getOptionSelected ={(o, v) => o.value == v}
+        onChange= {(e, v) => this.onChangeValue(v.value, e)}
+        getOptionLabel={(option) => typeof option === "object" ? option.label : oselect[option]}
+        renderInput={(params) => (
+          <TextField {...params} label={label} size="small" />
+        )}
+      ></Autocomplete>
+      /*       <FormControl
+        required
+        fullWidth={fullWidth}
+        margin="dense"
+        hiddenLabel={!label}
+        size="small" 
+      >
         {label && (
-          <InputLabel shrink required={required} htmlFor={key}>
+          <InputLabel id={key + "-label"} shrink required={required} htmlFor={key}>
             {label}
           </InputLabel>
         )}
         <Select
+          labelId={key + "-label"}
+          id={key}
           {...items}
-          value={this.props.value}
+          value={value}
           onChange={(e) => this.onChangeEvent(e)}
           name={label}
           inputProps={{ id: key }}
         >
           {iselect.map((i, index) => (
-            <option value={i.value} key={`_${index}_${i.value}_`}>
+            <option value={i.value} key={`_${index}_${i.label}_`}>
               {i.label}
             </option>
           ))}
         </Select>
         {hint ? <FormHelperText>{hint}</FormHelperText> : null}
       </FormControl>
+ */
     );
     return Iob.AddIcon(prependIcon, Iob.AddTooltip(tooltip, sw));
   }
 
-  chips(item) {
+  $chips(item) {
     const { prependIcon, hint, ...rest } = item;
     const key = this.getKey();
     const items = defaultProps(rest, { size: "medium", color: "primary", key });
-    let sel = this.props.value;
+    let sel = this.state.value;
     if (!Array.isArray(sel)) {
       if (typeof sel === "string") {
         sel = this.stringToArrayComma(sel);
@@ -531,11 +549,11 @@ class ConfigItem extends React.Component {
         error={this.error}
         onAdd={(chip) => {
           console.log("onAdd:", chip, this.checkRules(chip));
-          this.onChangeValue(this.props.value.concat(chip));
+          this.onChangeValue(this.state.value.concat(chip));
         }}
         onDelete={(label, index) => {
           //          console.log("onDelete:", label, index, this.props.value);
-          let a = new Array(...this.props.value);
+          let a = new Array(...this.state.value);
           a.splice(index, 1);
           this.onChangeValue(a);
         }}
@@ -545,13 +563,13 @@ class ConfigItem extends React.Component {
     return Iob.AddIcon(prependIcon, sw);
   }
 
-  table(item) {
+  $table(item) {
     return (
       <ConfigTable
         index={this.getKey()}
         item={item}
         app={this.props.app}
-        native={this.props.value}
+        inative={this.props.value}
         settings={this.props.settings}
         attr={this.props.attr}
         rows={this.props.value}
@@ -561,7 +579,7 @@ class ConfigItem extends React.Component {
     );
   }
 
-  icon(item) {
+  $icon(item) {
     //    this.change = (value) => !this.props.value;
     //    const { tooltip, label, ...rest } = item;
     const key = this.getKey();
@@ -569,7 +587,7 @@ class ConfigItem extends React.Component {
     return <Iob.IButton key={key} {...items} />;
   }
 
-  button(item) {
+  $button(item) {
     //    this.change = (value) => !this.props.value;
     //    const { tooltip, label, ...rest } = item;
     const key = this.getKey();
@@ -577,18 +595,18 @@ class ConfigItem extends React.Component {
     return <Iob.TButton key={key} {...items} />;
   }
 
-  password(item) {
-    return this.string(item, "password");
+  $password(item) {
+    return this.$string(item, "password");
   }
 
-  string(item, type) {
+  $string(item, type) {
     type = type || "text";
     const { prependIcon, hint, __chackItem, defaultValue, ...drest } = item;
     const rest = defaultProps(drest, {
       size: "medium",
       id: this.getKey(),
     });
-    let value = this.props.value;
+    let value = this.state.value;
     if (value === null || value === undefined) value = "";
     const inputProps = rest.inputProps || {};
     if (hint || this.errorString) rest.helperText = this.error ? this.errorString : hint;
@@ -604,15 +622,15 @@ class ConfigItem extends React.Component {
     );
   }
 
-  log(item) {
+  $log(item) {
     return <ConfigLog item={this.state.item} />;
   }
 
-  number(item) {
+  $number(item) {
     let { min, max, fixed, zero, ...items } = item;
     min = typeof min === "number" ? min : Number.NEGATIVE_INFINITY;
     max = typeof max === "number" ? max : Number.POSITIVE_INFINITY;
-    let value = this.props.value;
+    let value = this.state.value;
     this.check = (value) => {
       this.error = false;
       let val = fixed ? parseInt(value) : parseFloat(value);
@@ -631,17 +649,34 @@ class ConfigItem extends React.Component {
     };
     this.change = (value) => (fixed ? parseInt(value) : parseFloat(value));
     this.check(value);
-    return this.string(items);
+    return this.$string(items);
+  }
+
+  $state(item) {
+    const { name, ...items } = item;
+    const key = this.getKey();
+    return <EditState item={items} fKey={key} name={name} />;
   }
 
   render() {
     //    if (!itemR) return itemR = this.state.item;
     //    console.log(this.props.index);
     const { ieval, itype, item } = this.state;
+    const nitem = Object.assign({}, item);
+    const { disabled } = nitem;
+    if (typeof disabled === "string")
+      try {
+        const fun = Iob.makeFunction(disabled, this, "props", "Iob");
+        const res = fun(this.props, Iob);
+        nitem.disabled = res;
+      } catch (e) {
+        Iob.logSnackbar("error; error in displayIf for {0}: {1}", key, e);
+        nitem.disabled = !!disabled;
+      }
     if (Array.isArray(ieval))
       for (const ei of ieval)
         try {
-          ieval(this.props.value, item, Iob);
+          ei(this.state.value, nitem, Iob);
         } catch (e) {
           Iob.logSnackbar("error;ieval error %s", e);
           console.log("ieval error:", e);
@@ -650,12 +685,12 @@ class ConfigItem extends React.Component {
     if (
       isPartOf(
         itype,
-        "text|html|number|string|password|switch|button|checkbox|iselect|chips|table|textarea|icon|log"
+        "$state|$text|$html|$number|$string|$password|$switch|$button|$checkbox|$select|$chips|$table|$textarea|$icon|$log"
       ) &&
       typeof this[itype] === "function"
     )
-      return this[itype](item);
-    return <span>{this.props.index + ":" + JSON.stringify(item, null, 2)}</span>;
+      return this[itype](nitem);
+    return <span>{this.props.index + ":" + JSON.stringify(nitem, null, 2)}</span>;
   }
 }
 

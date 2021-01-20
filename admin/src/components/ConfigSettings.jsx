@@ -2,9 +2,10 @@ import React from "react";
 import { withStyles, makeStyles } from "@material-ui/core/styles";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
 import ConfigItem from "./ConfigItem";
+import { LoadButton } from "./LoadButton";
 //import InputChips from "./InputChips";
 //import ChipInput from "material-ui-chip-input";
-import { Iob, styles, t, splitProps, isPartOf } from "./Iob";
+import { Iob, styles, t, splitProps, isPartOf, logSnackbar } from "./Iob";
 import {
   Avatar,
   AppBar,
@@ -24,21 +25,6 @@ import { config } from "chai";
 import { isNoSubstitutionTemplateLiteral } from "typescript";
 //import { isNotEmittedStatement } from "typescript";
 
-/**
- * @typedef {object} SettingsProps
- * @property {Record<string, string>} classes
- * @property {Record<string, any>} inative
- * @property {(field: string, value: any) => void} onChange
- */
-
-/**
- * @typedef {object} SettingsState
- * @property {undefined} [dummy] Delete this and add your own state properties here
- */
-
-/**
- * @extends {React.Component<SettingsProps, SettingsState>}
- */
 class ConfigSettings extends React.Component {
   constructor(props) {
     super(props);
@@ -99,8 +85,19 @@ class ConfigSettings extends React.Component {
   }
 
   renderToolbarAdapter() {
+    let readme =
+      (this.props.instanceConfig &&
+        this.props.instanceConfig.common &&
+        this.props.instanceConfig.common.readme) ||
+      "#";
+    const lang = Iob.getStore.displayLanguage;
+    if (lang != "en")
+      readme = `https://translate.google.com/translate?sl=auto&tl=${lang}&u=${encodeURIComponent(
+        readme
+      )}`;
+
     return (
-      <>
+      <React.Fragment>
         <Paper elevation={0} variant="outlined">
           <Avatar src={"./" + Iob.getStore.instanceConfig.common.icon} variant="square" />
         </Paper>
@@ -117,7 +114,7 @@ class ConfigSettings extends React.Component {
             className={this.classes.menuButton}
             color="inherit"
             aria-label="menu"
-            href={(this.props.instanceConfig && this.props.instanceConfig.common.readme) || "#"}
+            href={readme}
             target="_"
           >
             <Icon color="inherit">help_outline</Icon>
@@ -138,64 +135,107 @@ class ConfigSettings extends React.Component {
           size="large"
         />
         <Iob.IButton
-          disabled={!this.props.adapterStatus.status}
+          disabled={!this.props.adapterStatus.alive}
           tooltip={t("restart adapter")}
           style={{
             margin: "0px 10px",
-            color: this.props.adapterStatus.connected
-              ? "yellow"
-              : "orange",
           }}
-          onClick={(e) => Iob.enableDisableAdapter(!this.props.adapterStatus.alive)}
+          onClick={(e) => Iob.setLoglevel()}
           icon={"replay"}
         />
-      </>
+      </React.Fragment>
     );
   }
 
   renderConfigSave() {
     return (
-      <>
+      <React.Fragment>
         <Iob.TButton
-          tooltip="Save config to file"
-          icon="save_alt"
-          onClick={() => this.props.app.onSave(false)}
-          narrow={this.props.narrowWidth}
-          label="ra_Save Config"
-        />
-        <Iob.TButton
-          tooltip="Load config from file"
-          icon="system_update_alt"
-          onClick={() => this.props.app.onSave(false)}
-          narrow={this.props.narrowWidth}
-          label="ra_Load Config"
-        />
-        <Iob.TButton
-          tooltip="Save config"
-          disabled={!this.props.changed}
-          icon="save"
-          onClick={() => this.props.app.onSave(false)}
-          narrow={this.props.narrowWidth}
-          label="ra_Save"
-        />
-        <Iob.TButton
-          tooltip="Save & Close"
-          disabled={!this.props.changed}
-          icon="settings_power"
-          onClick={() => this.props.app.onSave(true)}
-          narrow={this.props.narrowWidth}
-          label="ra_Save and close"
-        />
-        <Iob.TButton
-          tooltip="Cancel & Close"
+          tooltip={t("backupConfig")}
+          endIcon="save_alt"
           color="inherit"
+          size="large"
+          onClick={(e) =>
+            Iob.saveFile(
+              { native: this.props.inative },
+              {
+                stringify: true,
+                name:
+                  this.props.adapterInstance +
+                  "_config_" +
+                  new Date()
+                    .toLocaleDateString(Iob.displayLanguage, {
+                      year: "numeric",
+                      month: "numeric",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })
+                    .split(", ")
+                    .join("-"),
+              },
+              e
+            )
+          }
+          narrow={this.props.narrowWidth}
+          //          label={t("ra_Save Config")}
+        />
+        <LoadButton
+          tooltip={t("restoreConfig")}
+          endIcon="system_update_alt"
+          color="inherit"
+          size="large"
+          dropStyle={{ color: "darkred" }}
+          dropLabel={t("drop single file")}
+          receivedFile={(value, file) => {
+//            Iob.logSnackbar("info;file loaded: %s", file.path);
+            let native = null;
+            debugger;
+            try {
+              native = JSON.parse(value);
+            } catch(e) {
+              Iob-logSnackbar("error;cannotParseNative", e);
+            }
+            if (native && native.native) {
+              Iob.setStore.setInative(native.native);
+              Iob.logSnackbar("success;config file loaded: %s", file);
+            }
+            else Iob.logSnackbar("error;cannotParseNative", file);
+          }}
+          narrow={this.props.narrowWidth}
+        />
+        <Iob.TButton
+          tooltip={t("rt_Saveconfig")}
+          disabled={!this.props.inativeChanged}
+          endIcon="save"
+          size="large"
+          color="inherit"
+          onClick={() => this.props.app.configSave(false)}
+          narrow={this.props.narrowWidth}
+          label={t("ra_Save")}
+        />
+        <Iob.TButton
+          tooltip={t("Save & Close")}
+          disabled={!this.props.inativeChanged}
+          endIcon="settings_power"
+          size="large"
+          color="inherit"
+          onClick={() => this.props.app.configSave(true)}
+          narrow={this.props.narrowWidth}
+          label={t("ra_Save and close")}
+        />
+        <Iob.TButton
+          tooltip={t("Cancel & Close")}
+          color="inherit"
+          size="large"
           className={this.props.classes.menuButton}
-          icon="close"
+          endIcon="close"
           onClick={() => this.props.app.onClose()}
           narrow={this.props.narrowWidth}
-          label="ra_Close"
+          label={t("ra_cancel")}
         />
-      </>
+      </React.Fragment>
     );
   }
 
@@ -242,20 +282,27 @@ class ConfigSettings extends React.Component {
               style={{ paddingTop: "4px", paddingBottom: "16px" }}
             >
               {this.state.page.items.map((item, index) => {
-                const { cols, noGrid, ...rest } = item;
+                const { cols, noGrid, hideItem, ...rest } = item;
                 const { items, split } = splitProps(rest, "xs|xl|sm|md|lg");
                 if (!split.sm && cols) split.sm = cols;
                 if (!split.sm) split.sm = 2;
                 const key = `${this.state.tab}/${index}/${items.itype}`;
+                if (typeof hideItem === "string") try {
+                  const fun = Iob.makeFunction(hideItem, this, "props", "Iob");
+                  const res = fun(this.props, Iob);
+                  if (res) return null;
+                } catch(e) {
+                  Iob.logSnackbar("error; error in displayIf for {0}: {1}",key, e);
+                } else if (typeof hideItem === "boolean" && hideItem) return null;
                 let configItem;
                 switch (rest.itype) {
-                  case "divider":
+                  case "$divider":
                     return (
                       <Grid item sm={12} key={key + "d"}>
                         <Divider variant="fullWidth" />
                       </Grid>
                     );
-                  case "vdivider":
+                  case "$vdivider":
                     return <Divider key={key + "v"} orientation="vertical" flexItem></Divider>;
                   default:
                     configItem = (
@@ -263,10 +310,10 @@ class ConfigSettings extends React.Component {
                         key={key + "C"}
                         item={items}
                         index={key}
-                        native={this.props.inative}
+                        inative={this.props.inative}
                         app={this.props.app}
-                        attr={item.field}
-                        field={item.field}
+                        attr={item.field || "$undefined"}
+                        field={item.field }
                         value={this.props.inative[item.field]}
                         settings={this}
                         itype={items.itype}

@@ -1,0 +1,484 @@
+{
+    "configTooly": [
+        {
+            "icon": "settings",
+            "spacing": 1,
+            "items": [
+                {
+                    "itype": "icon",
+                    "icon": "translate",
+                    "size": "large",
+                    "color": "error",
+                    "onClick": "{Iob.logSnackbar('info;!copyToClipboadS %s', Iob.copyToClipboad(Iob.notFoundI18n));}",
+                    "noGrid": true
+                }
+            ]
+        }
+    ],
+    "configTool": [
+        {
+            "icon": "settings",
+            "tooltip": "Basic adapter config",
+            "spacing": 1,
+            "items": [
+                {
+                    "label": "Poll time",
+                    "itype": "number",
+                    "hint": "Poll devices every (15 - 300) seconds, 0 = no polling",
+                    "field": "poll",
+                    "min": 15,
+                    "max": 300,
+                    "zero": true,
+                    "fixed": true,
+                    "prependIcon": "hourglass_empty",
+                    "defaultValue": "30",
+                    "cols": 3,
+                    "xl": 2
+                },
+                {
+                    "label": "Password",
+                    "itype": "password",
+                    "hint": "password with minimal 5 letter length",
+                    "rules": [
+                        "{return typeof $ === 'string' && $.length>=5 || t('should be at least 5 letters long!')}",
+                        {
+                            "regexp": "/((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^\\w\\s]).{8,40})/",
+                            "message": "need to include one lower case, one upper case, one number and one special character at least 8 and maximal 40 characters long!"
+                        }
+                    ],
+                    "placeholder": "enter password here",
+                    "field": "password",
+                    "prependIcon": "vpn_key",
+                    "cols": 3,
+                    "fullWidth": true,
+                    "xl": 2
+                },
+                {
+                    "label": "Text Label",
+                    "itype": "text",
+                    "text": "Text is this",
+                    "html": [
+                        "!not translated because it starts with !",
+                        "html=this, ",
+                        "!<code>&nbsp;\"and this is code\".slice(1)&nbsp;</code><br>"
+                    ],
+                    "variant": "body2",
+                    "lvariant": "h6",
+                    "cols": 3,
+                    "xl": 2
+                },
+                {
+                    "itype": "text",
+                    "field": "poll",
+                    "variant": "body2",
+                    "noGrid": true
+                },
+                {
+                    "itype": "icon",
+                    "icon": "translate",
+                    "size": "large",
+                    "color": "error",
+                    "tooltip": "This is a testicon, you may click on it and copy not implemented translations to clipboard :)",
+                    "onClick": "{Iob.logSnackbar('info;!copyToClipboadS %s', Iob.copyToClipboad(Iob.notFoundI18n));}",
+                    "noGrid": true
+                },
+                {
+                    "itype": "divider"
+                },
+                {
+                    "label": "Use specific interface",
+                    "itype": "iselect",
+                    "iselect": "{return props.settings.props.ipAddresses && props.settings.props.ipAddresses.map(i => ({value:i.address, label:i.name}))}",
+                    "hint": "IP interface to use, default 0.0.0.0 for all",
+                    "field": "interface",
+                    "native": true,
+                    "defaultValue": "0.0.0.0",
+                    "multiple": false,
+                    "prependIcon": "router",
+                    "cols": 6,
+                    "xl": 4
+                },
+                {
+                    "itype": "vdivider"
+                },
+                {
+                    "label": "Define Unknown Type",
+                    "itype": "chips",
+                    "hint": "Add new device type like `0x12ab=RM4`",
+                    "field": "new",
+                    "prependIcon": "library_add",
+                    "rules": [
+                        {
+                            "regexp": "/^((0x)?[0-9a-f]+=[0-9a-z]+)*$/i",
+                            "message": "Need to be something like 0x12ab=RMP"
+                        }
+                    ],
+                    "cols": 5,
+                    "convertold": "stringToArrayComma",
+                    "xl": 3
+                },
+                {
+                    "itype": "switch",
+                    "label": "Debug mode",
+                    "field": "debug",
+                    "tooltip": "Switch debug mode of adapter on or off",
+                    "click": "return (this.$app.debugLevel = this.cItem.debug)",
+                    "convertoldx": "(this.$set(conf,'debug', this.$app.debugLevel), conf.debug)",
+                    "disabled": false,
+                    "prependIcon": "bug_report",
+                    "color": "secondary",
+                    "cols": 2
+                },
+                {
+                    "itype": "checkbox",
+                    "label": "debug",
+                    "field": "debug",
+                    "tooltip": "test Checkbox debug mode of adapter on or off",
+                    "onClick": "return (this.$app.debugLevel = this.cItem.debug)",
+                    "disabled": false,
+                    "labelPlacement": "start",
+                    "prependIcon": "bug_report",
+                    "colorx": "error",
+                    "cols": 2
+                },
+                {
+                    "itype": "vdivider"
+                },
+                {
+                    "itype": "button",
+                    "label": "Start Device Scan",
+                    "tooltip": "Start a complete device scan",
+                    "field": "debug",
+                    "onClick": "{Iob.logSnackbar('success;I clicked the button!');}",
+                    "icon": "touch_app",
+                    "size": "large",
+                    "variant": "contained",
+                    "cols": 2
+                },
+                {
+                    "label": "Device list",
+                    "itype": "table",
+                    "field": "devList",
+                    "icon": "format_list_bulleted",
+                    "disableSort": true,
+                    "pageSize": 10,
+                    "cols": 12,
+                    "xl": 6,
+                    "items": [
+                        {
+                            "headerName": "Name",
+                            "itype": "string",
+                            "field": "name",
+                            "align": "left",
+                            "rules": [
+                                "uniqueTableRule",
+                                {
+                                    "regexp": "/^[\\w\\$@/:-]+$/i",
+                                    "message": "Only letters, numbers and `$ @ / : _ -` are allowed"
+                                }
+                            ],
+                            "sortable": true,
+                            "defaultValue": "newName",
+                            "class": "text-body-2",
+                            "width": "16%"
+                        },
+                        {
+                            "headerName": "IP address",
+                            "itype": "string",
+                            "field": "ip",
+                            "width": "12%",
+                            "class": "text-body-2",
+                            "rules": [
+                                {
+                                    "regexp": "/^([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)?$/",
+                                    "message": "Need to be an IPv4 address (like 11.22.33.44)"
+                                }
+                            ]
+                        },
+                        {
+                            "headerName": "Mac address",
+                            "itype": "string",
+                            "field": "mac",
+                            "width": "12%",
+                            "class": "text-body-2",
+                            "rules": [
+                                {
+                                    "regexp": "/^(([\\dA-F]{2}:){5}[\\dA-F]{2})?$/i",
+                                    "message": "Need to be a mac address (like 01:23:45:56:78:9a)"
+                                }
+                            ]
+                        },
+                        {
+                            "headerName": "Poll",
+                            "itype": "checkbox",
+                            "field": "poll",
+                            "align": "center",
+                            "tooltip": "enable device poll",
+                            "sortable": false,
+                            "width": "3%",
+                            "convertold": "(props.value || props.value===undefined)",
+                            "color": "primary"
+                        },
+                        {
+                            "headerName": "Here",
+                            "itype": "checkbox",
+                            "field": "active",
+                            "align": "center",
+                            "sortable": false,
+                            "width": "5%",
+                            "disabled": true,
+                            "color": "secondary"
+                        },
+                        {
+                            "headerName": "Info",
+                            "itype": "text",
+                            "field": "info",
+                            "width": "40%",
+                            "disabled": true,
+                            "class": "text-caption",
+                            "variant": "body2"
+                        }
+                    ]
+                },
+                {
+                    "itype": "log",
+                    "pageSize": 25,
+                    "cols": 12,
+                    "xl": 6
+                }
+            ]
+        },
+        {
+            "label": "States+Scenes",
+            "icon": "playlist_add",
+            "tooltip": "Create and manage scenes or special actions",
+            "spacing": 2,
+            "items": [
+                {
+                    "label": "Scene setup",
+                    "itype": "table",
+                    "field": "scenes",
+                    "dyisable-sort": true,
+                    "cols": 12,
+                    "items": [
+                        {
+                            "headerName": "Name",
+                            "itype": "string",
+                            "field": "name",
+                            "align": "left",
+                            "rules": [
+                                "uniqueTableRule",
+                                "onlyWords"
+                            ],
+                            "sortable": true,
+                            "defaultValue": "newName",
+                            "width": "20%"
+                        },
+                        {
+                            "headerName": "Scene",
+                            "itype": "chips",
+                            "field": "scene",
+                            "align": "left",
+                            "sortable": false,
+                            "width": "75%",
+                            "convertold": "stringToArrayComma"
+                        }
+                    ]
+                },
+                {
+                    "label": "States setup",
+                    "itype": "table",
+                    "field": "switches",
+                    "dyisable-sort": true,
+                    "cols": 12,
+                    "items": [
+                        {
+                            "headerName": "Name",
+                            "itype": "string",
+                            "field": "name",
+                            "align": "left",
+                            "rules": [
+                                "uniqueTableRule",
+                                "onlyWords"
+                            ],
+                            "sortable": true,
+                            "defaultValue": "newName",
+                            "width": "20%"
+                        },
+                        {
+                            "headerName": "On",
+                            "itype": "chips",
+                            "field": "on",
+                            "align": "left",
+                            "sortable": false,
+                            "width": "45%",
+                            "convertold": "stringToArrayComma"
+                        },
+                        {
+                            "headerName": "Off",
+                            "itype": "chips",
+                            "field": "off",
+                            "align": "center",
+                            "sortable": false,
+                            "width": "30%",
+                            "convertold": "stringToArrayComma"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "label": "Learn & Codes",
+            "icon": "settings_remote",
+            "tooltip": "learn and manage learned functions of RM devices",
+            "items": [
+                {
+                    "label": "Port",
+                    "itype": "number",
+                    "min": 1000,
+                    "max": 65000,
+                    "defaultValue": 3000,
+                    "placeholder": "Enter port address on to listen on, 3000=example",
+                    "hint": "Port to listen on >=1000 & <=65000",
+                    "field": "port",
+                    "fullWidth": true,
+                    "prependIcon": "exit_to_app",
+                    "cols": 3,
+                    "sm": 4
+                },
+                {
+                    "label": "For Method field:",
+                    "itype": "html",
+                    "text": [
+                        "!<code>GET</code> | <code>POST</code> ",
+                        "is supported.",
+                        "!<br>",
+                        "By entering the below URL in your browser (changing iobroker-server to your server name or ip) you can test the 'Test' entry:",
+                        "!<br><a target='_blank' rel='noopener noreferrer' href='http://MyHost:MyPort/Test?what=ok&length_$m=12&temp_$%C2%B0F=13&speed_$mp/h=88'>http://MyHost:MyPort/Test?what=ok&length_$m=12&temp_$%C2%B0F=13&speed_$mp/h=88</a>"
+                    ],
+                    "style": {
+                        "width": "98%"
+                    },
+                    "changeItems": [
+                        "{items.text = items.text.map(i => i.replace(/MyHost/g,Iob.getStore.serverName.host))}",
+                        "{items.text = items.text.map(i => i.replace(/MyPort/g,Iob.getStore.inative.port))}"
+                    ],
+                    "cols": 6,
+                    "sm": 8
+                },
+                {
+                    "label": "For Path field:",
+                    "itype": "html",
+                    "text": [
+                        "The external device can connect to the adapter's server using following example:",
+                        "!<br>`http://MyHost:MyPort/&nbsp;<code>path</code>&nbsp;?data=...`"
+                    ],
+                    "changeItems": "{items.text = items.text.map(i => i.replace(/MyPort/g,Iob.getStore.inative.port))}",
+                    "style": {
+                        "width": "98%"
+                    },
+                    "cols": 3,
+                    "sm": 4
+                },
+                {
+                    "label": "For Convert field:",
+                    "itype": "html",
+                    "text": [
+                        "Conversion receives data as variable $ and can convert it to some new format which will then be stored in state(s) named with path. ",
+                        "!<br>",
+                        "Example: ",
+                        "!<code>{ tempC: FtoC($.tempf, 1) }</code>",
+                        " where 'FtoC' is an internal conversion for Farenheit to Celsius. Other functions are",
+                        "!<br><code>toNum(str, digits_after_comma), CtoF(..) and ItoMM(...)</code>",
+                        "The field names can end with '_' and type/unit information. The text after the '_' will be the type like with '_date',",
+                        "or if type should be number with specific unit you can name it '_$km/h'.",
+                        "There are some predefined types available as well which can be named directly (without $):",
+                        "!<br><code>'Hum', 'Kmh', 'Deg', 'Date', 'Hpa', 'Mm', 'Wm2', 'Txt', 'C', 'N'</code>",
+                        "where N is just a number Value, the many of the other set also roles."
+                    ],
+                    "style": {
+                        "width": "98%"
+                    },
+                    "cols": 9,
+                    "sm": 8
+                },
+                {
+                    "label": "Path Table",
+                    "itype": "table",
+                    "field": "pathtable",
+                    "disable-sort": true,
+                    "cols": 12,
+                    "items": [
+                        {
+                            "headerName": "Name",
+                            "itype": "string",
+                            "field": "name",
+                            "align": "left",
+                            "rules": [
+                                "uniqueTableRule",
+                                "onlyWords"
+                            ],
+                            "sortable": true,
+                            "defaultValue": "newPath",
+                            "width": "12%"
+                        },
+                        {
+                            "headerName": "Path",
+                            "itype": "string",
+                            "field": "path",
+                            "align": "left",
+                            "rules": [
+                                "onlyWords"
+                            ],
+                            "sortable": true,
+                            "defaultValue": "newPath",
+                            "width": "12%"
+                        },
+                        {
+                            "headerName": "Method",
+                            "itype": "iselect",
+                            "tooltip": "please select methot for path (GET,PUT or POST)",
+                            "iselect": "|GET|PUT|POST",
+                            "field": "method",
+                            "align": "center",
+                            "defaultValue": "GET",
+                            "sortable": false,
+                            "width": "5%"
+                        },
+                        {
+                            "headerName": "Convert",
+                            "field": "convert",
+                            "itype": "textarea",
+                            "align": "left",
+                            "defaultValue": "$",
+                            "placeholder": "Please enter the formula here, '$' is the simplest!",
+                            "sortable": true,
+                            "width": "55%"
+                        },
+                        {
+                            "headerName": "Enabled",
+                            "itype": "checkbox",
+                            "field": "enabled",
+                            "sortable": false,
+                            "align": "center",
+                            "width": "5%"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "translation": {
+        "getMissing": {
+            "en": "Missing text",
+            "de": "FehlendeTexte"
+        },
+        "Enabled": {
+            "en": "Enabled",
+            "de": "Aktiviert"
+        }
+    },
+    "readme": {
+        "en": "README.md"
+    }
+}

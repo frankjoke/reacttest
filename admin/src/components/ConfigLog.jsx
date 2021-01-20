@@ -1,9 +1,6 @@
 import React from "react";
 import { withStyles, makeStyles } from "@material-ui/core/styles";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
-import ConfigItem from "./ConfigItem";
-import Filter from "@material-ui/icons/Filter";
-
 //import InputChips from "./InputChips";
 //import ChipInput from "material-ui-chip-input";
 import { Iob, styles, t, splitProps, defaultProps, isPartOf, connect } from "./Iob";
@@ -25,8 +22,7 @@ import {
   TablePagination,
   InputBase,
 } from "@material-ui/core";
-import { DataGrid } from "@material-ui/data-grid";
-import { config } from "chai";
+//import { config } from "chai";
 //import { isNotEmittedStatement } from "typescript";
 
 /**
@@ -59,7 +55,13 @@ class ConfigLog extends React.Component {
       page: 0,
       columns: [
         { headerName: t("Time"), field: "tss", headerName: "Time", width: 140 },
-        { headerName: t("Severity"), field: "severity", headerName: "Severity", width: 60 },
+        {
+          headerName: t("Severity"),
+          field: "severity",
+          headerName: "Severity",
+          width: 60,
+          align: "center",
+        },
         { headerName: t("Message"), field: "message", headerName: "Message", width: 900 },
       ],
       ...ConfigLog._updateFilter("", props),
@@ -86,9 +88,10 @@ class ConfigLog extends React.Component {
 
     if (filter)
       rowsFiltered = adapterLog.filter(
-        (i) =>
-          (i.message && i.message.toLowerCase().indexOf(filter) >= 0) ||
+        (i) => Iob.customFilter(i, filter)
+        /*           (i.message && i.message.toLowerCase().indexOf(filter) >= 0) ||
           (i.severity && i.severity.toLowerCase().indexOf(filter) >= 0)
+ */
       );
     else rowsFiltered = adapterLog;
 
@@ -117,41 +120,74 @@ class ConfigLog extends React.Component {
     return (
       <Paper>
         <TableContainer style={dstyle}>
-          <Table aria-label="simple table">
-            <TableHead>
-              <TableRow>
+          <Table aria-label="adapter log">
+            <TableHead style={{ backgroundColor: "gainsboro" }}>
+              <TableRow size="small" padding="none">
                 {columns.map((c, i) => (
-                  <TableCell component="th" scope="row" key={"h" + i} align={c.align || "left"}>
-                    <Typography variant="subtitle2">{c.headerName}</Typography>
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    key={"h" + i}
+                    align={c.align || "left"}
+                    variant="head"
+                    size="small"
+                    style={{ padding: "0px 4px" }}
+                  >
+                    <Typography variant="subtitle1">
+                      <strong>{c.headerName}</strong>
+                    </Typography>
                   </TableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
               {(pageSize > 0 ? rows.slice(page * pageSize, page * pageSize + pageSize) : rows).map(
-                (row, ri) => (
-                  <TableRow key={"h" + ri} hover>
-                    {columns.map((c, ci) => {
-                      const rri = page * pageSize + ri;
-                      const key = `r${rri}c${ci}`;
-                      const { headerName, sortable, align, defaultValue, ...icitem } = c;
-                      delete icitem.class;
-                      const citem = defaultProps(icitem, { size: "small", margin: "none" });
-                      return (
-                        <TableCell
-                          key={key}
-                          component="td"
-                          scope="row"
-                          padding="none"
-                          size="small"
-                          align={c.align || "left"}
-                        >
-                          <Typography variant="body2">{row[c.field]}</Typography>
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                )
+                (row, ri) => {
+                  let color = "";
+                  switch (row.severity) {
+                    case "error":
+                      color = "#f8bbd0";
+                      break;
+                    case "info":
+                      if (row.message.indexOf("debug:") < 0) color = "#bbdefb";
+                      else color = "#fafafa";
+                      break;
+                    case "warn":
+                      color = "#ffe0b2";
+                      break;
+                    case "debug":
+                      color = "#fafafa";
+                      break;
+                    default:
+                      color = "#ffffff";
+                      break;
+                  }
+                  return (
+                    <TableRow key={"h" + ri} hover style={{ backgroundColor: color }}>
+                      {columns.map((c, ci) => {
+                        const rri = page * pageSize + ri;
+                        const key = `r${rri}c${ci}`;
+                        const { headerName, sortable, align, defaultValue, ...icitem } = c;
+                        delete icitem.class;
+                        const citem = defaultProps(icitem, { size: "small", margin: "none" });
+
+                        return (
+                          <TableCell
+                            key={key}
+                            component="td"
+                            scope="row"
+                            padding="none"
+                            size="small"
+                            align={c.align || "left"}
+                            style={{ padding: "0px 8px" }}
+                          >
+                            <Typography variant="body2">{row[c.field]}</Typography>
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                }
               )}
             </TableBody>
           </Table>
@@ -186,14 +222,14 @@ class ConfigLog extends React.Component {
     //    console.log("chips:", sel, items);
     const sw = (
       <div style={{ width, height, display: "flex", flexFlow: 1 }}>
-        <AppBar position="static" >
+        <AppBar position="static">
           <Toolbar variant="dense">
             <Icon>speaker_notes</Icon>
             <Typography variant="subtitle2" noWrap>
               &nbsp;{t("Log from %s", this.props.adapterInstance)}
             </Typography>
             <div style={{ flexGrow: 1 }} />
-            <Icon style={{paddingRight:"30px"}}>filter_alt</Icon>
+            <Icon style={{ paddingRight: "30px" }}>filter_alt</Icon>
             <InputBase
               value={filter}
               placeholder={t("Filter log report")}
@@ -216,9 +252,10 @@ class ConfigLog extends React.Component {
       </div>
     );
     return (
-      <>
-        {sw},{this.renderTable(items, columns, rowsFiltered)}
-      </>
+      <React.Fragment>
+        {sw}
+        {this.renderTable(items, columns, rowsFiltered)}
+      </React.Fragment>
     );
   }
 }

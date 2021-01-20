@@ -1,13 +1,6 @@
 import React from "react";
 import { withStyles, makeStyles } from "@material-ui/core/styles";
-import {
-  Iob,
-  splitProps,
-  defaultProps,
-  t,
-  isPartOf,
-  logSnackbar,
-} from "./Iob";
+import { Iob, splitProps, defaultProps, t, isPartOf, logSnackbar } from "./Iob";
 import {
   Icon,
   AppBar,
@@ -26,22 +19,6 @@ import ConfigItem from "./ConfigItem";
 /* import { config } from "chai";
 import { createSolutionBuilderWithWatch, isNoSubstitutionTemplateLiteral } from "typescript";
 import { restore } from "sinon";
- */
-/**
- * @typedef {object} SettingsProps
- * @property {Record<string, string>} classes
- * @property {Record<string, any>} inative
- * @property {Record<string, any>} item
- * @property {(field: string, value: any) => void} onChange
- */
-
-/**
- * @typedef {object} SettingsState
- * @property {undefined} [dummy] Delete this and add your own state properties here
- */
-
-/**
- * @extends {React.Component<SettingsProps, SettingsState>}
  */
 class ConfigTable extends React.Component {
   constructor(props) {
@@ -105,19 +82,23 @@ class ConfigTable extends React.Component {
     if (height) dstyle.height = height;
     const { pageSize, page } = this.state;
     return (
-      <Paper>
+      <Paper variant="outlined">
         <TableContainer style={dstyle}>
-          <Table aria-label="simple table">
-            <TableHead>
-              <TableRow>
+          <Table aria-label={this.props.label+" table"}>
+            <TableHead style={{backgroundColor:"gainsboro"}}>
+              <TableRow size="small">
                 {columns.map((c, i) => (
                   <TableCell
+                    size="small"
                     component="th"
                     scope="row"
                     key={this.getKey("h" + i)}
                     align={c.align || "left"}
+                    variant="head"
+                    size="small"
+                    style={{padding: "0px 4px"}}
                   >
-                    <Typography variant="subtitle1">{c.headerName}</Typography>
+                    <Typography variant="subtitle1"><strong>{c.headerName}</strong></Typography>
                   </TableCell>
                 ))}
                 <TableCell
@@ -146,18 +127,18 @@ class ConfigTable extends React.Component {
                           key={key}
                           component="td"
                           scope="row"
-                          padding="none"
                           size="small"
                           align={c.align || "left"}
+                          style={{padding: "0px 2px"}}
                         >
                           <ConfigItem
                             item={citem}
                             index={key}
                             table={rows}
                             app={this.props.app}
-                            attr={`${this.props.attr}.${rri}.${c.field}`}
+                            attr={`${this.props.attr}.${rri}.${c.field || '$undefined'}`}
                             field={c.field}
-                            native={row}
+                            inative={row}
                             settings={this.props.settings}
                             value={row[c.field]}
                             settings={this.props.settings}
@@ -228,22 +209,22 @@ class ConfigTable extends React.Component {
       let value = def;
       if (!(def || def == "" || def == 0 || def == false))
         switch (i.itype) {
-          case "string":
-          case "text":
-          case "html":
-          case "password":
-          case "textarea":
-          case "select":
+          case "$string":
+          case "$text":
+          case "$html":
+          case "$password":
+          case "$textarea":
+          case "$select":
             value = "";
             break;
-          case "chips":
-          case "table":
+          case "$chips":
+          case "$table":
             value = [];
             break;
-          case "number":
+          case "$number":
             value = 0;
-          case "switch":
-          case "checkbox":
+          case "$switch":
+          case "$checkbox":
             value = false;
           default:
             break;

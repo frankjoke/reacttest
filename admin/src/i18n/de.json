@@ -6,5 +6,13 @@
   "Time": "Zeit",
   "key": "Schlüssel",
   "copyToClipboadS": "Ins Clipboard kopieren %s {0}",
-  "Open Readme": "Readme-Datei Öffnen"
+  "Open Readme": "Readme-Datei Öffnen",
+  "ra_Save Config": "in Datei speichern",
+  "ra_Load Config": "lade Konfiguration",
+  "cancel": "Schließen",
+  "ra_cancel": "Abbruch",
+  "rt_Saveconfig": "Speichere Konfiguration in ioBroker",
+  "backupConfig": "Backup Konfiguratuion in Datei",
+  "restoreConfig": "Konfiguration aus Datei laden",
+  "cannotParseNative": "Kann config-Datei nicht verstehen: %s"
 }

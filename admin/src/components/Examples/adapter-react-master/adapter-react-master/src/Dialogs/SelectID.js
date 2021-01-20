@@ -1,0 +1,210 @@
+/**
+ * Copyright 2018-2020 bluefox <dogafox@gmail.com>
+ *
+ * MIT License
+ *
+ **/
+// please do not delete React, as without it other projects could not be compiled: ReferenceError: React is not defined
+import React from 'react';
+import PropTypes from 'prop-types';
+import withStyles from '@material-ui/core/styles/withStyles';
+
+import Button from '@material-ui/core/Button';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogActions from '@material-ui/core/DialogActions';
+import Dialog from '@material-ui/core/Dialog';
+
+import I18n from '../i18n';
+import ObjectBrowser from '../Components/ObjectBrowser';
+
+const styles = theme => ({
+    headerID: {
+        fontWeight: 'bold',
+        fontStyle: 'italic'
+    },
+    dialog: {
+        height: '95%'
+    },
+    content: {
+        height: '100%',
+        overflow: 'hidden'
+    },
+    titleRoot: {
+        whiteSpace: 'nowrap',
+        width: 'calc(100% - 72px)',
+        overflow: 'hidden',
+        display: 'inline-block',
+        textOverflow: 'ellipsis',
+    }
+});
+
+/**
+ * @typedef {object} SelectIDProps
+ * @property {string} [key] The key to identify this component.
+ * @property {string} [dialogName] The internal name of the dialog; default: "default"
+ * @property {string} [title] The dialog title; default: Please select object ID... (translated)
+ * @property {boolean} [multiSelect] Set to true to allow the selection of multiple IDs.
+ * @property {boolean} [foldersFirst] Show folders before any leaves.
+ * @property {string} [imagePrefix] Prefix (default: '.')
+ * @property {boolean} [showExpertButton] Show the expert button?
+ * @property {import('../Components/types').ObjectBrowserColumn[]} [columns] Columns to display; default: 'name', 'type', 'role', 'room', 'func', 'val'
+ * @property {import('../Components/types').ObjectBrowserType[]} [types] Object types to show; default: 'state' only
+ * @property {ioBroker.Languages} [lang] The language.
+ * @property {import('../Connection').default} socket The socket connection.
+ * @property {boolean} [notEditable] Can't objects be edited? (default: true)
+ * @property {string} [themeName] Theme name.
+ * @property {string} [themeType] Theme type.
+ * @property {import('../Components/types').ObjectBrowserCustomFilter} [customFilter] Custom filter.
+ * @property {string | string[]} [selected] The selected IDs.
+ * @property {string} [ok] The ok button text; default: OK (translated)
+ * @property {string} [cancel] The cancel button text; default: Cancel (translated)
+ * @property {() => void} onClose Close handler that is always called when the dialog is closed.
+ * @property {(selected: string | string[] | undefined, name: string) => void} onOk Handler that is called when the user presses OK.
+ * @property {{headerID: string; dialog: string; content: string}} [classes] The styling class names.
+ *
+ * @extends {React.Component<SelectIDProps>}
+ */
+class SelectID extends React.Component {
+    /**
+     * @param {SelectIDProps} props
+     */
+    constructor(props) {
+        super(props);
+        this.dialogName = this.props.dialogName || 'default';
+        this.dialogName = 'SelectID.' + this.dialogName;
+
+        this.filters = window.localStorage.getItem(this.dialogName) || '{}';
+
+        try {
+            this.filters = JSON.parse(this.filters);
+        } catch (e) {
+            this.filters = {};
+        }
+
+        let selected = this.props.selected || [];
+        if (typeof selected !== 'object') {
+            selected = [selected];
+        }
+        selected = selected.filter(id => id);
+
+        this.state =  {
+            selected,
+            name: ''
+        };
+    }
+
+    handleCancel() {
+        this.props.onClose();
+    };
+
+    handleOk() {
+        this.props.onOk(this.props.multiSelect ? this.state.selected : this.state.selected[0] || '', this.state.name);
+        this.props.onClose();
+    };
+
+    render() {
+        let title;
+        if (this.state.name || this.state.selected.length) {
+            if (this.state.selected.length === 1) {
+                title = [
+                    <span key="selected">{ I18n.t('ra_Selected') } </span>,
+                    <span key="id" className={ this.props.classes.headerID }>{
+                        (this.state.name || this.state.selected) + (this.state.name ? ' [' + this.state.selected + ']' : '')
+                    }</span>
+                ];
+            } else {
+                title = [
+                    <span key="selected">{ I18n.t('ra_Selected') } </span>,
+                    <span key="id" className={ this.props.classes.headerID }>{
+                        I18n.t('%s items', this.state.selected.length)
+                    }</span>
+                ];
+            }
+        } else {
+            title = this.props.title || I18n.t('ra_Please select object ID...');
+        }
+
+        return <Dialog
+            key={this.props.key}
+            disableBackdropClick
+            maxWidth={false}
+            disableEscapeKeyDown
+            classes={{paper: this.props.classes.dialog}}
+            fullWidth={true}
+            open={true}
+            aria-labelledby="selectid-dialog-title"
+        >
+            <DialogTitle id="selectid-dialog-title" classes={{root: this.props.classes.titleRoot}}>{ title }</DialogTitle>
+            <DialogContent className={this.props.classes.content}>
+                <ObjectBrowser
+                    foldersFirst={ this.props.foldersFirst }
+                    imagePrefix={ this.props.imagePrefix || this.props.prefix } // prefix is for back compatibility
+                    defaultFilters={ this.filters }
+                    dialogName={this.dialogName}
+                    showExpertButton={ this.props.showExpertButton !== undefined ? this.props.showExpertButton : true }
+                    style={ {width: '100%', height: '100%'} }
+                    columns={ this.props.columns || ['name', 'type', 'role', 'room', 'func', 'val'] }
+                    types={ this.props.types || ['state'] }
+                    t={ I18n.t }
+                    lang={ this.props.lang || I18n.getLanguage() }
+                    socket={ this.props.socket }
+                    selected={ this.state.selected }
+                    multiSelect={ this.props.multiSelect }
+                    notEditable={ this.props.notEditable === undefined ? true : this.props.notEditable }
+                    name={ this.state.name }
+                    themeName={ this.props.themeName }
+                    themeType={ this.props.themeType }
+                    customFilter={ this.props.customFilter }
+                    onFilterChanged={ filterConfig => {
+                        this.filters = filterConfig;
+                        window.localStorage.setItem(this.dialogName, JSON.stringify(filterConfig));
+                    } }
+                    onSelect={ (selected, name, isDouble) => {
+                        if (JSON.stringify(selected) !== JSON.stringify(this.state.selected)) {
+                            this.setState({selected, name}, () =>
+                                isDouble && this.handleOk());
+                        } else if (isDouble) {
+                            this.handleOk();
+                        }
+                    } }
+                />
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={ () => this.handleOk() } disabled={ !this.state.selected.length } color="primary">{ this.props.ok || I18n.t('ra_Ok') }</Button>
+                <Button onClick={ () => this.handleCancel() }>{ this.props.cancel || I18n.t('ra_Cancel') }</Button>
+            </DialogActions>
+        </Dialog>;
+    }
+}
+
+SelectID.propTypes = {
+    dialogName: PropTypes.string, // where to store settings in localStorage
+    classes: PropTypes.object,
+    onClose: PropTypes.func,
+    notEditable: PropTypes.bool,
+    onOk: PropTypes.func.isRequired,
+    title: PropTypes.string,
+    lang: PropTypes.string,
+    foldersFirst: PropTypes.bool,
+    selected: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.array
+    ]),
+    customFilter: PropTypes.object, // optional {common: {custom: true}} or {common: {custom: 'sql.0'}}
+    statesOnly: PropTypes.bool,
+    socket: PropTypes.object.isRequired,
+    cancel: PropTypes.string,
+    imagePrefix: PropTypes.string,
+    ok: PropTypes.string,
+    themeName: PropTypes.string,
+    themeType: PropTypes.string,
+    showExpertButton: PropTypes.bool,
+    multiSelect: PropTypes.bool,
+    types: PropTypes.array,   // optional ['state', 'instance', 'channel']
+    columns: PropTypes.array, // optional ['name', 'type', 'role', 'room', 'func', 'val', 'buttons']
+};
+
+/** @type {typeof SelectID} */
+const _export = withStyles(styles)(SelectID);
+export default _export;
