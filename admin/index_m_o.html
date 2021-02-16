@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
+    <script>
+      const script = document.createElement("script");
+      window.registerSocketOnLoad = function (o) {
+        window.socketLoadedHandler = o;
+      };
+      script.onload = () => {
+        "function" == typeof window.socketLoadedHandler && window.socketLoadedHandler();
+      };
+      script.src = "http://cslstretch:8081/socket.io/socket.io.js";
+      document.head.appendChild(script);
+    </script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <!-- load compiled React scripts -->
+    <script type="text/javascript" src="build/index.jsx"></script>
+  </body>
+</html>

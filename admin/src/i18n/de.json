@@ -5,7 +5,7 @@
   "delete table row": "Tabellenzeile löschen",
   "Time": "Zeit",
   "key": "Schlüssel",
-  "copyToClipboadS": "Ins Clipboard kopieren %s {0}",
+  "copyToClipboard": "Ins Clipboard kopieren %s {0}",
   "Open Readme": "Readme-Datei Öffnen",
   "ra_Save Config": "in Datei speichern",
   "ra_Load Config": "lade Konfiguration",
@@ -14,5 +14,9 @@
   "rt_Saveconfig": "Speichere Konfiguration in ioBroker",
   "backupConfig": "Backup Konfiguratuion in Datei",
   "restoreConfig": "Konfiguration aus Datei laden",
-  "cannotParseNative": "Kann config-Datei nicht verstehen: %s"
+  "cannotParseNative": "Kann config-Datei nicht verstehen: %s",
+  "ra_Save": "Speichern",
+  "ttSaveClose": "speichere Konfiguration und gehe zurück zu Admin",
+  "raSaveclose": "Speichern und Schließen",
+  "dcancel": "Abbruch"
 }

@@ -13,38 +13,6 @@ import I18n from "@iobroker/adapter-react/i18n";
 /**
  * @type {() => Record<string, import("@material-ui/core/styles/withStyles").CreateCSSProperties>}
  */
-const styles = () => ({
-  input: {
-    marginTop: 0,
-    minWidth: 400,
-  },
-  button: {
-    marginRight: 20,
-  },
-  card: {
-    maxWidth: 345,
-    textAlign: "center",
-  },
-  media: {
-    height: 180,
-  },
-  column: {
-    display: "inline-block",
-    verticalAlign: "top",
-    marginRight: 20,
-  },
-  columnLogo: {
-    width: 350,
-    marginRight: 0,
-  },
-  columnSettings: {
-    width: "calc(100% - 370px)",
-  },
-  controlElement: {
-    //background: "#d2d2d2",
-    marginBottom: 5,
-  },
-});
 
 
 /**

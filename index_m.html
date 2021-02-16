@@ -1,16 +1,68 @@
 <html>
   <head>
-    <!-- Load ioBroker scripts and styles-->
+    <!-- Load ioBroker scripts and styles
     <link rel="stylesheet" type="text/css" href="../../css/adapter.css" />
-    <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
 
-    <!-- Load our own files -->
-    <link rel="stylesheet" type="text/css" href="style.css" />
-    <!--    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />  
- -->
-    <link rel="stylesheet" href="./node_modules/material-icons/iconfont/material-icons.css" />
+    <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
     <script>
-        console.log("window", window.location)
+      window.registerSocketOnLoad = function (o) {
+        window.socketLoadedHandler = o;
+      };
+      const script = document.createElement("script");
+      script.onload = () => {
+        "function" == typeof window.socketLoadedHandler && window.socketLoadedHandler();
+      };
+      const location = Object.assign({}, window.location);
+      console.log(window.location);
+      if (location.protocol == "file:") location.protocol = "http:";
+      const port = location.port || "8081";
+      location.hostname = location.hostname || "cslstretch";
+      location.host = location.host || location.hostname + port ? ":" + port : "";
+      location.port = port;
+      window.myLocation = location;
+      script.src = `${location.protocol}//${location.host}/socket.io/socket.io.js`;
+      window.socketUrl = location.host;
+      document.head.appendChild(script);
+      console.log(location);
+    </script>
+-->
+    <!-- Load our own files -->
+    <!--        <link rel="stylesheet" type="text/css" href="./admin/style.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />  
+    <link rel="stylesheet" href="./node_modules/material-icons/iconfont/material-icons.css" />
+ -->
+    <script>
+      window.registerSocketOnLoad = function (o) {
+        window.socketLoadedHandler = o;
+      };
+      const script = document.createElement("script");
+      script.type = "text/javascript";
+      script.onload = () => {
+        "function" == typeof window.socketLoadedHandler && window.socketLoadedHandler();
+      };
+      const olocation = {};
+      const dport = "8081";
+      const dhostname = "cslstretch";
+      const dadapterName = "broadlink2";
+      const dprotocol = "http:";
+      const dinstance = "0";
+      Object.keys(window.location).map((i) => {
+        if (window.location.hasOwnProperty(i)) olocation[i] = window.location[i];
+      });
+
+      let protocol = olocation.protocol == "file:" ? dprotocol : olocation.protocol;
+      let port = olocation.port || "1234";
+      let isDev = port == "1234";
+      let hostname = isDev ? dhostname : olocation.hostname || "localhost";
+      port = isDev ? dport : port;
+      let host = hostname + ":" + port;
+      window.myLocation = { port, hostname, host, protocol, search: olocation.search, olocation };
+      if (isDev) window.myLocation.adapterName = dadapterName;
+
+      script.src = `${protocol}//${host}/socket.io/socket.io.js`;
+      window.socketUrl = host;
+      document.head.appendChild(script);
+      console.log(window.location, window.myLocation, script.src);
     </script>
   </head>
 

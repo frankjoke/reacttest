@@ -13,9 +13,9 @@ import IconClose from '@material-ui/icons/Close';
 
 import printPrompt from './Prompt';
 import theme from './Theme';
-import Loader from './Components/Loader';
-import Router from './Components/Router';
-import Utils from './Components/Utils';
+import Loader from './components/Loader';
+import Router from './components/Router';
+import Utils from './components/Utils';
 import I18n from './i18n';
 
 import './index.css';

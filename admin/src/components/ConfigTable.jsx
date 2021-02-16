@@ -1,6 +1,7 @@
 import React from "react";
-import { withStyles, makeStyles } from "@material-ui/core/styles";
-import { Iob, splitProps, defaultProps, t, isPartOf, logSnackbar } from "./Iob";
+//import { withStyles, makeStyles } from "@material-ui/core/styles";
+import { IButton, TButton, IDialog } from "./UiComponents";
+import { Iob, t } from "./Iob";
 import {
   Icon,
   AppBar,
@@ -23,9 +24,16 @@ import { restore } from "sinon";
 class ConfigTable extends React.Component {
   constructor(props) {
     super(props);
-    const { rest, split } = splitProps(props, "pageSize|height|width|rows|columns");
-    const { rows, columns, ...psplit } = split;
-    this.state = defaultProps(psplit, { heigth: 500, pageSize: 5, width: "100%", page: 0 });
+    const {
+      pageSize = 5,
+      heigth = 500,
+      width = "100%",
+      rows,
+      columns,
+      folded = false,
+      ...rest
+    } = props;
+    this.state = { heigth, pageSize, width, page: 0, folded };
   }
 
   /*   static getDerivedStateFromProps(props, state) {
@@ -45,10 +53,9 @@ class ConfigTable extends React.Component {
 
   render() {
     const { columns = [], rows = [] } = this.props;
-    const { icon, label, ...rest } = this.props.item;
-    const key = this.getKey();
-    const drest = defaultProps(rest, { size: "small", key });
-    const { width, height } = this.state;
+    const { icon, label, size = "small", key = this.getKey(), ...rest } = this.props.item;
+    const drest = { size, key, ...rest };
+    const { width, height, folded } = this.state;
     //    console.log("chips:", sel, items);
     const sw = (
       <div style={{ width, height }}>
@@ -61,31 +68,39 @@ class ConfigTable extends React.Component {
               </Typography>
             )}
             <div style={{ flexGrow: 1 }} />
-            <Iob.TButton
+            <TButton
               icon="add"
-              label={t("add item to %s", label)}
+              label={t("add new entry to {0}", label)}
               color="inherit"
+              tooltip={t("add new line item to {0}", label)}
+              disabled={folded}
               onClick={this.addRow}
-            ></Iob.TButton>
+            ></TButton>
+            <TButton
+              icon={folded ? "keyboard_arrow_down" : "keyboard_arrow_left"}
+              tooltip={t("fold/unfold data")}
+              color="inherit"
+              onClick={(e) => this.setState({ folded: !folded })}
+            ></TButton>
           </Toolbar>
         </AppBar>
-        {this.renderTable(drest, columns, rows, key)}
+        {!folded && this.renderTable(drest, columns, rows, key)}
       </div>
     );
     return sw;
   }
 
   renderTable(item, columns, rows = []) {
-    const { height, ...prest } = item;
-    const rest = defaultProps(prest, { rowsPerPage: 6 });
+    const { height, rowsPerPage = 6, ...prest } = item;
+    const rest = { ...prest, rowsPerPage };
     const dstyle = { width: "100%" };
     if (height) dstyle.height = height;
     const { pageSize, page } = this.state;
     return (
       <Paper variant="outlined">
         <TableContainer style={dstyle}>
-          <Table aria-label={this.props.label+" table"}>
-            <TableHead style={{backgroundColor:"gainsboro"}}>
+          <Table aria-label={this.props.label + " table"}>
+            <TableHead style={{ backgroundColor: "gainsboro" }}>
               <TableRow size="small">
                 {columns.map((c, i) => (
                   <TableCell
@@ -96,9 +111,11 @@ class ConfigTable extends React.Component {
                     align={c.align || "left"}
                     variant="head"
                     size="small"
-                    style={{padding: "0px 4px"}}
+                    style={{ padding: "0px 4px" }}
                   >
-                    <Typography variant="subtitle1"><strong>{c.headerName}</strong></Typography>
+                    <Typography variant="subtitle1">
+                      <strong>{c.headerName}</strong>
+                    </Typography>
                   </TableCell>
                 ))}
                 <TableCell
@@ -119,9 +136,17 @@ class ConfigTable extends React.Component {
                     {columns.map((c, ci) => {
                       const rri = page * pageSize + ri;
                       const key = this.getKey(`r${rri}c${ci}`);
-                      const { headerName, sortable, align, defaultValue, ...icitem } = c;
+                      const {
+                        headerName,
+                        sortable,
+                        align,
+                        defaultValue,
+                        size = "small",
+                        margin = "none",
+                        ...icitem
+                      } = c;
                       delete icitem.class;
-                      const citem = defaultProps(icitem, { size: "small", margin: "none" });
+                      const citem = { ...icitem, size, margin };
                       return (
                         <TableCell
                           key={key}
@@ -129,14 +154,13 @@ class ConfigTable extends React.Component {
                           scope="row"
                           size="small"
                           align={c.align || "left"}
-                          style={{padding: "0px 2px"}}
+                          style={{ padding: "0px 2px" }}
                         >
                           <ConfigItem
                             item={citem}
                             index={key}
                             table={rows}
-                            app={this.props.app}
-                            attr={`${this.props.attr}.${rri}.${c.field || '$undefined'}`}
+                            attr={`${this.props.attr}.${rri}.${c.field || "$undefined"}`}
                             field={c.field}
                             inative={row}
                             settings={this.props.settings}
@@ -149,11 +173,18 @@ class ConfigTable extends React.Component {
                       );
                     })}
                     <TableCell align="center" padding="none">
-                      <Iob.IButton
+                      <IButton
                         color="error"
                         tooltip={t("delete table row")}
                         icon="delete_forever"
-                        onClick={(e) => this.deleteRow(ri)}
+                        onClick={(e) => {
+                          console.log(e, row);
+                          Iob.getDialog({
+                            type: "deleteTableEntry",
+                            text: t("Delete row with item '{0}'", row.name),
+                          }).then((r) => (r ? this.deleteRow(ri) : null));
+                          //                Iob.logSnackbar("warning;rename not implemented '{0}'", row);
+                        }}
                       />
                     </TableCell>
                   </TableRow>
@@ -171,6 +202,19 @@ class ConfigTable extends React.Component {
           onChangePage={this.handleChangePage}
           onChangeRowsPerPage={this.handleChangeRowsPerPage}
         />
+        <IDialog
+          type="deleteTableEntry"
+          options={{
+            title: t("delete table row"),
+            cancelIcon: "close",
+            cancelColor: "primary",
+            cancelLabel: t("dcancel"),
+            okIcon: "done",
+            okLabel: t("ok"),
+            okColor: "secondary",
+            okTooltip: t("click here to accept to delete"),
+          }}
+        />
       </Paper>
     );
   }
@@ -185,12 +229,9 @@ class ConfigTable extends React.Component {
 
   deleteRow = (index) => {
     const { page, pageSize } = this.state;
-    const { attr, rows = [] } = this.props;
+    const { attr, rows = [], onUpdateValue } = this.props;
     const item = index + page * pageSize;
-    Iob.setStore.updateInativeValue({
-      attr,
-      value: rows.slice(0, item).concat(rows.slice(item + 1)),
-    });
+    onUpdateValue(attr, rows.slice(0, item).concat(rows.slice(item + 1)));
     const len = rows.length - 1;
     if (pageSize) {
       let npage = Math.floor(len / pageSize);
@@ -201,7 +242,7 @@ class ConfigTable extends React.Component {
 
   addRow = () => {
     const newItem = {};
-    const { attr, rows = [], columns } = this.props;
+    const { attr, rows = [], columns, onUpdateValue } = this.props;
     const { page, pageSize } = this.state;
     columns.map((i) => {
       const def = i.defaultValue;
@@ -233,10 +274,7 @@ class ConfigTable extends React.Component {
     });
     const nrows = rows.concat(newItem);
     const len = nrows.length;
-    Iob.setStore.updateInativeValue({
-      attr,
-      value: nrows,
-    });
+    onUpdateValue(attr, nrows);
     if (pageSize) {
       let npage = Math.floor(len / pageSize);
       if (len % pageSize == 0) npage--;

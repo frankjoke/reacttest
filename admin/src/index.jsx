@@ -2,11 +2,15 @@ import React from "react";
 import "material-icons/iconfont/material-icons.css";
 import ReactDOM from "react-dom";
 import { MuiThemeProvider } from "@material-ui/core/styles";
-import theme from "@iobroker/adapter-react/Theme";
-import Utils from "@iobroker/adapter-react/Components/Utils";
 import App from "./app";
 import store from "./store/ioBroker";
-import { SnackbarProvider , useSnackbar} from "notistack";
+import { SnackbarProvider, useSnackbar } from "notistack";
+import Iob from "./components/Iob";
+import { Icon, IconButton } from '@material-ui/core';
+import { Provider } from "react-redux";
+import "material-icons/iconfont/material-icons.css";
+import "../style.css";
+import conf from "../assets/config.js";
 
 store.$snackbarProvider = {
   enqueueSnackbar: (message, opts) =>
@@ -15,39 +19,39 @@ store.$snackbarProvider = {
   closeSnackbar: (message, opts) => console.log("closeSnackbar not defined yet!", message, opts),
 };
 
-
 function MySnackbar() {
   store.$snackbarProvider = useSnackbar();
   return null;
 }
 
-
-import { Provider } from "react-redux";
 //import Iob from "./components/Iob";
 //import 'overlayscrollbars/css/OverlayScrollbars.css';
-let themeName = Utils.getThemeName();
-
-
 function build() {
   ReactDOM.render(
-    <MuiThemeProvider theme={theme(themeName)}>
-      <SnackbarProvider
-        maxSnack={6}
-        dense
-        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
-      >
-        <MySnackbar />
-        <Provider store={store}>
+    <SnackbarProvider
+      maxSnack={6}
+      dense
+      anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
+      autoHideDuration={6000}
+      action={(key) => (
+        <IconButton color="inherit" onClick={() => Iob.closeSnackbar(key)}>
+          <Icon>close</Icon>
+        </IconButton>
+      )}
+    >
+      <MySnackbar />
+      <Provider store={store}>
+        <MuiThemeProvider theme={Iob.getTheme}>
           <App
-            socket={{ port: window.location.port == 1234 ? 8181 : window.location.port  }}
+            socket={{ port: window.location.port == 1234 ? 8181 : window.location.port }}
             onThemeChange={(_theme) => {
-              themeName = _theme || themeName;
-              build();
+              Iob.createTheme(_theme || Iob.getStore.themeName);
+              //              build();
             }}
           />
-        </Provider>
-      </SnackbarProvider>
-    </MuiThemeProvider>,
+        </MuiThemeProvider>
+      </Provider>
+    </SnackbarProvider>,
     document.getElementById("root")
   );
 }

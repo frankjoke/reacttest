@@ -3,14 +3,12 @@ import { withStyles, makeStyles } from "@material-ui/core/styles";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
 //import InputChips from "./InputChips";
 //import ChipInput from "material-ui-chip-input";
-import { Iob, styles, t, splitProps, defaultProps, isPartOf, connect } from "./Iob";
+import { styles, TButton, AutocompleteSelect, AddTooltip2 } from "./UiComponents";
+import { Iob, t, connect } from "./Iob";
 import {
-  Avatar,
   AppBar,
   Toolbar,
   Typography,
-  TextField,
-  InputAdornment,
   Paper,
   Icon,
   Table,
@@ -20,8 +18,12 @@ import {
   TableCell,
   TableRow,
   TablePagination,
+  TextField,
   InputBase,
+  Select,
+  MenuItem,
 } from "@material-ui/core";
+import ConfigList from "./ConfigList";
 //import { config } from "chai";
 //import { isNotEmittedStatement } from "typescript";
 
@@ -44,28 +46,36 @@ class ConfigLog extends React.Component {
   constructor(props) {
     super(props);
     this.classes = props.classes;
-    const { items, split } = splitProps(props.item, "pageSize|height|width|rowHeight|itype");
-    this.state = defaultProps(split, {
-      heigth: 200,
-      pageSize: 25,
-      width: "100%",
-      rowHeight: 32,
+    const {
+      pageSize = 25,
+      heigth = 200,
+      width = "100%",
+      rowHeight = 32,
+      itype,
+      folded = false,
+      ...items
+    } = props.item;
+    this.state = {
+      heigth,
+      pageSize,
+      width,
+      rowHeight,
       items,
       adapterLog: props.adapterLog,
       page: 0,
       columns: [
-        { headerName: t("Time"), field: "tss", headerName: "Time", width: 140 },
+        { headerName: t("Time"), field: "tss", headerName: "Time", width: "10%" },
         {
           headerName: t("Severity"),
           field: "severity",
           headerName: "Severity",
-          width: 60,
+          width: "7%",
           align: "center",
         },
-        { headerName: t("Message"), field: "message", headerName: "Message", width: 900 },
+        { headerName: t("Message"), field: "message", headerName: "Message", width: "83%" },
       ],
       ...ConfigLog._updateFilter("", props),
-    });
+    };
     //    const nconf = ConfigSettings.transformConfig(props.configPage);
   }
 
@@ -108,12 +118,8 @@ class ConfigLog extends React.Component {
     this.handleChangePage(event, 0);
   };
 
-  updateFilter(filter) {
-    this.setState(ConfigLog._updateFilter(filter, this.props, this.state));
-  }
   renderTable(item, columns, rows = []) {
     //    const { height, ...prest } = item;
-    //    const rest = defaultProps(prest, { rowsPerPage: 6 });
     const dstyle = { width: "100%" };
     //    if (height) dstyle.height = height;
     const { pageSize, page } = this.state;
@@ -131,6 +137,7 @@ class ConfigLog extends React.Component {
                     align={c.align || "left"}
                     variant="head"
                     size="small"
+                    width={c.width}
                     style={{ padding: "0px 4px" }}
                   >
                     <Typography variant="subtitle1">
@@ -167,9 +174,17 @@ class ConfigLog extends React.Component {
                       {columns.map((c, ci) => {
                         const rri = page * pageSize + ri;
                         const key = `r${rri}c${ci}`;
-                        const { headerName, sortable, align, defaultValue, ...icitem } = c;
+                        const {
+                          headerName,
+                          sortable,
+                          align,
+                          defaultValue,
+                          size = "small",
+                          margin = "none",
+                          ...icitem
+                        } = c;
                         delete icitem.class;
-                        const citem = defaultProps(icitem, { size: "small", margin: "none" });
+                        const citem = { size, margin, ...icitem };
 
                         return (
                           <TableCell
@@ -218,7 +233,9 @@ class ConfigLog extends React.Component {
       totalLen,
       filteredLen,
       columns,
+      folded,
     } = this.state;
+    const { instanceConfig, adapterStatus, adapterInstance } = this.props;
     //    console.log("chips:", sel, items);
     const sw = (
       <div style={{ width, height, display: "flex", flexFlow: 1 }}>
@@ -226,27 +243,50 @@ class ConfigLog extends React.Component {
           <Toolbar variant="dense">
             <Icon>speaker_notes</Icon>
             <Typography variant="subtitle2" noWrap>
-              &nbsp;{t("Log from %s", this.props.adapterInstance)}
+              &nbsp;{t("{0} log", adapterInstance)}
             </Typography>
             <div style={{ flexGrow: 1 }} />
+            <AddTooltip2 tooltip={t("set the debug level within running adapter only!")}>
+              <Typography variant="subtitle2" noWrap>
+                &nbsp;{t("set log level:")}&nbsp;
+              </Typography>
+            </AddTooltip2>
+            <AutocompleteSelect
+              style={{ minWidth: 100 }}
+              color="inherit"
+              size="small"
+              options={"debug|info|warn|error|silly"}
+              disableClearable
+              disabled={!adapterStatus.alive}
+              value={Iob.getStateValue(".logLevel") || instanceConfig.common.loglevel}
+              onChange={(e, value) => Iob.setStateValue(".logLevel", value)}
+            />
+            <div style={{ flexGrow: 1 }} />
             <Icon style={{ paddingRight: "30px" }}>filter_alt</Icon>
-            <InputBase
+            <TextField
               value={filter}
               placeholder={t("Filter log report")}
-              onChange={(e) => this.updateFilter(e.target.value)}
+              onChange={(e) => ConfigList._updateFilter(e.target.value, this.props, this.state)}
             />
             <Typography variant="subtitle2" noWrap>
               &nbsp;{totalLen == filteredLen ? t("all") : filteredLen}&nbsp;{t("of")}&nbsp;
               {totalLen ? totalLen : t("none")}
             </Typography>
             <div style={{ flexGrow: 1 }} />
-            <Iob.TButton
+            <TButton
               icon="delete_sweep"
               label={t("Clear log")}
               tooltip={t("Clear adapter log and leave only last entry")}
+              disabled={folded}
               color="inherit"
               onClick={(e) => Iob.setStore.clearAdapterLog(1)}
-            ></Iob.TButton>
+            ></TButton>
+            <TButton
+              icon={folded ? "keyboard_arrow_down" : "keyboard_arrow_left"}
+              tooltip={t("fold/unfold data")}
+              color="inherit"
+              onClick={(e) => this.setState({ folded: !folded })}
+            ></TButton>
           </Toolbar>
         </AppBar>
       </div>
@@ -254,13 +294,13 @@ class ConfigLog extends React.Component {
     return (
       <React.Fragment>
         {sw}
-        {this.renderTable(items, columns, rowsFiltered)}
+        {!folded && this.renderTable(items, columns, rowsFiltered)}
       </React.Fragment>
     );
   }
 }
 
 export default connect((state) => {
-  const { adapterLog, adapterInstance } = state;
-  return { adapterLog, adapterInstance };
+  const { adapterLog, adapterInstance, adapterStatus, instanceConfig, adapterStates } = state;
+  return { adapterLog, adapterInstance, adapterStatus, instanceConfig, adapterStates };
 })(ConfigLog);

@@ -9,12 +9,13 @@
                     "icon": "translate",
                     "size": "large",
                     "color": "error",
-                    "onClick": "{Iob.logSnackbar('info;!copyToClipboadS %s', Iob.copyToClipboad(Iob.notFoundI18n));}",
+                    "onClick": "{Iob.logSnackbar('info;!copyToClipboard {0}', Iob.copyToClipboard(Iob.notFoundI18n));}",
                     "noGrid": true
                 }
             ]
         }
     ],
+    "encryptedFields": ["password"],
     "configTool": [
         {
             "icon": "settings",
@@ -41,7 +42,7 @@
                     "itype": "$password",
                     "hint": "password with minimal 5 letter length",
                     "rules": [
-                        "{return typeof $ === 'string' && $.length>=5 || t('should be at least 5 letters long!')}",
+                        "{return typeof $ === 'string' && $.length>=8 || t('should be at least 8 letters long!')}",
                         {
                             "regexp": "/((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^\\w\\s]).{8,40})/",
                             "message": "need to include one lower case, one upper case, one number and one special character at least 8 and maximal 40 characters long!"
@@ -55,12 +56,10 @@
                     "xl": 2
                 },
                 {
-                    "itype": "$vdivider"
-                },
-                {
                     "label": "Text Label",
                     "itype": "$text",
-                    "hideItem": "Iob.getStateValue('._NewDeviceScan')",
+                    "vdivider": "start",
+                    "hideItem": "return !!Iob.getStateValue('._NewDeviceScan')",
                     "text": "Text is this",
                     "html": [
                         "!not translated because it starts with !",
@@ -83,8 +82,8 @@
                     "icon": "translate",
                     "size": "large",
                     "color": "error",
-                    "tooltip": "This is a testicon, you may click on it and copy not implemented translations to clipboard :)",
-                    "onClick": "{Iob.logSnackbar('info;!copyToClipboadS %s', Iob.copyToClipboad(Iob.notFoundI18n));}",
+                    "tooltip": "This is a testicon, you may click on it and copy not implemented translations to clipboard",
+                    "onClick": "{Iob.logSnackbar('info;!copyToClipboard {0}', Iob.copyToClipboard(Iob.notFoundI18n));}",
                     "noGrid": true
                 },
                 {
@@ -93,22 +92,20 @@
                 {
                     "label": "Use specific interface",
                     "itype": "$select",
-                    "iselect": "{return props.settings.props.ipAddresses && props.settings.props.ipAddresses.map(i => ({value:i.address, label:i.name}))}",
+                    "iselect": "{return Iob.getStore.ipAddresses.map(i => ({value:i.address, label:i.name}))}",
                     "hint": "IP interface to use, default 0.0.0.0 for all",
                     "field": "interface",
                     "native": true,
                     "defaultValue": "0.0.0.0",
                     "multiple": false,
                     "prependIcon": "router",
-                    "cols": 6,
-                    "xl": 4
-                },
-                {
-                    "itype": "$vdivider"
+                    "cols": 5,
+                    "xl": 3
                 },
                 {
                     "label": "Define Unknown Type",
                     "itype": "$chips",
+                    "vdivider": "start",
                     "hint": "Add new device type like `0x12ab=RM4`",
                     "field": "new",
                     "prependIcon": "library_add",
@@ -118,9 +115,25 @@
                             "message": "Need to be something like 0x12ab=RMP"
                         }
                     ],
-                    "cols": 5,
+                    "cols": 4,
                     "convertOld": "stringToArrayComma",
                     "xl": 3
+                },
+                {
+                    "label": "encryptedFields",
+                    "itype": "$chips",
+                    "hint": "Enter field names which should be encrypted in config",
+                    "vdivider": "start",
+                    "field": "encryptedFields",
+                    "prependIcon": "enhanced_encryption",
+                    "rules": [
+                        {
+                            "regexp": "/^[_$\\w]+$/i",
+                            "message": "Need to be native field names"
+                        }
+                    ],
+                    "convertOld": "stringToArrayComma",
+                    "cols":2
                 },
                 {
                     "itype": "$divider"
@@ -160,16 +173,26 @@
                     "cols": 2
                 },
                 {
-                    "itype": "$vdivider"
+                    "label": "set running log level",
+                    "itype": "$select",
+                    "vdivider": "start",
+                    "field": "logLevel",
+                    "iselect": "||debug|info|warning|error|silly",
+                    "onClick": "{Iob.setStateValue('.logLevel', value)}",
+                    "convertOld": "Iob.getStateValue('.logLevel')",
+                    "hint":"change loglevel within running adapter",
+                    "prependIcon": "playlist_add_check",
+                    "defaultValue": "",
+                    "cols": 2
                 },
                 {
-                    "label": "set log level",
+                    "label": "set Adapter log",
                     "itype": "$select",
                     "field": "$undefined",
                     "iselect": "||debug|info|warning|error|silly",
-                    "onClick": "{Iob.setStateValue('.logLevel', event)}",
-                    "convertOld": "Iob.getStateValue('.logLevel')",
-                    "disabled": false,
+                    "onClick": "{Iob.connection.extendObject(Iob.getStore.instanceId,{common: {loglevel: value}});}",
+                    "convertOld": "Iob.getStore.instanceConfig.common.loglevel",
+                    "hint":"change loglevel for adapter - will restart adapter!",
                     "prependIcon": "playlist_add_check",
                     "defaultValue": "",
                     "cols": 2
@@ -179,7 +202,7 @@
                     "itype": "$button",
                     "tooltip": "Learn IR code on Broadlink RM4",
                     "field": "debug",
-                    "onClick": "{Iob.commandSend('setState','broadlink2.0.RM:RM4-4f-a8-08._Learn', true);Iob.logSnackbar('warning;set state %s','.RM:RM4-4f-a8-08._Learn');}",
+                    "onClick": "{Iob.commandSend('setState','broadlink2.0.RM:RM4-4f-a8-08._Learn', true);Iob.logSnackbar('warning;set state {0}','.RM:RM4-4f-a8-08._Learn');}",
                     "disabled": "!Iob.getStore.adapterStatus.alive",
                     "onStateChange": "{if (e.message.id.endsWith('.RM:RM4-4f-a8-08._Learn')) {Iob.logSnackbar('info;'+ (!!e.message.state.val ? 'Start learning now, plese press button on remote!' : 'finished learning'));} }",
                     "icon": "touch_app",
@@ -194,10 +217,21 @@
                     "cols": 1
                 },
                 {
+                    "label": "send sql.0",
+                    "itype": "$button",
+                    "field": "$undefined",
+                    "icon": "perm_data_setting",
+                    "onClick": "Iob.sendTo('sql.0', 'query','SELECT * FROM datapoints').then(x => Iob.logSnackbar(';!'+JSON.stringify(x) ))",
+                    "cols": 1
+                },
+                {
                     "label": "WifiLampe",
                     "itype": "$state",
-                    "name": ".SP:SP3S",
+                    "name": ".A1:EAIR1.AirQuality",
                     "cols": 1
+                },
+                {
+                    "itype": "$divider"
                 },
                 {
                     "label": "Device list",
@@ -260,7 +294,7 @@
                             "tooltip": "enable device poll",
                             "sortable": false,
                             "width": "3%",
-                            "convertOld": "(props.value || props.value===undefined)",
+                            "convertOld": "(this.props.value || this.props.value===undefined)",
                             "color": "primary"
                         },
                         {
@@ -269,7 +303,7 @@
                             "field": "$undefined",
                             "align": "center",
                             "ieval": "{this.state.value = Iob.getStateValue('.'+this.props.inative.name + '._notReachable')===false;}",
-                            "convertOld": "{return undefined; val = Iob.getStateValue('.'+props.inative.name + '._notReachable')===false; return val;}",
+                            "convertOld": "{return undefined; val = Iob.getStateValue('.'+this.props.inative.name + '._notReachable')===false; return val;}",
                             "sortable": false,
                             "width": "5%",
                             "disabled": true,
@@ -282,7 +316,8 @@
                             "ieval": "{items.name = '.'+this.props.inative.name;}",
                             "sortable": false,
                             "color": "secondary",
-                            "width": "10%"
+                            "width": "5%",
+                            "style": {"width": 100}
                         },
                         {
                             "headerName": "Info",
@@ -306,6 +341,7 @@
         {
             "label": "Scenes",
             "icon": "playlist_add",
+            "hideItem": "this.props.inative.debug",
             "tooltip": "Create and manage scenes or special actions",
             "spacing": 2,
             "items": [

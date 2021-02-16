@@ -7,7 +7,7 @@
   "Message": "Message",
   "Severity": "Severity",
   "key": "key",
-  "copyToClipboadS": "copy to clipboad %s",
+  "copyToClipboard": "copy to clipboad %s",
   "Open Readme": "Open Readme",
   "ra_Save Config": "Save config file",
   "ra_Load Config": "load config file",
@@ -16,5 +16,9 @@
   "rt_Saveconfig": "Save config to ioBroker",
   "backupConfig": "Backup config to file",
   "restoreConfig": "Restore config from file",
-  "cannotParseNative": "cannot parse native file: %s"
+  "cannotParseNative": "cannot parse native file: %s",
+  "ttSaveClose": "Save config and go back to admin",
+  "raSaveclose": "Save and close",
+  "ra_Save": "Save",
+  "dcancel": "cancel"
 }

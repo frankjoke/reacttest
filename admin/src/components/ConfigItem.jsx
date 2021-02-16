@@ -1,58 +1,65 @@
-import React from "react";
+import React, { useRef } from "react";
 //import { withStyles, makeStyles } from "@material-ui/core/styles";
 //import I18n from "@iobroker/adapter-react/i18n";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
-import { Iob, splitProps, defaultProps, t, isPartOf, connect, makeFunction } from "./Iob";
-import InputChips from "./InputChips";
+import { Iob, t, isPartOf, connect, makeFunction } from "./Iob";
+
+import {
+  InputField,
+  InputChips,
+  AddIcon,
+  AddTooltip,
+  IButton,
+  TButton,
+  HtmlComponent,
+  MakeDroppable,
+  MakeDraggable,
+  useSingleAndDoubleClick,
+  MyChip,
+  UButton,
+} from "./UiComponents";
 import ConfigTable from "./ConfigTable";
 import ConfigLog from "./ConfigLog";
+import StateBrowser from "./StateBrowser";
+import ObjectBrowser from "./ObjectBrowser";
+import ConfigList from "./ConfigList";
 import EditState from "./EditState";
+//import InputChips from "./InputChips";
 import {
   Typography,
   Checkbox,
   FormControl,
   InputLabel,
-  Select,
+  InputBase,
   FormControlLabel,
   FormHelperText,
   Switch,
   TextField,
   TextareaAutosize,
+  InputAdornment,
 } from "@material-ui/core";
 import Autocomplete, { createFilterOptions } from "@material-ui/lab/Autocomplete";
 //import { config } from "chai";
 //import { createSolutionBuilderWithWatch, isNoSubstitutionTemplateLiteral } from "typescript";
 //import { restore } from "sinon";
 //import { SIGTSTP } from "constants";
-
-class HtmlComponent extends React.Component {
-  constructor(props) {
-    super(props);
-    this.divRef = React.createRef();
-    const { html, ...rest } = props;
-    this.myHTML = html;
-    this.rest = rest;
-  }
-
-  componentDidMount() {
-    this.divRef.current.innerHTML = this.myHTML;
-  }
-
-  render() {
-    return <div ref={this.divRef} {...this.rest}></div>;
-  }
-}
+import { useDrag, useDrop } from "react-dnd";
+import { createStubInstance } from "sinon";
 
 class ConfigItem extends React.Component {
   constructor(props) {
     super(props);
+    this.classes = props.classes;
     this.events = {};
+    this.errorString="";
     this.state = this.createState(props);
-    this.error = false;
-    this.errorString = "";
+    this.onChangeFun = () => null;
     //    this.renderItem(this.state.item);
   }
 
+  get error() {
+    return this.errorString !== "";
+  }
   check() {
     return true;
   }
@@ -81,15 +88,17 @@ class ConfigItem extends React.Component {
       rules,
       ieval,
       iselect,
+      isOverProps,
       convertOld,
       changeItems,
       onStateChange,
       onObjectChange,
-      ...items
+      ...citems
     } = props.item;
-    const { onClick, onChange } = items;
+    let { canDropHere, dropAction, dropZone, ...items } = citems;
+    const { dragZone, onClick, onChange } = items;
     const that = this;
-
+    if (dropZone && !Array.isArray(dropZone)) dropZone = [dropZone];
     if (changeItems) {
       const commands = Array.isArray(changeItems) ? changeItems : [changeItems];
       for (const cmd of commands) {
@@ -98,49 +107,60 @@ class ConfigItem extends React.Component {
         try {
           res = fun(props.value, items, Iob);
         } catch (e) {
-          Iob.logSnackbar("error;changeItems error %s", e);
+          Iob.logSnackbar("error;changeItems error {0}", e);
         }
       }
     }
 
-    if (onStateChange) {
-      const commands = Array.isArray(onStateChange) ? onStateChange : [onStateChange];
+    function prepareOnChange(item, event, that) {
+      if (!item) return;
+      const commands = Array.isArray(item) ? item : [item];
       for (const cmd of commands) {
-        if (typeof cmd === "string") {
-          const fun = makeFunction(cmd, this, "e", "Iob");
-          const sfun = (ev) => {
-            let res = undefined;
-            try {
-              res = fun(ev, Iob);
-            } catch (e) {
-              Iob.logSnackbar("error;onStateChange error %s", e);
-            }
-            return res;
-          };
-          this.subscribeEvent("stateChange", sfun);
-          //          console.log("subscribeStateCHange", this.getKey(), cmd);
+        let fun;
+        if (typeof cmd === "string") fun = makeFunction(cmd, that, "e", "Iob");
+        else if (typeof cmd === "function") fun = cmd;
+        if (!fun) {
+          Iob.logSnackbar("warning;on{0} is not a string nor a function '{1}'", event, cmd);
+          continue;
         }
+        const sfun = (ev) => {
+          let res = undefined;
+          try {
+            res = fun(ev, Iob);
+          } catch (e) {
+            Iob.logSnackbar("error;on{0} error {1}", event, e);
+          }
+          return res;
+        };
+        that.subscribeEvent(event, sfun);
+        //          console.log("subscribeStateCHange", this.getKey(), cmd);
       }
     }
 
-    if (onObjectChange) {
-      const commands = Array.isArray(onStateChange) ? onStateChange : [onStateChange];
-      for (const cmd of commands) {
-        if (typeof cmd === "string") {
-          const fun = makeFunction(cmd, this, "e", "Iob");
-          const sfun = (ev) => {
-            let res = undefined;
-            try {
-              res = fun(ev, Iob);
-            } catch (e) {
-              Iob.logSnackbar("error;onObjectChange error %s", e);
-            }
-            return res;
-          };
-          this.subscribeEvent("objectChange", sfun);
-        }
+    function convertFun(item, name, that, dres) {
+      let fun;
+      if (typeof item === "string") fun = makeFunction(cmd, that, "e", "that", "Iob");
+      else if (typeof item === "function") fun = item;
+      if (!fun) {
+        Iob.logSnackbar("warning;{0} is not a string nor a function '{1}'", name, item);
+        return () => dres;
       }
+      return (ev) => {
+        let res = dres;
+        try {
+          res = fun(ev, that, Iob);
+        } catch (e) {
+          Iob.logSnackbar("error;{0} error {1}", name, e);
+        }
+        return res;
+      };
     }
+
+    prepareOnChange(onStateChange, "stateChange", this);
+    prepareOnChange(onObjectChange, "objectChange", this);
+
+    if (canDropHere) canDropHere = convertFun(canDropHere, "canDropHere", this, true);
+    if (dropAction) dropAction = convertFun(dropAction, "dropAction", this, true);
 
     function makeSel(sel, char) {
       const def = { value: "", label: "" };
@@ -154,20 +174,36 @@ class ConfigItem extends React.Component {
     }
 
     const state = { value: props.value };
-
-    if (onClick && typeof onClick !== "function") {
+    if (onClick) {
+      let fun;
       if (typeof onClick === "string") {
-        const fun = makeFunction(onClick, this, "event", "props", "Iob");
-        items.onClick = ((event) => {
+        try {
+          fun = makeFunction(onClick, this, "event", "value", "Iob");
+        } catch (e) {
+          Iob.logSnackbar(
+            "error;onClick create function error {0} in function generated from: {1}",
+            e.toString(),
+            onClick
+          );
+        }
+      } else if (typeof onClick === "function") fun = onClick;
+      else Iob.logSnackbar("error;onClick invalid function type: {0}", onClick);
+      if (fun) {
+        items.onClick = ((event, value) => {
           try {
-            fun(event, this.props, Iob);
+            fun(event, value, Iob);
           } catch (e) {
-            console.log(`onClick error ${e} in function generatied from: '${onClick}'`);
-            Iob.logSnackbar("error;onClick error %s in function generated from: %s", e, onClick);
+            //            console.log(`onClick error ${e} in function generatied from: '${onClick}'`);
+            Iob.logSnackbar(
+              "error;onClick error {0} in function generated from: {1}",
+              e.toString(),
+              onClick
+            );
           }
         }).bind(this);
       }
-    } //    const { items, split } = splitProps(pitems, "xs|xl|sm|md|lg"); //    if (!split.sm && cols) split.sm = cols; //    if (!split.sm) split.sm = 3;
+    }
+
     if (convertOld) {
       const fun =
         typeof convertOld !== "function"
@@ -177,13 +213,12 @@ class ConfigItem extends React.Component {
       try {
         res = fun(state.value, props, Iob);
       } catch (e) {
-        Iob.logSnackbar("error;convertOld error %s", e);
+        Iob.logSnackbar("error;convertOld error {0}", e.toString());
       }
       if (res !== null && res !== undefined && res !== state.value) {
         state.value = res;
         //        console.log("convertOld:", this.props.attr, props.value, res);
-        if (props.field !== "$undefined")
-          Iob.setStore.updateInativeValue({ attr: this.props.attr, value: res });
+        if (props.field !== "$undefined") this.props.onUpdateValue(this.props.attr, res);
       }
       //          Iob.setStore.updateInativeValue({ attr: this.props.attr, value:res });
     }
@@ -206,8 +241,11 @@ class ConfigItem extends React.Component {
           }
         } else sel = makeSel(sel, ";");
         state.iselect = sel;
+      } else if (typeof sel === "function") {
+        state.iselect = sel.bind(this)(state.value, this.props, Iob);
       }
-    } else if (sel) state.iselect = [sel];
+    } else if (Array.isArray(sel)) state.iselect = sel;
+    else if (sel) state.iselect = [sel];
 
     if (ieval) {
       state.ieval = (Array.isArray(ieval) ? ieval : [ieval]).map((ei) =>
@@ -216,10 +254,11 @@ class ConfigItem extends React.Component {
     }
 
     if (rules) {
-      //    if (state.ieval)
-      //      state.ieval(state.item, props.inative);
       const values = (Array.isArray(rules) && rules) || (rules && [rules]) || null;
-      if (values) state.rules = values.map((i) => makeFunction(i, that, "$", "t"));
+      if (values)
+        state.rules = values.map((i) =>
+          typeof i === "function" ? i.bind(that) : makeFunction(i, that, "$", "t")
+        );
     }
 
     //    console.log(this.getKey(), Iob.type(this.props.value));
@@ -228,6 +267,11 @@ class ConfigItem extends React.Component {
       item: { ...items },
       field,
       itype: items.itype.trim(),
+      dropZone,
+      dragZone,
+      dropAction,
+      canDropHere,
+      isOverProps,
       ...state,
     };
   }
@@ -243,28 +287,45 @@ class ConfigItem extends React.Component {
   }
 
   setErr(err) {
-    this.error = !!err;
-    this.errorString = this.error ? err : "";
+    const errorString = this.errorString;
+    const iserr = err !== true && err !== "";
+    const errstr = iserr ? err : "";
     //    this.setState({errorString: this.errorString});
-    return this.errorString;
+    if (errorString !== errstr) {
+//      console.log(this, errstr, iserr, errorString);
+      this.errorString = errstr;
+      //      this.setState({ errorString: errstr, error:iserr });
+      setTimeout(this.forceUpdate.bind(this), 10);
+    }
+    return errstr;
   }
 
   getKey(index) {
     return this.props.index + (index !== undefined ? `/${index}` : "");
   }
 
-  checkRules(value) {
+  testRules(value) {
     const rules = this.state.rules;
-    if (!rules) return false;
+    let check = true;
+    if (!rules) return true;
     try {
       for (const rule of rules) {
-        const check = rule(value, t);
-        if (check !== true) return this.setErr(check);
+        check = rule(value, t, this, Iob);
+        if (check !== true) break;
       }
     } catch (e) {
       console.log("error in check rules:", e);
+      return e.toString();
     }
-    return this.setErr("");
+    return check;
+  }
+
+  checkRules(value) {
+    const { rules } = this.state;
+    const check = this.testRules(value);
+//    if (this.errorString) console.log("checkRules", value, check, this.error, this.errorString);
+    this.setErr(check);
+    return check;
   }
 
   uniqueTableRule(val) {
@@ -276,116 +337,55 @@ class ConfigItem extends React.Component {
     return found.length <= 1 || this.t("This item can only be once per table in this field!");
   }
 
-  onChangeValue(value, e) {
+  doChangeValue(value, e) {
     if (this.check(value)) value = this.change(value);
-        console.log(value, this.state.ovalue, this.props.attr, this.errorString);
+    //    console.log(value, this.props.attr, `'${this.errorString}'`);
     this.setState({ value });
-    if (this.state.item.onClick) this.state.item.onClick(value, this.props, Iob);
-    if (this.props.field !== "$undefined")
-      Iob.setStore.updateInativeValue({ attr: this.props.attr, value });
-  }
-
-  onChangeEvent(event) {
-    this.onChangeValue(event.target.value, event);
-  }
-
-  /*   componentDidMount() {
-    console.log("componentDidMount:", this.getKey(), this.state);
-  }
- */
-  /* 
-    <div v-if="cToolItem.label" v-text="cToolItem.label" class="subtitle-2" />
-    <div
-      v-if="Array.isArray(cToolItem.text)"
-      v-html="cToolItem.text.join('<br>')"
-      class="caption"
-    />
-    */
-
-  stringToArrayComma(value = []) {
-    //    const { value } = this.props;
-    const res = this.stringToArray(value);
-    //    console.log("stringToArray", value, res);
-    return res;
-  }
-
-  stringToArray(val, what = ",") {
-    if (typeof val !== "string") return val;
-    const ret = val.split(what).map((i) => i.trim());
-    if (ret.length == 1 && !ret[0]) ret.splice(0, 1);
-    //    console.log(val, ret);
-    return ret;
-  }
-
-  uniqueTableRule(val, ...args) {
-    console.log("uniqueTableRule", val, ...args);
-    const { table, field } = this.props;
-    if (!table || !field) return true;
-    const v = ("" + val).trim();
-    const found = table.filter((i) => ("" + i[field]).trim() == v);
-    return found.length < 1 || t("This item can only be once per table in this field!");
-  }
-
-  onlyWords(val) {
-    if (Array.isArray(val)) val = val[0];
-    //      debugger;
-    return (
-      !!val.match(/^[\u00C0-\u017Fa-zA-Z0-9_\-\@\$\/]+$/) ||
-      t("Only letters, numbers and `_ - @ $ /` are allowed!")
-    );
+    //    debugger;
+    if (typeof this.state.item.onClick === "function") this.state.item.onClick(e, value, Iob);
+    if (this.props.field !== "$undefined" && this.props.onUpdateValue)
+      this.props.onUpdateValue(this.props.attr, value);
   }
 
   $text(item) {
-    const { items, split } = splitProps(item, "label|text|html");
+    let { label, text, html, ...items } = item;
     const { value } = this.state;
-    if (Array.isArray(split.text)) split.text = split.text.join("");
-    if (Array.isArray(split.html)) split.html = split.html.join("<br>");
-    if (!split.text && !split.html && !split.label && value !== undefined && value !== null)
-      split.text = value.toString();
-    return Object.keys(split).map((n, index) => {
-      switch (n) {
-        case "label":
-          return (
-            <Typography key={this.getKey(index)} {...items} variant={items.lvariant || "subtitle1"}>
-              {split.label}
-            </Typography>
-          );
-        case "text":
-          return (
-            <Typography key={this.getKey(index)} {...items}>
-              {split.text}
-            </Typography>
-          );
-        case "html":
-          return <HtmlComponent key={this.getKey(index)} {...items} html={split.html} />;
-        default:
-          return null;
-      }
-    });
+    if (Array.isArray(text)) text = text.join("");
+    if (Array.isArray(html)) html = html.join("<br>");
+    if (!text && !html && !label && value !== undefined && value !== null) text = value.toString();
+    let res = [];
+    if (label)
+      res.push(
+        <Typography key={this.getKey("l")} {...items} variant={items.lvariant || "subtitle1"}>
+          {label}
+        </Typography>
+      );
+    if (text)
+      res.push(
+        <Typography key={this.getKey("t")} {...items}>
+          {text}
+        </Typography>
+      );
+    if (html) res.push(<HtmlComponent key={this.getKey("h")} {...items} html={html} />);
+    return res;
   }
 
   $html(item) {
-    const { items, split } = splitProps(item, "label|text");
+    let { label, text, ...items } = item;
     const { value } = this.state;
     //    console.log("html:", split);
-    if (Array.isArray(split.text)) split.text = split.text.join("");
-    if (!split.text && !split.label && value !== undefined && value !== null)
-      split.text = value.toString();
-    return Object.keys(split).map((n, index) => {
-      switch (n) {
-        case "label":
-          return (
-            <Typography key={this.getKey(index)} {...items} variant={items.lvariant || "subtitle1"}>
-              {split.label}
-              <br />
-            </Typography>
-          );
-        case "text":
-          return <HtmlComponent key={this.getKey(index)} {...items} html={split.text} />;
-        default:
-          return null;
-      }
-    });
+    if (Array.isArray(text)) text = text.join("");
+    if (!text && !label && value !== undefined && value !== null) text = value.toString();
+    const res = [];
+    if (label)
+      res.push(
+        <Typography key={this.getKey("l")} {...items} variant={items.lvariant || "subtitle1"}>
+          {label}
+          <br />
+        </Typography>
+      );
+    if (text) res.push(<HtmlComponent key={this.getKey("t")} {...items} html={text} />);
+    return res;
   }
 
   $textarea(item) {
@@ -399,10 +399,10 @@ class ConfigItem extends React.Component {
       defaultValue,
       ...rest
     } = item;
-    const { value } = this.state;
+    const { value, errorString } = this.state;
     const key = this.getKey();
     const sw = (
-      <FormControl required /* className={classes.formControl} */>
+      <FormControl required error={!!this.errorString} /* className={classes.formControl} */>
         {label && (
           <InputLabel shrink required={required} htmlFor={key}>
             {label}
@@ -414,48 +414,69 @@ class ConfigItem extends React.Component {
           rowsMin={rowsMin}
           width="100%"
           value={typeof value === "string" ? value : (value && value.toString()) || ""}
-          onChange={(e) => this.onChangeEvent(e)}
+          onChange={(e) => this.doChangeValue(e.target.value, e)}
           {...rest}
         />
-        {hint || this.errorString ? (
-          <FormHelperText>{this.errorString || hint}</FormHelperText>
-        ) : null}
+        {hint || this.errorString ? <FormHelperText>{this.errorString || hint}</FormHelperText> : null}
       </FormControl>
     );
-    return Iob.AddIcon(prependIcon, sw);
+    return AddIcon(prependIcon, sw);
   }
 
   $switch(item) {
     this.change = (value) => !this.state.value;
-    const { tooltip, label, labelPlacement, prependIcon, ...rest } = item;
+    const {
+      tooltip,
+      label,
+      labelPlacement,
+      prependIcon,
+      size = "medium",
+      color = "primary",
+      ...items
+    } = item;
     const key = this.getKey();
-    const items = defaultProps(rest, { size: "medium", color: "primary", key });
     const sw = (
       <FormControlLabel
         control={
-          <Switch {...items} checked={!!this.state.value} onChange={(e) => this.onChangeEvent(e)} />
+          <Switch
+            key={key}
+            size={size}
+            color={color}
+            {...items}
+            checked={!!this.state.value}
+            onChange={(e) => this.doChangeValue(!this.state.value, e)}
+          />
         }
         label={label}
         labelPlacement={labelPlacement || "end"}
       />
     );
-    return Iob.AddTooltip(tooltip, Iob.AddIcon(prependIcon, sw));
+    return AddTooltip(tooltip, AddIcon(prependIcon, sw));
   }
 
   $checkbox(item) {
     this.change = (value) => !this.state.value;
-    const { tooltip, label, labelPlacement, prependIcon, ...rest } = item;
+    const {
+      tooltip,
+      label,
+      labelPlacement,
+      prependIcon,
+      size = "medium",
+      color = "primary",
+      ...items
+    } = item;
     const key = this.getKey();
-    const { color, ...items } = defaultProps(rest, { size: "medium", color: "primary", key });
     //    console.log("Color:", color);
     const sw = (
       <FormControlLabel
         control={
           <Checkbox
+            key={key}
+            size={size}
+            color={color}
             {...items}
             checked={!!this.state.value}
-            onChange={(e) => this.onChangeValue(!this.state.value)}
-            color={color}
+            onChange={(e) => this.doChangeValue(!this.state.value)}
           />
         }
         label={label}
@@ -463,7 +484,7 @@ class ConfigItem extends React.Component {
         color={color}
       />
     );
-    return Iob.AddTooltip(tooltip, Iob.AddIcon(prependIcon, sw));
+    return AddTooltip(tooltip, AddIcon(prependIcon, sw));
   }
 
   $select(item) {
@@ -474,106 +495,208 @@ class ConfigItem extends React.Component {
       hint,
       defaultValue,
       tooltip,
+      disabled,
+      margin = "none",
       fullWidth = true,
-      ...rest
+      size = "medium",
+      color = "primary",
+      ...items
     } = item;
     const key = this.getKey();
-    const items = defaultProps(rest, { size: "medium", color: "primary", key });
     const { iselect = [{ value: "", label: "...loading" }] } = this.state;
     const oselect = {};
-    iselect.map(i => oselect[i.value] = i.label)
+    iselect.map((i) => (oselect[i.value] = i.label));
     const value = this.state.value || "";
+    const helper = this.error ? this.errorString : hint ? hint : "";
     //    console.log("select:", `'${value}'`, key, iselect, items);
     const sw = (
-      <Autocomplete
-        value={value}
-        options={iselect}
-        id={key}
-        disableClearable
-        getOptionSelected ={(o, v) => o.value == v}
-        onChange= {(e, v) => this.onChangeValue(v.value, e)}
-        getOptionLabel={(option) => typeof option === "object" ? option.label : oselect[option]}
-        renderInput={(params) => (
-          <TextField {...params} label={label} size="small" />
-        )}
-      ></Autocomplete>
-      /*       <FormControl
-        required
-        fullWidth={fullWidth}
-        margin="dense"
-        hiddenLabel={!label}
-        size="small" 
-      >
-        {label && (
-          <InputLabel id={key + "-label"} shrink required={required} htmlFor={key}>
-            {label}
-          </InputLabel>
-        )}
-        <Select
-          labelId={key + "-label"}
-          id={key}
-          {...items}
-          value={value}
-          onChange={(e) => this.onChangeEvent(e)}
-          name={label}
-          inputProps={{ id: key }}
-        >
-          {iselect.map((i, index) => (
-            <option value={i.value} key={`_${index}_${i.label}_`}>
-              {i.label}
-            </option>
-          ))}
-        </Select>
-        {hint ? <FormHelperText>{hint}</FormHelperText> : null}
-      </FormControl>
- */
-    );
-    return Iob.AddIcon(prependIcon, Iob.AddTooltip(tooltip, sw));
-  }
-
-  $chips(item) {
-    const { prependIcon, hint, ...rest } = item;
-    const key = this.getKey();
-    const items = defaultProps(rest, { size: "medium", color: "primary", key });
-    let sel = this.state.value;
-    if (!Array.isArray(sel)) {
-      if (typeof sel === "string") {
-        sel = this.stringToArrayComma(sel);
-      } else sel = [];
-    }
-    //    console.log("chips:", sel, items);
-    const sw = (
-      <InputChips
-        helperText={this.error ? this.errorString : hint}
-        value={sel}
+      <FormControl
+        {...{ required, size, margin, disabled, fullWidth }}
+        hiddenLabel={true}
         error={this.error}
-        onAdd={(chip) => {
-          console.log("onAdd:", chip, this.checkRules(chip));
-          this.onChangeValue(this.state.value.concat(chip));
-        }}
-        onDelete={(label, index) => {
-          //          console.log("onDelete:", label, index, this.props.value);
-          let a = new Array(...this.state.value);
-          a.splice(index, 1);
-          this.onChangeValue(a);
-        }}
+      >
+        <Autocomplete
+          value={value}
+          options={iselect}
+          id={key}
+          key={key}
+          size={size}
+          color={color}
+          disabled={disabled}
+          disableClearable
+          getOptionSelected={(o, v) => o.value == v}
+          onChange={(e, v) => this.doChangeValue(v.value, e)}
+          getOptionLabel={(option) =>
+            typeof option === "object" ? option.label : oselect[option] || ""
+          }
+          renderInput={(params) => <TextField {...params} label={label} size="small" />}
+        ></Autocomplete>
+        {helper ? <FormHelperText>{helper}</FormHelperText> : null}
+      </FormControl>
+    );
+    return AddIcon(prependIcon, AddTooltip(tooltip, sw));
+  }
+  $chips(item) {
+    let {
+      prependIcon,
+      hint,
+      label,
+      size = "medium",
+      color = "primary",
+      placeholder = "",
+      canRearrange,
+      required,
+      freeSolo,
+      clickable,
+      disabled,
+      fullWidth = true,
+      margin = "none",
+      ...items
+    } = item;
+    const key = this.getKey();
+    let { value, iselect = [], dragZone, dropZone, itype, field } = this.state;
+    if (!Array.isArray(value)) {
+      if (typeof value === "string") {
+        value = Iob.stringToArrayComma(value);
+      } else value = [];
+    }
+
+    if (value.length) placeholder = "";
+    //    const helperText = errorString ? errorString : hint;
+    //    console.log(itype, field, dragZone, dropZone, value, iselect);
+    let sw = (
+      <InputField
+        {...{ required, size, margin, disabled, hint, fullWidth, label, disabled }}
+        //      hiddenLabel={!label}
+        errorString={this.errorString}
+        options={iselect}
+        dragZone={dragZone}
+        error={this.error}
+        onChange={(e) => this.doChangeValue(e.target.value)}
+        id={key}
+        type="chips"
+        value={value}
+        canRearrange={true}
         {...items}
       />
     );
-    return Iob.AddIcon(prependIcon, sw);
+    /*     let sw1 = (
+      <FormControl
+        {...{ required, size, margin, disabled }}
+        hiddenLabel={!label}
+        error={this.error}
+        fullWidth={fullWidth}
+      >
+        <Autocomplete
+          value={value}
+          multiple
+          id={key}
+          options={iselect}
+          freeSolo={freeSolo === false ? false : true}
+          renderTags={(value, getTagProps) =>
+            value.map(
+              (option, index) => (
+                <MyChip
+                  key={`${key}-${option}-${index}`}
+                  dropZone={dragZone}
+                  dragValue={{ value: option, dropped: option, index, that: this }}
+                  dragProps={{ style: { opacity: 0.5, cursor: "move" } }}
+                  dragTest={
+                    ({ dropZone, props, isDragging, dragHandle, dragValue }) => true
+                    //                console.log(`'${dropZone}'`, props, isDragging, dragHandle, dragValue)
+                  }
+                  onDoubleClick={(e) => clickable && this.onChangeFun(option)}
+                  onDelete={(e) =>
+                    this.doChangeValue(value.slice(0, index).concat(value.slice(index + 1)))
+                  }
+                  moveChip={(src, dst) => {
+                    let arr = Array.from(value);
+                    var element = arr[src];
+                    arr.splice(src, 1);
+                    arr.splice(dst, 0, element);
+                    this.doChangeValue(arr);
+                  }}
+                  //                  key={key + index}
+                  //            {...getTagProps(index)}
+                  clickable={clickable}
+                  index={index}
+                  label={option}
+                  size="small"
+                />
+              ),
+              this
+            )
+          }
+          renderInput={(params) => {
+            this.onChangeFun =
+              params.inputProps && params.inputProps.onChange
+                ? (v) => params.inputProps.onChange({ target: { value: v } })
+                : () => null;
+
+            return (
+              <TextField
+                {...params}
+                label={label}
+                onKeyUp={(e) => (e.key == "Escape" ? this.onChangeFun("") : null)}
+                fullWidth={fullWidth}
+                placeholder={placeholder}
+              />
+            );
+          }}
+          onChange={(e, v) => {
+            v.map((c) => this.checkRules(c));
+            this.doChangeValue(v, e);
+          }}
+        />
+        {helperText ? <FormHelperText>{helperText}</FormHelperText> : null}
+      </FormControl>
+    );
+ */ return AddIcon(
+      prependIcon,
+      sw
+    );
   }
 
   $table(item) {
+    const { value, settings, attr, onUpdateValue } = this.props;
     return (
       <ConfigTable
         index={this.getKey()}
         item={item}
-        app={this.props.app}
-        inative={this.props.value}
-        settings={this.props.settings}
-        attr={this.props.attr}
-        rows={this.props.value}
+        inative={value}
+        settings={settings}
+        attr={attr}
+        rows={value}
+        onUpdateValue={onUpdateValue}
         columns={item.items}
+        {...item}
+      />
+    );
+  }
+
+  $object(item) {
+    const { value, settings, attr, onUpdateValue } = this.props;
+    return (
+      <ConfigList
+        index={this.getKey()}
+        page={item}
+        inative={value || {}}
+        attr={attr}
+        onUpdateValue={onUpdateValue}
+        {...item}
+      />
+    );
+  }
+
+  $grid(item) {
+    const { inative, settings, attr, onUpdateValue } = this.props;
+    return (
+      <ConfigList
+        index={this.getKey()}
+        page={item}
+        inative={inative}
+        attr={attr}
+        onUpdateValue={onUpdateValue}
         {...item}
       />
     );
@@ -582,42 +705,37 @@ class ConfigItem extends React.Component {
   $icon(item) {
     //    this.change = (value) => !this.props.value;
     //    const { tooltip, label, ...rest } = item;
-    const key = this.getKey();
-    const items = defaultProps(item, { size: "medium", color: "primary", key });
-    return <Iob.IButton key={key} {...items} />;
+    const { size = "medium", color = "primary", key = this.getKey(), ...items } = item;
+    return <IButton key={key} size={size} color={color} {...items} />;
   }
 
   $button(item) {
     //    this.change = (value) => !this.props.value;
     //    const { tooltip, label, ...rest } = item;
-    const key = this.getKey();
-    const items = defaultProps(item, { size: "medium", color: "primary", key });
-    return <Iob.TButton key={key} {...items} />;
+    const { size = "small", color = "primary", key = this.getKey(), ...items } = item;
+    return <UButton key={key} keyId={key} size={size} color={color} {...items} />;
   }
 
   $password(item) {
     return this.$string(item, "password");
   }
 
-  $string(item, type) {
-    type = type || "text";
-    const { prependIcon, hint, __chackItem, defaultValue, ...drest } = item;
-    const rest = defaultProps(drest, {
-      size: "medium",
-      id: this.getKey(),
-    });
-    let value = this.state.value;
+  $string(item, type = "text") {
+    const key = this.getKey();
+    const { prependIcon, size = "medium", ...rest } = item;
+    let { value } = this.state;
+    //    console.log(key, value, errorString, error);
     if (value === null || value === undefined) value = "";
-    const inputProps = rest.inputProps || {};
-    if (hint || this.errorString) rest.helperText = this.error ? this.errorString : hint;
-    return Iob.AddIcon(
+    const props = { value, type, size };
+    return AddIcon(
       prependIcon,
-      <TextField
-        value={value}
+      <InputField
+        error={!!this.errorString}
+        errorString={this.errorString}
+        id={key}
+        {...props}
         {...rest}
-        error={this.error}
-        type={type}
-        onChange={(e) => this.onChangeEvent(e)}
+        onChange={(e) => this.doChangeValue(e.target.value, e)}
       />
     );
   }
@@ -626,45 +744,67 @@ class ConfigItem extends React.Component {
     return <ConfigLog item={this.state.item} />;
   }
 
+  $stateBrowser(item) {
+    const { inative, settings, attr, onUpdateValue } = this.props;
+    return (
+      <StateBrowser
+        item={this.state.item}
+        index={this.getKey()}
+        inative={inative}
+        attr={attr}
+        onUpdateValue={onUpdateValue}
+      />
+    );
+  }
+
   $number(item) {
+    //    console.log(item);
     let { min, max, fixed, zero, ...items } = item;
     min = typeof min === "number" ? min : Number.NEGATIVE_INFINITY;
     max = typeof max === "number" ? max : Number.POSITIVE_INFINITY;
     let value = this.state.value;
     this.check = (value) => {
-      this.error = false;
       let val = fixed ? parseInt(value) : parseFloat(value);
       if (typeof value !== "number") {
         if (val === NaN && !value) val = 0;
       }
       // console.log("number", value, val, item);
       if (val === NaN || val.toString() != value)
-        this.setErr(t(fixed ? "Not an integer: %s" : "Not a number: %s", `'${value}'`));
+        return this.setErr(t(fixed ? "Not an integer: {0}" : "Not a number: {0}", `'${value}'`));
       else if (!zero || val !== 0) {
-        if (val < min) this.setErr(t("value must not be smaller than %s!", min));
-        else if (val > max) this.setErr(t("value must not be bigger than %s!", max));
-        else if (fixed && parseFloat(value) != val) this.setErr(t("number need to be an integer!"));
+        if (val < min) return this.setErr(t("value must not be smaller than {0}!", min));
+        else if (val > max) return this.setErr(t("value must not be bigger than {0}!", max));
+        else if (fixed && parseFloat(value) != val)
+          return this.setErr(t("number need to be an integer!"));
       }
-      return !this.error;
+      return true;
     };
     this.change = (value) => (fixed ? parseInt(value) : parseFloat(value));
-    this.check(value);
+    this.setErr(this.check(value));
     return this.$string(items);
   }
 
   $state(item) {
     const { name, ...items } = item;
-    const key = this.getKey();
-    return <EditState item={items} fKey={key} name={name} />;
+    return <EditState item={items} iKey={this.getKey()} name={name} />;
   }
 
+  $objectBrowser(item) {
+    const { ...items} = item;
+    console.log(items);
+    return <ObjectBrowser 
+      value={this.state.value}
+      {...items}
+    />
+  }
   render() {
     //    if (!itemR) return itemR = this.state.item;
     //    console.log(this.props.index);
-    const { ieval, itype, item } = this.state;
+    const { ieval, itype, item, canDropHere, dropAction, dropZone, isOverProps } = this.state;
     const nitem = Object.assign({}, item);
     const { disabled } = nitem;
-    if (typeof disabled === "string")
+    if (typeof disabled === "function") nitem.disabled = disabled(this.props, Iob);
+    else if (typeof disabled === "string")
       try {
         const fun = Iob.makeFunction(disabled, this, "props", "Iob");
         const res = fun(this.props, Iob);
@@ -678,27 +818,43 @@ class ConfigItem extends React.Component {
         try {
           ei(this.state.value, nitem, Iob);
         } catch (e) {
-          Iob.logSnackbar("error;ieval error %s", e);
+          Iob.logSnackbar("error;ieval error {0}", e);
           console.log("ieval error:", e);
         }
 
-    if (
+    let sw =
       isPartOf(
         itype,
-        "$state|$text|$html|$number|$string|$password|$switch|$button|$checkbox|$select|$chips|$table|$textarea|$icon|$log"
-      ) &&
-      typeof this[itype] === "function"
-    )
-      return this[itype](nitem);
-    return <span>{this.props.index + ":" + JSON.stringify(nitem, null, 2)}</span>;
+        "$objectBrowser|$grid|$stateBrowser|$object|$state|$text|$html|$number|$string|$password|$switch|$button|$checkbox|$select|$chips|$table|$textarea|$icon|$log"
+      ) && typeof this[itype] === "function" ? (
+        this[itype](nitem)
+      ) : (
+        <span>{this.props.index + ":" + JSON.stringify(nitem, null, 2)}</span>
+      );
+    if (!dropZone) return sw;
+    return (
+      <MakeDroppable
+        dropZone={dropZone}
+        canDropHere={(e) => {
+//          console.log("canDrop", dropZone, e);
+          const test = canDropHere ? canDropHere(e, this, Iob) : this.testRules(e.value);
+          //            console.log(dropZone, e.value, test);
+          return test === true;
+        }}
+        dropAction={(e) => {
+          console.log("dropAction", dropZone, e);
+          if (dropAction) return dropAction(e, this, Iob);
+          const test = this.testRules(e.value);
+          test === true
+            ? this.doChangeValue(e.value, e)
+            : Iob.logSnackbar("warning;dropped Value '{0}' invalid because of {1}", e.value, test);
+        }}
+        isOverProps={isOverProps}
+      >
+        {sw}
+      </MakeDroppable>
+    );
   }
 }
 
-/* export default connect(
-  (state) => {
-    const { ...all } = state;
-    return { ...all };
-  }
-)(ConfigItem);
- */
 export default ConfigItem;

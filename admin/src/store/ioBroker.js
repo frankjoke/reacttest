@@ -3,7 +3,7 @@
 import {
   createSlice,
   configureStore,
-  createImmutableStateInvariantMiddleware,
+  //  createImmutableStateInvariantMiddleware,
 } from "@reduxjs/toolkit";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
@@ -11,30 +11,84 @@ import { bindActionCreators } from "redux";
 //import visibilityFilterReducer from 'features/filters/filtersSlice'
 
 //let nextTodoId = 0;
+myLocation = window.myLocation || window.location;
+//console.log(myLocation);
+const query = (myLocation.search || "").replace(/^\?/, "").replace(/#.*$/, "");
+const args = {};
+query
+  .trim()
+  .split("&")
+  .filter((t) => t.trim())
+  .forEach((b) => {
+    const parts = b.split("=");
+    args[parts[0]] = parts.length === 2 ? parts[1] : true;
+  });
 
+// extract instance from URL
+const instance =
+  args.instance !== undefined
+    ? parseInt(args.instance, 10) || 0
+    : parseInt(myLocation.search.slice(1), 10) || 0;
+// extract adapter name from URL
+const tmp = (myLocation.pathname || myLocation.olocation.pathname).split("/");
+const { host, port, adapterName = window.adapterName || tmp[tmp.length - 2] || "iot" } = myLocation;
+const instanceId = "system.adapter." + adapterName + "." + instance;
+
+//console.log(port, host, instance, adapterName);
 const ioBroker = createSlice({
   name: "ioBrokerAdapter",
   initialState: {
     configPage: {},
     systemConfig: {},
+    location: Object.assign({}, myLocation),
+    common: {},
     instanceConfig: {},
     ipAddresses: [
       { name: "[IPv4] 0.0.0.0 - Listen on all IPs", address: "0.0.0.0", family: "ipv4" },
     ],
-    adapterName: "",
+    adapterName,
+    instance,
+    instanceId,
     inative: null,
     inativeChanged: false,
     inativeOld: "",
-    adapterInstance: "iot.0",
+    adapterInstance: adapterName + "." + instance,
     adapterLog: [],
     serverName: "http://localhost",
-    displayLanguage: "en",
+    displayLanguage: window.sysLang || "en",
     adapterStates: {},
     adapterStatus: {},
     adapterObjects: {},
+    stateNames: {},
+    translations: {},
+    width: "xs",
+    narrowWidth: false,
+    theme: {},
+    themeName: window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "colored",
+    themeType: "",
+    loaded: false,
+    connected: false,
   },
   reducers: {
-    setadapterObjects(state, action) {
+    setThemeName(state, action) {
+      const themeName = action.payload;
+      state.themeName = themeName;
+      state.themeType = themeName === "dark" || themeName === "blue" ? "dark" : "light";
+    },
+
+    setLoaded(state, action) {
+      state.loaded = action.payload;
+    },
+
+    setConnected(state, action) {
+      state.connected = action.payload;
+    },
+
+    setTheme(state, action) {
+      state.theme = action.payload;
+    },
+
+    setAdapterObjects(state, action) {
       const mine = {};
       const objects = action.payload;
       for (const item of Object.keys(objects))
@@ -44,9 +98,32 @@ const ioBroker = createSlice({
 
     updateAdapterStates(state, action) {
       const states = Object.assign({}, state.adapterStates);
-      for (const ust of action.payload) states[ust.id] = ust.state;
+      const { adapterInstance, adapterObjects, adapterStates } = state;
+      for (const { id, state } of action.payload) {
+        if (!state) delete states[id];
+        else {
+          state._id = id;
+          if (id.startsWith(adapterInstance + ".") && state) {
+            const ido = adapterObjects[id];
+            if (ido && ido.common && ido.common.name) state._name = ido.common.name;
+          } else state._name = id.split(".").slice(2).join(".");
+          states[id] = state;
+        }
+      }
       state.adapterStates = states;
-      const sai = "system.adapter." + state.adapterInstance;
+      const stateNames = {};
+      for(const [key, value] of Object.entries(states)) 
+        if(value._name) {
+          const name = value._name;
+          const sname = stateNames[name]; 
+          if (sname)  {
+            if (Array.isArray(sname))
+              sname.push(key);
+            else stateNames[name] = [sname, key]
+          } else stateNames[name] = key;
+      }
+      state.stateNames = stateNames;
+      const sai = "system.adapter." + adapterInstance;
       let alive = state.adapterStates[sai + ".alive"];
       alive = alive && alive.val;
       let connected = state.adapterStates[sai + ".connected"];
@@ -71,46 +148,13 @@ const ioBroker = createSlice({
       }
       state.adapterObjects = objects;
     },
+
     updateInativeValue(state, action) {
-      const native = JSON.parse(JSON.stringify(state.inative));
-
-      function _updateNativeValue(obj, attrs, value) {
-        if (typeof attrs !== "object") {
-          attrs = attrs.split(".");
-        }
-        const attr = attrs.shift();
-        if (attr === "$undefined") return false;
-        if (!attrs.length) {
-          //          console.log(`UpdateLast ${attr} ${obj[attr]} ${value}`);
-          if (value !== undefined && value !==null && (typeof value === "object" || Array.isArray(value))) {
-            if (JSON.stringify(obj[attr]) !== JSON.stringify(value)) {
-              obj[attr] = value;
-              return true;
-            }
-          } else if (obj[attr] != value) {
-            obj[attr] = value;
-            return true;
-          } else {
-            return false;
-          }
-        } else {
-          obj[attr] = obj[attr] || {};
-          if (typeof obj[attr] !== "object" && !Array.isArray(obj[attr])) {
-            throw new Error("attribute " + attr + " is no object, but " + typeof obj[attr]);
-          }
-          return _updateNativeValue(obj[attr], attrs, value);
-        }
-      }
-
-      const { attr, value } = action.payload;
-
-      if (_updateNativeValue(native, attr, value)) {
-        const changed = state.inativeOld != JSON.stringify(native);
-//        console.log(`About to change ${attr} because of ${changed} to ${value}`)
-        //        this.setState({ native, changed }, cb);
-        state.inative = native;
-        state.inativeChanged = changed;
-      }
+      const changed = state.inativeOld != JSON.stringify(action.payload);
+      //        console.log(`About to change ${attr} because of ${changed} to ${value}`)
+      //        this.setState({ native, changed }, cb);
+      state.inative = action.payload;
+      state.inativeChanged = changed;
     },
 
     updateAdapterLog(state, action) {
@@ -140,7 +184,7 @@ const ioBroker = createSlice({
     setAdapterInstance(state, action) {
       state.adapterInstance = action.payload;
     },
-    setaDisplayLanguage(state, action) {
+    setDisplayLanguage(state, action) {
       state.displayLanguage = action.payload;
     },
     setInativeOld(state, action) {
@@ -152,13 +196,14 @@ const ioBroker = createSlice({
     setInative(state, action) {
       let { iNew, iOld } = action.payload;
       if (!iNew) iNew = action.payload;
-      if (!iOld) iOld=iNew;
+      if (!iOld) iOld = iNew;
       state.inative = iOld;
       state.inativeOld = JSON.stringify(iNew);
       state.inativeChanged = JSON.stringify(state.inative) != state.inativeOld;
     },
     setSystemConfig(state, action) {
       state.systemConfig = action.payload;
+      if (action.payload.common) state.common = action.payload.common;
     },
     setInstanceConfig(state, action) {
       state.instanceConfig = action.payload;
@@ -166,8 +211,19 @@ const ioBroker = createSlice({
     setIpAddresses(state, action) {
       state.ipAddresses = action.payload;
     },
+    setTranslations(state, action) {
+      state.translations = action.payload;
+    },
+    setWidth(state, action) {
+      const width = action.payload;
+      state.width = width;
+      state.narrowWidth = width == "xs" || width == "sm" || width == "md";
+    },
     setAdapterName(state, action) {
-      state.adapterName = action.payload;
+      const name = action.payload;
+      state.adapterName = name;
+      state.adapterInstance = name + "." + state.instance;
+      state.instanceId = "system.adapter." + state.adapterInstance;
     },
   },
 });
@@ -186,11 +242,12 @@ const store = configureStore({
           "configPage",
           "systemConfig",
           "instanceConfig",
+          "translations",
         ],
       },
     }),
 });
-//console.log("store", store);
+//console.log("store", store, ioBroker);
 export { ioBroker, connect, bindActionCreators };
 
 export default store;
