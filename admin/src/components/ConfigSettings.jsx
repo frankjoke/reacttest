@@ -2,6 +2,7 @@ import React from "react";
 import { withStyles } from "@material-ui/core/styles";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
 import ConfigList from "./ConfigList";
+import AdapterList from "./AdapterList";
 import { styles, AddTooltip, IButton, TButton, ScrollTop, UButton } from "./UiComponents";
 //import ChipInput from "material-ui-chip-input";
 import { Iob, t, logSnackbar } from "./Iob";
@@ -240,10 +241,11 @@ class ConfigSettings extends React.Component {
   }
   render() {
     const { tab, page, config } = this.state;
+    //    console.log(tab, page);
     if (!page || !page.items || !page.items.length) return null;
     const { inative } = this.props;
     let ti = 0;
-    const pi=[];
+    const pi = [];
     return (
       //      <div className={this.props.classes.tab}>
       <React.Fragment>
@@ -254,7 +256,7 @@ class ConfigSettings extends React.Component {
             <Tabs
               value={tab}
               onChange={(e, t) => {
-//                console.log(e, t);
+                //                console.log(e, t);
                 this.setState({ tab: t, page: this.state.config[pi[t]] });
               }}
               textColor="inherit"
@@ -275,7 +277,7 @@ class ConfigSettings extends React.Component {
                 else if (typeof hideItem === "boolean" && hideItem) return null;
                 else if (typeof hideItem === "function" && hideItem(this.props, Iob)) return null;
                 const index = ti++;
-                pi[index]=i;
+                pi[index] = i;
                 const tab = (
                   <Tab
                     key={key}
@@ -292,13 +294,17 @@ class ConfigSettings extends React.Component {
           </Toolbar>
         </AppBar>
         <ScrollTop />
-        <ConfigList
-          page={page}
-          inative={inative}
-          index={tab.toString()}
-          attr={""}
-          onUpdateValue={(attr, value) => Iob.updateInativeValue(inative, attr, value)}
-        />
+        {page.label === "Adapters" ? (
+          <AdapterList page={page} tab={tab} />
+        ) : (
+          <ConfigList
+            page={page}
+            inative={inative}
+            index={tab.toString()}
+            attr={""}
+            onUpdateValue={(attr, value) => Iob.updateInativeValue(inative, attr, value)}
+          />
+        )}
       </React.Fragment>
     );
   }

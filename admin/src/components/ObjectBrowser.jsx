@@ -50,8 +50,9 @@ class ObjectBrowser extends React.Component {
       dragZone,
       folded = false,
       expanded,
-      rootName = "root",
+      rootName = "",
       value,
+      label=""
     } = props;
     const ostate = {
       heigth,
@@ -69,6 +70,7 @@ class ObjectBrowser extends React.Component {
       singlemode: true,
       page: 0,
       filter,
+      label,
       expanded: nexp,
       ostate,
       columns: [
@@ -111,19 +113,19 @@ class ObjectBrowser extends React.Component {
       rowsFiltered = [],
       expanded = [],
       filter = "",
-      rootName = "root",
+      rootName = "",
     } = state;
 
     const list = [];
 
     function createList(name, value, idx = []) {
-      const ida = idx.concat(name);
+      const ida = !idx.length && name==="" ? [] : idx.concat(name);
       const id = ida.join(".");
       const type = Iob.type(value);
       const level = idx.length;
       const item = { name, value, ida, id, level, ...type };
       //      if (expanded.indexOf(id) >= 0) item.isexpanded = true;
-      list.push(item);
+      if (ida.length) list.push(item);
       if (type.typeof === "array") {
         if (value.length) {
           item.expandable = true;
@@ -144,81 +146,6 @@ class ObjectBrowser extends React.Component {
     const totalLen = list.length;
     filteredLen = list.length;
     rowsFiltered = list;
-    /* 
-    const states = Object.entries(props.adapterStates || {}).sort((a, b) =>
-      a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0
-    );
-
-    let { filteredLen, rowsFiltered, expanded, filter } = state;
-    if (!states) return {};
-    let totalLen = states.length;
-    filter = filter && filter.toLowerCase();
-
-    if (filter) rowsFiltered = states.filter((i) => Iob.customFilter(i, filter));
-    else rowsFiltered = states;
-    const titems = [];
-    for (const [key] of rowsFiltered) {
-      let akey = key.split(".");
-      akey = [akey.slice(0, 2).join("."), ...akey.slice(2)];
-      if (akey[0] === "system.adapter" && akey[2].match(/^\d+$/))
-        akey = [akey[0], akey[1] + "." + akey[2], ...akey.slice(3)];
-      const treew = titems;
-      const treen = 1;
-      for (const name of akey) {
-        let found = treew.find((i) => i.item == name);
-        if (!found) {
-          const id = akey.slice(0, treen).join(".");
-          const value = Iob.getState(id);
-          //          if (value.common) console.log(value);
-          found = {
-            id,
-            item: name,
-            stateName: id != key ? "" : value && value.common ? value.common.name : "",
-            items: [],
-            level: treen - 1,
-            name: Iob.trimL(name),
-          };
-          if (id == key && value) found.value = value;
-          treew.push(found);
-        }
-        treew = found.items;
-        ++treen;
-      }
-    }
-
-    const rows = [];
-    function renderItems(tree = [], level = 0) {
-      if (!Array.isArray(tree)) return [];
-      //      console.log(level, tree);
-      for (const i of tree) {
-        const { id, item, name, stateName, value, items } = i;
-        const r = {
-          id,
-          name,
-          value,
-          stateName,
-          level,
-          expandable: !!(items && items.length),
-          isexpanded: expanded && expanded.indexOf(id) >= 0,
-        };
-        rows.push(r);
-        //        console.log(r);
-        if (r.isexpanded && r.expandable) renderItems(items, level + 1);
-      }
-    }
-
-    renderItems(titems);
-    //    console.log(titems);
-    filteredLen = rowsFiltered.length;
-
-    const rows = list;
-    list.filter((i) => {
-      const ids = i.idn.slice(0, i.idn.length - 1).join(".");
-      console.log(i.name, ids, i);
-      for (const e of expanded) if (i.id === e || i.id == ids) return true;
-      return false;
-    });
- */
     //    console.log(totalLen, list, expanded);
     return {
       filter,
@@ -334,6 +261,7 @@ class ObjectBrowser extends React.Component {
     let sval = "";
     switch (row.typeof) {
       case "string":
+      case "boolean":
         sval = rval;
       case "object":
       case "array":
@@ -406,6 +334,7 @@ class ObjectBrowser extends React.Component {
       filteredLen,
       columns,
       folded,
+      label,
       singlemode,
       idrename,
     } = this.state;
@@ -417,7 +346,7 @@ class ObjectBrowser extends React.Component {
           <Toolbar variant="dense">
             <Icon>view_list</Icon>
             <Typography variant="subtitle2" noWrap>
-              &nbsp;{t("Object")}&nbsp;&nbsp;
+              &nbsp;{t("Object")}&nbsp;{label}&nbsp;
             </Typography>
             <TButton
               label={t("single")}

@@ -457,17 +457,35 @@ class Iob {
     );
   }
 
+  static getTranslatedDescription(desc) {
+    if (!desc) return "";
+    if (type(desc).class !== "Object")
+      return desc;
+    const i18 = Iob.i18n;
+    const lang = i18.language || "en";
+    let fallback = i18.options && i18.options.fallbackLng || ["en"];
+    if (fallback && !Array.isArray(fallback)) fallback = [fallback];
+    fallback = [lang].concat(fallback);
+    for (const l of fallback) if (desc[l]) return desc[l];
+    const dk = Object.keys(desc);
+    if (dk.length) return desc[dk[0]];
+    return desc;
+  }
+
   static addLanguageData(lng, translation) {
+//    console.log("addLanguageData", lng, translation);
     if (typeof Iob.i18n.addResourceBundle === "function")
-      Iob.i18n.addResourceBundle(lng, "translation", translation, true, true);
+      return Iob.i18n.addResourceBundle(lng, "translation", translation, true, true);
   }
 
   static changeLanguage(lng = "en") {
     const { displayLanguage, translations } = Iob.getStore;
 
-    if (lng != "en" && translations[lng]) {
+    if (/* lng != "en" &&  */translations[lng]) {
       return Promise.resolve(Iob.addLanguageData(lng, translations[lng]), true, true)
         .then(() => {
+//          console.log("change lang", lng)
+          console.log(Iob.i18n);
           Iob.i18n.changeLanguage(lng);
           Iob.setStore.setDisplayLanguage(lng);
         })
@@ -810,7 +828,7 @@ class Iob {
       Iob.emitEvent("stateChange", obj);
     });
 
-    socket.subscribeState(instanceId + "*", (id, state) => {
+    socket.subscribeState(/* instanceId + "*" */ "system.adapter.*", (id, state) => {
       const obj = { id, state };
       storeHandler("updateAdapterStates", obj, 50);
       Iob.emitEvent("stateChange", obj);

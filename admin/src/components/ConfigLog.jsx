@@ -1,5 +1,5 @@
 import React from "react";
-import { withStyles, makeStyles } from "@material-ui/core/styles";
+//import { withStyles, makeStyles } from "@material-ui/core/styles";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
 //import InputChips from "./InputChips";
 //import ChipInput from "material-ui-chip-input";
@@ -24,6 +24,7 @@ import {
   MenuItem,
 } from "@material-ui/core";
 import ConfigList from "./ConfigList";
+import { lightBlue } from "@material-ui/core/colors";
 //import { config } from "chai";
 //import { isNotEmittedStatement } from "typescript";
 
@@ -156,7 +157,7 @@ class ConfigLog extends React.Component {
                       color = "#f8bbd0";
                       break;
                     case "info":
-                      if (row.message.indexOf("debug:") < 0) color = "#bbdefb";
+                      if (row.message.indexOf("debug:") < 0) color = lightBlue[50];
                       else color = "#fafafa";
                       break;
                     case "warn":

@@ -34,6 +34,15 @@ class App extends React.Component {
     const options = { ...props, doNotLoadAllObjects: true };
     Iob.createConnection(options);
     Iob.mergeTranslations(translations);
+    this.state = { displayLanguage: props.displayLanguage };
+  }
+
+  static getDerivedStateFromProps(props, state) {
+    let newState = null;
+    const { displayLanguage } = props;
+    if (displayLanguage !== state.displayLanguage) newState = { ...newState, displayLanguage };
+    //    console.log(newState);
+    return newState;
   }
 
   render() {
@@ -42,7 +51,7 @@ class App extends React.Component {
       <div className="App">
         <ThemeProvider theme={theme}>
           <DndProvider options={HTML5toTouch}>
-            <ConfigSettings />
+            <ConfigSettings lng={this.state.displayLanguage} />
           </DndProvider>
         </ThemeProvider>
       </div>

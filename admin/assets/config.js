@@ -145,7 +145,9 @@ export default function config() {
           /*           {
             itype: "$divider",
           },
- */ {
+ */
+
+          {
             label: "Use specific interface",
             itype: "$select",
             iselect: ($, props, Iob) =>
@@ -264,7 +266,7 @@ export default function config() {
             variant: "contained",
             cols: 2,
           },
-          {
+          /*           {
             label: "Learn RM4",
             itype: "$button",
             tooltip: "Learn IR code on Broadlink RM4",
@@ -278,6 +280,22 @@ export default function config() {
             size: "large",
             variant: "contained",
             cols: 1,
+          },
+ */
+          {
+            label: "Display Language",
+            itype: "$select",
+            iselect: ($, props, Iob) =>
+              Object.keys(Iob.getStore.translations).map((i) => ({ value: i, label: i })),
+            hint: "en, de, .... ",
+            field: "$undefined",
+            convertOld: ($, props, Iob) => Iob.getStore.displayLanguage,
+            onClick: (e, v, Iob) => Iob.changeLanguage(v),
+            native: true,
+            multiple: false,
+            prependIcon: "router",
+            cols: 2,
+            xl: 2,
           },
           {
             label: "Multiline",
@@ -378,7 +396,7 @@ export default function config() {
                 itype: "$objectBrowser",
                 field: "$undefined",
                 convertOld: ($, props, Iob, that) => {
-//                  console.log("ObjectBrowser", that, $, props);
+                  //                  console.log("ObjectBrowser", that, $, props);
                   Iob.sendToHost(undefined, "getInstalled", {}).then((x) => {
                     that.setState({ value: x });
                   });
@@ -784,6 +802,19 @@ export default function config() {
         hideItem: "!this.props.inative.debug",
         items: [
           {
+            itype: "$log",
+            pageSize: 25,
+            cols: 12,
+          },
+        ],
+      },
+      {
+        label: "Adapters",
+        tooltip: "only for Test",
+        icon: "view_list",
+//        hideItem: "!this.props.inative.debug",
+        items: [
+           {
             itype: "$log",
             pageSize: 25,
             cols: 12,

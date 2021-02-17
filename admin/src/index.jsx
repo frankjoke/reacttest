@@ -43,7 +43,7 @@ function build() {
       <Provider store={store}>
         <MuiThemeProvider theme={Iob.getTheme}>
           <App
-            socket={{ port: window.location.port == 1234 ? 8181 : window.location.port }}
+//            socket={{ port: window.location.port == 1234 ? 8181 : window.location.port }}
             onThemeChange={(_theme) => {
               Iob.createTheme(_theme || Iob.getStore.themeName);
               //              build();
