@@ -205,13 +205,15 @@ class ConfigItem extends React.Component {
     }
 
     if (convertOld) {
+//      console.log("convertOld:",convertOld)
       const fun =
         typeof convertOld !== "function"
-          ? makeFunction(convertOld, this, "$", "props", "Iob")
+          ? makeFunction(convertOld, that, "$", "props", "Iob")
           : convertOld;
       let res = undefined;
       try {
-        res = fun(state.value, props, Iob);
+//          fun.apply(that,that.atate.value, that.props, Iob);
+        res = fun(state.value, props, Iob, that);
       } catch (e) {
         Iob.logSnackbar("error;convertOld error {0}", e.toString());
       }
@@ -791,7 +793,7 @@ class ConfigItem extends React.Component {
 
   $objectBrowser(item) {
     const { ...items} = item;
-    console.log(items);
+//    console.log(items);
     return <ObjectBrowser 
       value={this.state.value}
       {...items}

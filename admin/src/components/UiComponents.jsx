@@ -328,13 +328,14 @@ class MyChip extends React.Component {
   }
 }
 
+let cid = 0;
 class InputField extends React.Component {
   constructor(props) {
     super(props);
     const {
       classes,
       options = [],
-      id,
+      id="inputField"+ cid++,
       label,
       error,
       errorString,

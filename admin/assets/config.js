@@ -376,9 +376,16 @@ export default function config() {
               },
               {
                 itype: "$objectBrowser",
-                field: "switches",
-                cols:12,
-              }
+                field: "$undefined",
+                convertOld: ($, props, Iob, that) => {
+//                  console.log("ObjectBrowser", that, $, props);
+                  Iob.sendToHost(undefined, "getInstalled", {}).then((x) => {
+                    that.setState({ value: x });
+                  });
+                  return {};
+                },
+                cols: 12,
+              },
             ],
           },
 

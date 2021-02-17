@@ -42,7 +42,7 @@ class ObjectBrowser extends React.Component {
   constructor(props) {
     super(props);
     this.classes = props.classes;
-    let {
+    const {
       pageSize = 25,
       heigth = 300,
       width = "100%",
@@ -65,23 +65,29 @@ class ObjectBrowser extends React.Component {
     };
     const nexp = expanded || [rootName];
     const filter = "";
-    const nstate = {
+    this.state = {
       singlemode: true,
       page: 0,
       filter,
       expanded: nexp,
       ostate,
+      columns: [
+        { headerName: t("name"), width: "35%" },
+        //      { headerName: "\u00A9", align: "center", width: "3%" },
+        { headerName: t("id"), width: "15%", align: "left" },
+        { headerName: t("type"), width: "20%", align: "left" },
+        //      { headerName: "\u270D", align: "center", width: "3%" },
+        { headerName: t("Value"), align: "center", width: "30%" },
+      ],
+
       ...ostate,
     };
-    this.state = {
-      ...nstate,
-      ...ObjectBrowser._updateFilter(value, nstate ),
-    };
+    Object.assign(this.state, ObjectBrowser._updateFilter(value, this.state));
     this.crow = null;
-    console.log(this.state);
+    //    console.log(this.state);
     //    const nconf = ConfigSettings.transformConfig(props.configPage);
   }
-/*
+
   static getDerivedStateFromProps(props, state) {
     let newState = null;
     const ostate = state.ostate;
@@ -93,34 +99,44 @@ class ObjectBrowser extends React.Component {
         ostate[key] = nstate[key] = props[key];
       }
     if (ncount) newState = nstate;
-    if (nstate.value !== undefined)
-      newState = { ...nstate, ...this._updateFilter(props.value, state) };
+    if (props.value !== undefined)
+      newState = { ...nstate, ...ObjectBrowser._updateFilter(props.value, state) };
     //    console.log(newState);
     return newState;
   }
-*/
+
   static _updateFilter(value, state) {
-    let { filteredLen, rowsFiltered, expanded, filter, rootName } = state;
+    let {
+      filteredLen = 0,
+      rowsFiltered = [],
+      expanded = [],
+      filter = "",
+      rootName = "root",
+    } = state;
 
     const list = [];
 
     function createList(name, value, idx = []) {
-      const idn = idx.concat(name);
-      const id = idn.join(".");
+      const ida = idx.concat(name);
+      const id = ida.join(".");
       const type = Iob.type(value);
       const level = idx.length;
-      const item = { name, value, idn, id, level, ...type };
-//      if (expanded.indexOf(id) >= 0) item.isexpanded = true;
+      const item = { name, value, ida, id, level, ...type };
+      //      if (expanded.indexOf(id) >= 0) item.isexpanded = true;
       list.push(item);
       if (type.typeof === "array") {
-        if (value.length) item.expandable = true;
-        if (expanded.indexOf(id)>=0)
-        value.map((v, i) => createList(`[${i}]`, v, idn));
+        if (value.length) {
+          item.expandable = true;
+          item.isexpanded = expanded.indexOf(id) >= 0;
+          if (item.isexpanded) value.map((v, i) => createList(`[${i}]`, v, ida));
+        }
       } else if (type.typeof === "object") {
         const obs = Object.entries(value);
-        if (obs.length) item.expandable = true;
-        if (expanded.indexOf(id)>=0)
-        for (const [key, value] of obs) createList(key, value, idn);
+        if (obs.length) {
+          item.expandable = true;
+          item.isexpanded = expanded.indexOf(id) >= 0;
+          if (item.isexpanded) for (const [key, value] of obs) createList(key, value, ida);
+        }
       }
     }
 
@@ -194,18 +210,22 @@ class ObjectBrowser extends React.Component {
     renderItems(titems);
     //    console.log(titems);
     filteredLen = rowsFiltered.length;
- */
-    const rows = list.filter((i) => {
-      for (const e of expanded) if (i.id === e || i.id == i.idn.slice(0, i.idn.length-1).join(".")) return true;
+
+    const rows = list;
+    list.filter((i) => {
+      const ids = i.idn.slice(0, i.idn.length - 1).join(".");
+      console.log(i.name, ids, i);
+      for (const e of expanded) if (i.id === e || i.id == ids) return true;
       return false;
     });
-    console.log(totalLen, rows);
+ */
+    //    console.log(totalLen, list, expanded);
     return {
       filter,
       filteredLen,
       rowsFiltered,
       totalLen,
-      rows,
+      rows: list,
     };
   }
 
@@ -222,14 +242,7 @@ class ObjectBrowser extends React.Component {
     //    const { height, ...prest } = item;
     const dstyle = { width: "100%" };
     //    if (height) dstyle.height = height;
-    const { pageSize, page, rows } = this.state;
-    const columns = [
-      { headerName: t("id"), width: "35%" },
-      { headerName: "\u00A9", align: "center", width: "3%" },
-      { headerName: t("name"), width: "25%" },
-      { headerName: "\u270D", align: "center", width: "3%" },
-      { headerName: t("Value"), align: "center", width: "30%" },
-    ];
+    const { pageSize = 25, page, rows, columns } = this.state;
     //        console.log(tree, rows);
     return (
       <Paper>
@@ -278,7 +291,7 @@ class ObjectBrowser extends React.Component {
 
   renderRow(row, ri) {
     const { expandable, isexpanded, id, level, name, stateName } = row;
-    const { expanded, page, pageSize, singlemode, dragZone } = this.state;
+    const { expanded, page, pageSize, singlemode, dragZone, value, columns } = this.state;
     const rin = page * pageSize + ri;
     const cellProps = {
       component: "td",
@@ -289,30 +302,62 @@ class ObjectBrowser extends React.Component {
     };
 
     function toggleExpand(that) {
-      let nexpand;
-      if (isexpanded)
-        nexpand = expanded
-          .slice(0, expanded.indexOf(id))
-          .concat(expanded.slice(expanded.indexOf(id) + 1));
-      else {
-        nexpand = Array.from(expanded);
-        for (let i = 0; i < nexpand.length; )
-          if (id.startsWith(nexpand[i])) i++;
+      const nexpand = expanded.sort();
+      const idx = nexpand.indexOf(id);
+      console.log(isexpanded, idx, nexpand, id);
+      if (idx < 0) {
+        for (let i = 0; i < nexpand.length; ) {
+          const nid = nexpand[i];
+          if (id.startsWith(nid)) i++;
           else if (singlemode) nexpand.splice(i, 1);
           else i++;
+        }
         nexpand.push(id);
-      }
-      that.setState({
+        //      if (isexpanded) nexpand.splice(expaned.indexOf(id),1)
+      } else
+        for (let i = 0; i < nexpand.length; ) {
+          const nid = nexpand[i];
+          if (nid.startsWith(id)) nexpand.splice(i, 1);
+          else i++;
+        }
+
+      const nst = {
         expanded: nexpand,
-      });
+        ...ObjectBrowser._updateFilter(value, that.state),
+      };
+      console.log(nst);
+      that.setState(nst);
     }
-    let longName = row.stateName || "";
-    while (row.stateName && longName.length < 40) longName += "\u00A0\u00A0";
-    const key = this.props.index + "h" + rin;
+    //    let longName = row.stateName || "";
+    //    while (row.stateName && longName.length < 40) longName += "\u00A0\u00A0";
+    const rval = row.value;
+    let sval = "";
+    switch (row.typeof) {
+      case "string":
+        sval = rval;
+      case "object":
+      case "array":
+        try {
+          sval = Iob.stringify(rval, 0);
+        } catch (e) {
+          sval = `JSON.stringify error ${e}`;
+        }
+        break;
+      case "null":
+      case "undefined":
+        sval = row.typeof;
+        break;
+      default:
+        sval.toString();
+        break;
+    }
+    const key = (this.props.index || ObjectBrowser) + "h" + ri;
     return (
       <TableRow key={key} hover style={isexpanded ? { backgroundColor: lightBlue[50] } : {}}>
         <TableCell
           {...cellProps}
+          width={columns[0].width}
+          align={columns[0].align}
           style={expandable ? { cursor: "pointer" } : { cursor: "default" }}
         >
           <div
@@ -330,63 +375,19 @@ class ObjectBrowser extends React.Component {
             ) : (
               <IButton size="small" icon="chevron_right" />
             )}
-            <Typography
-              variant="subtitle2"
-              title={`${row.id}\n${row.stateName}\n${Object.keys(row.value || {})}`}
-            >
-              <strong>{row.name}</strong>{" "}
+            <Typography variant="subtitle2" title={`${name} = ${row.class}\n${id}\n${row.value}`}>
+              <strong>{name}</strong>{" "}
             </Typography>
           </div>
         </TableCell>
-        <TableCell {...cellProps} align="center">
-          <IButton
-            icon="content_copy"
-            size="small"
-            tooltip={t("copy id to clipboard.")}
-            onClick={(e) => {
-              Iob.copyToClipboard(id);
-              Iob.logSnackbar("info;copied '{0}' to clipboard!", id);
-            }}
-            style={{ marginLeft: 8, marginRight: 8 }}
-          />
+        <TableCell {...cellProps} width={columns[1].width} align={columns[1].align}>
+          <Typography variant="subtitle2">{row.id}</Typography>
         </TableCell>
-        <TableCell {...cellProps}>
-          <MakeDraggable
-            dragDisable={!row.stateName}
-            dragValue={{ value: row.stateName, dropped: row, index: rin, component: this }}
-            dragZone={dragZone}
-            dragProps={{ style: { opacity: 0.5, cursor: "move" } }}
-          >
-            <Typography style={{ cursor: "pointer" }} variant="caption">
-              {longName}
-            </Typography>
-          </MakeDraggable>
+        <TableCell {...cellProps} width={columns[2].width} align={columns[2].align}>
+          {`${row.class}/${row.typeof}`}
         </TableCell>
-        <TableCell {...cellProps} align="center">
-          {row.stateName && (
-            <IButton
-              icon="drive_file_rename_outline"
-              size="small"
-              tooltip={t("rename State")}
-              onClick={(e) => {
-                this.crow = row;
-                Iob.getDialog({
-                  type: "activeOk",
-                  inputValue: row.stateName,
-                  text: t("Rename state text from id '{0}'", row.id),
-                }).then((r) =>
-                  typeof r === "string"
-                    ? Iob.connection.extendObject(row.id, { common: { name: r } })
-                    : null
-                );
-                //                Iob.logSnackbar("warning;rename not implemented '{0}'", row);
-              }}
-              style={{ marginLeft: 8, marginRight: 8 }}
-            />
-          )}
-        </TableCell>
-        <TableCell {...cellProps} align="center">
-          {id}
+        <TableCell {...cellProps} width={columns[3].width} align={columns[3].align}>
+          {`${sval}`}
         </TableCell>
       </TableRow>
     );
@@ -408,7 +409,7 @@ class ObjectBrowser extends React.Component {
       singlemode,
       idrename,
     } = this.state;
-    console.log(this.state);
+    //    console.log(this.state);
     //    console.log("chips:", sel, items);
     const sw = (
       <div style={{ width, height, display: "flex", flexFlow: 1 }}>
@@ -429,7 +430,7 @@ class ObjectBrowser extends React.Component {
             <Icon style={{ paddingRight: "30px" }}>filter_alt</Icon>
             <InputField
               value={filter}
-              placeholder={t("Filter states")}
+              placeholder={t("Filter entries")}
               onChange={(e) => this.setState({ filter: e.target.value })}
               endAdornment={
                 filter ? (

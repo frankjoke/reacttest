@@ -201,6 +201,25 @@ class Iob {
     return text;
   }
 
+  static stringify(val, depth, replacer, space = "") {
+    depth = isNaN(+depth) ? 1 : depth;
+    function _build(key, val, depth, o, a) {
+      // (JSON.stringify() has it's own rules, which we respect here by using it for property iteration)
+      return !val || typeof val != "object"
+        ? val
+        : ((a = Array.isArray(val)),
+          JSON.stringify(val, function (k, v) {
+            if (a || depth > 0) {
+              if (replacer) v = replacer(k, v);
+              if (!k) return (a = Array.isArray(v)), (val = v);
+              !o && (o = a ? [] : {});
+              o[k] = _build(k, v, a ? depth : depth - 1);
+            }
+          }),
+          o || (a ? [] : {}));
+    }
+    return JSON.stringify(_build("", val, depth), null, space);
+  }
   static type(obj) {
     function getAnyClass(obj) {
       if (typeof obj === "undefined") return "undefined";
@@ -562,20 +581,20 @@ class Iob {
         if (re) {
           f = (v) => {
             if (Array.isArray(v)) v = v.slice(-1)[0];
-            return !!(v || "").match(re) || t(from.message,v);
+            return !!(v || "").match(re) || t(from.message, v);
           };
         } else {
           f = (v) => {
             if (Array.isArray(v)) v = v.slice(-1)[0];
             // console.log(v);
-            return (v || "").indexOf(from.regexp) >= 0 || t(from.message,v);
+            return (v || "").indexOf(from.regexp) >= 0 || t(from.message, v);
           };
         }
         return that ? f.bind(that) : f;
       } else if (Iob.type(from.regexp).class == "RegExp") {
         let f = (v) => {
           if (Array.isArray(v)) v = v.slice(-1)[0];
-          return !!(v || "").match(from.regexp) || t(from.message,v);
+          return !!(v || "").match(from.regexp) || t(from.message, v);
         };
         return f.bind(that);
       }
@@ -742,10 +761,10 @@ class Iob {
     return result;
   }
 
-  static mergeProps(old={}, add={}) {
-    const {style:oldStyle , ...oldRest} = old;
-    const {style:addStyle , ...addRest} = add;
-    const style = oldStyle ||  addStyle ? {style : {...oldStyle, ...addStyle}} : undefined; 
+  static mergeProps(old = {}, add = {}) {
+    const { style: oldStyle, ...oldRest } = old;
+    const { style: addStyle, ...addRest } = add;
+    const style = oldStyle || addStyle ? { style: { ...oldStyle, ...addStyle } } : undefined;
     return Object.assign({}, oldRest, addRest, style);
   }
 
@@ -897,7 +916,7 @@ class Iob {
       (Iob.getStore.inative && Iob.getStore.inative.encryptedFields) ||
       [];
     // here you can encode values
-    const nsettings = Object.assign({},settings);
+    const nsettings = Object.assign({}, settings);
     encryptedFields.forEach((attr) => {
       if (nsettings[attr]) {
         nsettings[attr] = this.decrypt(settings[attr]);
