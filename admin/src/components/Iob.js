@@ -201,7 +201,39 @@ class Iob {
     return text;
   }
 
-  static stringify(val, depth, replacer, space = "") {
+  static syntaxHighlight(json) {
+    const 
+    _number = 'color:darkgreen',
+    _string = 'color:maroon',
+    _boolean = 'color:blue',
+    _null = 'color:magenta',
+    _key = 'color:red';
+    json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return json.replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      function (match) {
+        var cls = _number;
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = _key;
+          } else {
+            cls = _string;
+          }
+        } else if (/true|false/.test(match)) {
+          cls = _boolean;
+        } else if (/null/.test(match)) {
+          cls = _null;
+        }
+        return '<span style="' + cls + ';">' + match + "</span>";
+      }
+    ).replace(/\n/g, "<br/>").replace(/\t/g,"\u00a0\u00a0\u00a0\u00a0");
+  }
+
+  static stringify(val, depth, replacer, space) {
+    if (typeof replacer === "string" && space === undefined) {
+      space = replacer;
+      replacer=null;
+    }
     depth = isNaN(+depth) ? 1 : depth;
     function _build(key, val, depth, o, a) {
       // (JSON.stringify() has it's own rules, which we respect here by using it for property iteration)
@@ -220,6 +252,7 @@ class Iob {
     }
     return JSON.stringify(_build("", val, depth), null, space);
   }
+
   static type(obj) {
     function getAnyClass(obj) {
       if (typeof obj === "undefined") return "undefined";
@@ -236,7 +269,18 @@ class Iob {
   }
 
   static nbsp(text = " ") {
-    return text.replace(/ /g, "\u00a0");
+    if (typeof text==="number") {
+      let num = text>100 ? 100 : text;
+      num = num<1 ? 1 : num;
+      text = "";
+      while(num) {
+        --num;
+        text += "\u00a0";
+      }
+      return text;
+    }
+    if (typeof text ==="string") return text.replace(/ /g, "\u00a0");
+    return "\u00a0";
   }
 
   static timeStamp(ts) {
@@ -457,13 +501,12 @@ class Iob {
     );
   }
 
-  static getTranslatedDescription(desc) {
+  static getTranslatedDesc(desc) {
     if (!desc) return "";
-    if (type(desc).class !== "Object")
-      return desc;
+    if (type(desc).class !== "Object") return desc;
     const i18 = Iob.i18n;
     const lang = i18.language || "en";
-    let fallback = i18.options && i18.options.fallbackLng || ["en"];
+    let fallback = (i18.options && i18.options.fallbackLng) || ["en"];
     if (fallback && !Array.isArray(fallback)) fallback = [fallback];
     fallback = [lang].concat(fallback);
     for (const l of fallback) if (desc[l]) return desc[l];
@@ -473,7 +516,7 @@ class Iob {
   }
 
   static addLanguageData(lng, translation) {
-//    console.log("addLanguageData", lng, translation);
+    //    console.log("addLanguageData", lng, translation);
     if (typeof Iob.i18n.addResourceBundle === "function")
       return Iob.i18n.addResourceBundle(lng, "translation", translation, true, true);
   }
@@ -481,11 +524,10 @@ class Iob {
   static changeLanguage(lng = "en") {
     const { displayLanguage, translations } = Iob.getStore;
 
-    if (/* lng != "en" &&  */translations[lng]) {
+    if (/* lng != "en" &&  */ translations[lng]) {
       return Promise.resolve(Iob.addLanguageData(lng, translations[lng]), true, true)
         .then(() => {
-//          console.log("change lang", lng)
-          console.log(Iob.i18n);
+          //          console.log("change lang", lng, Iob.i18n)
           Iob.i18n.changeLanguage(lng);
           Iob.setStore.setDisplayLanguage(lng);
         })
@@ -779,9 +821,9 @@ class Iob {
     return result;
   }
 
-  static mergeProps(old = {}, add = {}) {
-    const { style: oldStyle, ...oldRest } = old;
-    const { style: addStyle, ...addRest } = add;
+  static mergeProps(old, add) {
+    const { style: oldStyle, ...oldRest } = old || {};
+    const { style: addStyle, ...addRest } = add || {};
     const style = oldStyle || addStyle ? { style: { ...oldStyle, ...addStyle } } : undefined;
     return Object.assign({}, oldRest, addRest, style);
   }
@@ -845,12 +887,13 @@ class Iob {
       message.tss = Iob.timeStamp(message.ts);
       storeHandler("updateAdapterLog", message, 50);
     });
-
-    const { protocol, host, port } = socket.props;
-    const serverName = `${protocol || "http:"}//${host || "localhost"}${port ? ":" + port : ""}`;
+    const { protocol, hostname, port } = Iob.getStore.location;
+    const serverName = `${protocol || "http:"}//${hostname || "localhost"}${
+      port ? ":" + port : ""
+    }`;
 
     //    Iob.logSnackbar("Info;!getWebServerName {0}", serverName);
-    setStore.setServerName({ serverName, protocol, host, port });
+    setStore.setServerName({ serverName, protocol, hostname, port });
     //    console.log(Iob.getStore.myLocation);
     return Promise.all([
       Promise.resolve(() => Iob.changeLanguage("de"))
@@ -1078,8 +1121,8 @@ class Iob {
     if (state) Iob.commandSend("setState", name, value);
   }
 
-  static enableDisableAdapter(what) {
-    const id = "system.adapter." + Iob.getStore.adapterInstance;
+  static enableDisableAdapter(what, adapter = Iob.getStore.adapterInstance) {
+    const id = "system.adapter." + adapter;
     const obj = { common: {} };
     if (typeof what == "boolean") {
       obj.common.enabled = !!what;
@@ -1087,10 +1130,10 @@ class Iob {
     }
   }
 
-  static setLoglevel(what) {
-    what = what || Iob.getStore.instanceConfig.common.loglevel;
-    const id = "system.adapter." + Iob.getStore.adapterInstance;
-    const obj = { common: { loglevel: what } };
+  static setLoglevel(what, adapter = Iob.getStore.adapterInstance) {
+    const level = typeof what === "sting" ? { loglevel: what } : {};
+    const id = "system.adapter." + adapter;
+    const obj = { common: level };
     return Iob.connection.extendObject(id, obj);
   }
 

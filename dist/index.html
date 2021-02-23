@@ -72,7 +72,7 @@ if (olocation.search && olocation.search.startsWith("?")) olocation.search.slice
 });
 var protocol = olocation.protocol == "file:" ? dlocation.protocol || olocation.protocol : olocation.protocol;
 var port = olocation.port || "1235";
-var isDev = port == "1234" || port == "1235" || port == "1236";
+var isDev = port = "1234" || port == "1235" || port == "1236" || port == "1237" || port == "1238" || port == "1239";
 var hostname = isDev ? dlocation.hostname || olocation.hostname : olocation.hostname || "localhost";
 port = isDev ? dlocation.port || olocation.port : port;
 var host = hostname + ":" + port;

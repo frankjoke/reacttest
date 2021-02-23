@@ -148,7 +148,7 @@ const AdapterEntry = (props) => {
         style={{ backgroundColor: lightBlue[50], minHeight: 128 }}
         title={iid}
         titleTypographyProps={{ variant: "h6" }}
-        subheaderTypographyProps={{ variant: "caption" }}
+        subheaderTypographyProps={{ variant: "body2" }}
         subheader={
           <>
             {title ? (

@@ -12,6 +12,7 @@ import {
   makeDraggable,
   AddTooltip2,
   IDialog,
+  MakeDroppable,
 } from "./UiComponents";
 import { Iob, t, connect } from "./Iob";
 import {
@@ -40,7 +41,7 @@ import { lightBlue } from "@material-ui/core/colors";
 function SbDialog(props) {
   const { idrename } = props;
   const [myrename, setRename] = React.useState(idrename);
-//  if (idrename != myrename) setRename(idrename);
+  //  if (idrename != myrename) setRename(idrename);
   return (
     <IDialog
       type="activeOk"
@@ -325,20 +326,26 @@ class StateBrowser extends React.Component {
     let longName = row.stateName || "";
     while (row.stateName && longName.length < 40) longName += "\u00A0\u00A0";
     const key = this.props.index + "h" + rin;
+    const Dtyp = expandable ? MakeDroppable : "div";
+    const dstyle = {
+      style: {
+        paddingLeft: 24 * level + (expandable ? 0 : 12),
+        display: "flex",
+        whiteSpace: "nowrap",
+      },
+      onClick: (e) => toggleExpand(this),
+    };
+    const ddZone = "folder-" + this.props.index;
+    if (expandable) {
+      dstyle.dropZone = ddZone;
+    }
     return (
       <TableRow key={key} hover style={isexpanded ? { backgroundColor: lightBlue[50] } : {}}>
         <TableCell
           {...cellProps}
           style={expandable ? { cursor: "pointer" } : { cursor: "default" }}
         >
-          <div
-            style={{
-              paddingLeft: 24 * level + (expandable ? 0 : 12),
-              display: "flex",
-              whiteSpace: "nowrap",
-            }}
-            onClick={(e) => toggleExpand(this)}
-          >
+          <Dtyp {...dstyle}>
             {!expandable ? (
               <span>&nbsp;&nbsp;</span>
             ) : isexpanded ? (
@@ -346,13 +353,17 @@ class StateBrowser extends React.Component {
             ) : (
               <IButton size="small" icon="chevron_right" />
             )}
-            <Typography
-              variant="subtitle2"
-              title={`${row.id}\n${row.stateName}\n${Object.keys(row.value || {})}`}
-            >
-              <strong>{row.name}</strong>{" "}
-            </Typography>
-          </div>
+            <MakeDraggable 
+            dragValue={{ value: row.id, dropped: row, index: rin, component: this }}
+            dragZone={ddZone}>
+              <Typography
+                variant="subtitle2"
+                title={`${row.id}\n${row.stateName}\n${Object.keys(row.value || {})}`}
+              >
+                <b>{row.name}</b>
+              </Typography>
+            </MakeDraggable>
+          </Dtyp>
         </TableCell>
         <TableCell {...cellProps} align="center">
           <IButton
