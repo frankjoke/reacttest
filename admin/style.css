@@ -29,12 +29,16 @@ body {
   /* Don't cut off dropdowns! */
   overflow: initial;
 }
+
+button.bottom-border-button {
+  border-bottom: 1px solid darkblue;
+}
 .m.adapter-container,
 .m.adapter-container > div.App {
   /* Fix layout/scrolling issues with tabs */
   height: 100%;
   width: 100%;
-  position: relative;
+/*   position: relative; */  
   overflow: visible !important;
 }
 .m .select-wrapper + label {

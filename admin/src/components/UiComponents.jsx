@@ -33,6 +33,7 @@ import Autocomplete, { createFilterOptions } from "@material-ui/lab/Autocomplete
 //import { LinkedErrors } from "@sentry/browser/dist/integrations";
 //import { config } from "chai";
 //import { isNotEmittedStatement } from "typescript";
+import "./loader.css";
 import PropTypes from "prop-types";
 import { DragSource, useDrop, useDrag } from "react-dnd";
 import Draggable from "react-draggable";
@@ -335,7 +336,7 @@ class InputField extends React.Component {
     const {
       classes,
       options = [],
-      id="inputField"+ cid++,
+      id = "inputField" + cid++,
       label,
       error,
       errorString,
@@ -365,14 +366,7 @@ class InputField extends React.Component {
       multiple: chips || multiple || false,
       chips,
       canRearrange,
-      value:
-        value !== undefined && value !== null
-          ? value
-          : defaultValue
-          ? defaultValue
-          : multiple || chips
-          ? []
-          : "",
+      value,
     };
     if (!dragZone && chips && canRearrange) this.state.dragZone = "chips-drop-" + this.key;
     //    const nconf = ConfigSettings.transformConfig(props.configPage);
@@ -388,7 +382,7 @@ class InputField extends React.Component {
       errorString !== state.errorString
     ) {
       //      console.log("Prop value changed!", state.opvalue, props.value, state.value);
-      newState = { value, options, o_value: value, o_options: options };
+      newState = { value, options, o_value: value, o_options: options, error, errorString };
     }
     return newState;
   }
@@ -413,7 +407,7 @@ class InputField extends React.Component {
   }
   render() {
     //    if (this.key.indexOf("chips") >= 0) console.log(this.key, this.state);
-    const {
+    let {
       showPasswd,
       inputValue,
       options,
@@ -424,6 +418,8 @@ class InputField extends React.Component {
       multiple,
       label,
       id,
+      errorString = "",
+      error = false,
     } = this.state;
     let rprops;
     if (!rprops) {
@@ -438,6 +434,8 @@ class InputField extends React.Component {
         dragZone,
         canRearrange,
         type,
+        errorString,
+        error,
         ...pprops
       } = this.props;
       rprops = pprops;
@@ -446,29 +444,39 @@ class InputField extends React.Component {
       hint = "",
       endAdornment,
       startAdornment,
-      getOptionLabel = (o) => o.toString(),
-      getOptionSelected = (o, val) => /* console.log("getOptionSelected", o, val) || */ val == o,
+      getOptionLabel,
+      getOptionSelected,
       noOptionsText = "",
       fullWidth,
-      inputWidth = "2000px",
+      //      inputWidth = "2000px",
       iselect,
       freeSolo,
       dragComponent,
       clickable = true,
       renderInput,
       renderTags,
+      disableClearable,
       onChange,
       inputProps = {},
-      errorString = "",
-      error = false,
       rules = [],
       disabled = false,
       margin = "dense",
       size = "small",
       required = false,
+      width = "auto",
+      minWidth = "100px",
       ...more
     } = rprops;
-
+    //    console.log(id, value);
+    if (value === undefined || value === null)
+      value =
+        multiple || chips
+          ? Object.isArray(defaultValue)
+            ? defaultValue
+            : []
+          : typeof defaultValue === "string"
+          ? defaultValue
+          : "";
     const useOptions = Array.isArray(this.props.options) && this.props.options.length;
     const offsetWidth =
       (this.myInput.current && this.myInput.current.offsetWidth) || window.innerWidth / 4;
@@ -479,7 +487,7 @@ class InputField extends React.Component {
       //      width: offsetWidth ? Math.floor(offsetWidth/1.4).toString() : "20vw",
       maxWidth: offsetWidth ? Math.floor(offsetWidth / 1.2).toString() : "20vw",
     };
-
+    //    console.log(id, value, this.props.defaultValue);
     let nerror = error || !!errorString,
       nerrorString = errorString;
     //    if (Array.isArray(rules) && rules.length) debugger;
@@ -545,7 +553,7 @@ class InputField extends React.Component {
       );
     }
 
-//    chipList && console.log(listStyle);
+    //    chipList && console.log(listStyle);
     const ias = startAdornment ? (
       <InputAdornment position="start">{startAdornment}</InputAdornment>
     ) : (
@@ -557,16 +565,29 @@ class InputField extends React.Component {
         <Autocomplete
           id={this.key}
           value={value}
-          inputValue={inputValue}
+          //          inputValue={inputValue}
           label={label}
+          size={size}
+          fullWidth={fullWidth}
           options={options}
           freeSolo={freeSolo}
-          multiple={multiple || chips}
+          disableClearable={disableClearable || !multiple}
+          multiple={multiple}
           noOptionsText={noOptionsText}
-          getOptionLabel={getOptionLabel}
-          getOptionSelected={getOptionSelected}
+          getOptionLabel={
+            getOptionLabel ||
+            ((o) =>
+              /* console.log(`getOptionLabel '${o}'`, id) || */ typeof o === "string" ? o : o.label)
+          }
+          getOptionSelected={
+            getOptionSelected ||
+            ((o, t) =>
+              /* console.log(`getOptionSelected '${o}', '${t}'`, id) || */ typeof o === "string"
+                ? o == t
+                : o.value == t)
+          }
           onChange={(e, v) =>
-            console.log("acomplete onchANGE", e.target.value, v) ||
+            console.log("acomplete onchANGE", id, e.target.value, v) ||
             (typeof onChange === "function" && onChange(e, v))
           }
           renderTags={(value, getTagProps) =>
@@ -577,26 +598,33 @@ class InputField extends React.Component {
               return <Chip label={option} size={"small"} {...tp} />;
             })
           }
-          renderInput={(params) => {
-            //                console.log("renderInput", params);
-            this.onChangeFun =
-              params.inputProps && params.inputProps.onChange
-                ? (v) => params.inputProps.onChange({ target: { value: v } })
-                : () => null;
+          renderInput={
+            renderInput ||
+            ((params) => {
+              //                            console.log("renderInput",id, params);
+              this.onChangeFun =
+                params.inputProps && params.inputProps.onChange
+                  ? (v) => params.inputProps.onChange({ target: { value: v } })
+                  : () => null;
 
-            return (
-              <TextField
-                {...params}
-                label={label}
-                onChange={(e) => this.setState({ inputValue: e.target.value })}
-                onKeyUp={(e) => (e.key == "Escape" ? this.setState({ inputValue: "" }) : null)}
-                //                    fullWidth={fullWidth}
-                error={nerror}
-                //                    {...params.InputProps}
-                //                    {...}
-              />
-            );
-          }}
+              return (
+                <TextField
+                  {...Iob.mergeProps(params, {
+                    style: { fontSize: 14, ...(fullWidth ? {} : { width, minWidth }) },
+                  })}
+                  //                value={inputValue}
+                  label={label}
+                  fullWidth={fullWidth}
+                  onChange={(e) => this.setState({ inputValue: e.target.value })}
+                  onKeyUp={(e) => (e.key == "Escape" ? this.setState({ inputValue: "" }) : null)}
+                  //                    fullWidth={fullWidth}
+                  error={nerror}
+                  {...params.inputProps}
+                  //                    {...}
+                />
+              );
+            })
+          }
           {...more}
           onChange={(e, v) => this.doChange(v)}
         />
@@ -608,7 +636,6 @@ class InputField extends React.Component {
         type={showPasswd ? "text" : this.type}
         id={this.key}
         label={label}
-        style={{ alignSelf: "flex-end" }}
         startAdornment={!useOptions && ias}
         endAdornment={iae}
         onKeyUp={(e) => {
@@ -624,12 +651,13 @@ class InputField extends React.Component {
                 }
                 break;
               case "Backspace":
-                console.log(
+                /*                 console.log(
                   `'${inputValue}'`,
                   this.avoidDelete,
                   value,
                   value.slice(0, value.length - 1)
                 );
+ */
                 if (inputValue == "" && value.length && !this.avoidDelete)
                   this.doChange(value.slice(0, value.length - 1));
                 this.avoidDelete = false;
@@ -646,7 +674,9 @@ class InputField extends React.Component {
           this.onChangeInputValue(value);
         }}
         {...more}
-        {...inputProps}
+        inputProps={Iob.mergeProps(inputProps, {
+          style: { alignSelf: "flex-end" },
+        })}
       />
     );
 
@@ -665,7 +695,7 @@ class InputField extends React.Component {
     return (
       <FormControl
         ref={this.myInput}
-        {...{ required, size, margin, disabled }}
+        {...{ required, size, margin, disabled, fullWidth }}
         hiddenLabel={!label}
         error={nerror}
       >
@@ -678,18 +708,17 @@ class InputField extends React.Component {
 }
 
 function IButton(props) {
-  const { tooltip, size, icon, ...passThroughProps } = props;
-  const { disabled } = passThroughProps;
-  if (disabled) {
-    const style = passThroughProps.style || {};
-    style.color = "grey";
-    passThroughProps.style = style;
+  const { tooltip, size, icon, onClick, src, disabled, ...passThroughProps } = props;
+  function handleClick(e) {
+    if (src) window.open(src, "_blank");
+    if (onClick) onClick(e);
   }
-  const { onClick } = props;
-  const style = onClick ? { style: { cursor: "pointer" } } : {};
+  const nstyle = onClick || src ? { style: { cursor: "pointer" } } : { style: {} };
+  if (disabled) nstyle.style.color = "grey";
+
   if (size) passThroughProps.fontSize = size;
   const sw = (
-    <Icon {...style} {...passThroughProps}>
+    <Icon {...Iob.mergeProps(passThroughProps, nstyle)} onClick={(e) => handleClick(e)}>
       {icon}
     </Icon>
   );
@@ -818,6 +847,7 @@ function TButton(props) {
     "aria-label": label ? label : "",
     ...passThroughProps,
   };
+//  if (addProps) console.log(label, addProps, nprops);
   const iFontSize = nprops.size == "small" || nprops.size == "large" ? nprops.size : "default";
   if (startIcon)
     nprops.startIcon =
@@ -827,7 +857,8 @@ function TButton(props) {
   else if (endIcon)
     nprops.endIcon =
       typeof endIcon === "string" ? <Icon fontSize={iFontSize}>{endIcon}</Icon> : endIcon;
-  const sw = <Button {...nprops}>{!narrow ? label : null}</Button>;
+  let sw = <Button {...nprops}>{!narrow ? label : null}</Button>;
+//  if (addProps) sw = <span {...addProps}>{sw}</span>
   return (disabled && sw) || AddTooltip(tooltip, sw);
 }
 
@@ -887,17 +918,16 @@ class HtmlComponent extends React.Component {
   constructor(props) {
     super(props);
     this.divRef = React.createRef();
-    const { html, ...rest } = props;
-    this.myHTML = html;
-    this.rest = rest;
   }
 
   componentDidMount() {
-    this.divRef.current.innerHTML = this.myHTML;
+    this.divRef.current.innerHTML = this.props.html || "";
   }
 
   render() {
-    return <div ref={this.divRef} {...this.rest}></div>;
+    const { html, component="span", children, ...rest } = this.props;
+    const TagName = component;
+    return <TagName ref={this.divRef} {...rest}>{children}</TagName>;
   }
 }
 
@@ -1026,6 +1056,18 @@ class IDialog extends React.Component {
       this.setState(nstate);
     });
     //    this.id = props.label + props.icon + props.endIcon;
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+//    console.log(this.props,nextProps, this.state, nextState);
+    let {children, ...tprops} = this.props;
+    let nprops = {...nextProps};
+    delete nprops["children"];
+    if (JSON.stringify(tprops) == JSON.stringify(nprops) && JSON.stringify(this.state) == JSON.stringify(nextState)) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
   handleClose(how, e) {

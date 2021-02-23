@@ -37,6 +37,57 @@ import { isIterationStatement } from "typescript";
 import { useDrag } from "react-dnd"; //import { config } from "chai";
 import { lightBlue } from "@material-ui/core/colors";
 //import { isNotEmittedStatement } from "typescript";
+function SbDialog(props) {
+  const { idrename } = props;
+  const [myrename, setRename] = React.useState(idrename);
+//  if (idrename != myrename) setRename(idrename);
+  return (
+    <IDialog
+      type="activeOk"
+      options={{
+        okOnEnter: true,
+        title: t("Rename state name"),
+        cancelIcon: "close",
+        cancelColor: "primary",
+        cancelLabel: t("cancel"),
+        okIcon: "done",
+        okLabel: t("ok"),
+        okColor: "secondary",
+        okTooltip: t("click here to accept data"),
+        inputProps: {
+          rules: [
+            //                  check on invalid characters
+            (v) =>
+              !v.match(/[\[\].*,;'"`<>\\?]+/) ||
+              t("Name should not include chractesrs like '{0}'!", "[]*.,;'\"`<>\\?"),
+            (v) => {
+              //                  console.log("rule OctiveOk", v);
+              const cname = this.crow && this.crow.stateName;
+              const aobjects = Iob.getStore.adapterObjects;
+              return (
+                !Object.keys(aobjects)
+                  .map((i) => aobjects[i].common.name)
+                  .find((i) => i == v && v != cname) || t("Name should not exist in adapter!")
+              );
+            },
+          ],
+          label: t("Name to change"),
+          hint: t("Please enter name, it must not be used already in your adapter!"),
+        },
+      }}
+    >
+      <br />
+      <TButton
+        label={t("Id also")}
+        tooltip={t("switch on to rename also state id or name only")}
+        icon={myrename ? "radio_button_checked" : "radio_button_unchecked"}
+        onClick={(e) => this.setRename(!myrename)}
+        color="secondary"
+      />
+      <br />
+    </IDialog>
+  );
+}
 
 class StateBrowser extends React.Component {
   constructor(props) {
@@ -449,49 +500,7 @@ class StateBrowser extends React.Component {
     return (
       <React.Fragment>
         {sw}
-        <IDialog
-          type="activeOk"
-          options={{
-            okOnEnter: true,
-            title: t("Rename state name"),
-            cancelIcon: "close",
-            cancelColor: "primary",
-            cancelLabel: t("cancel"),
-            okIcon: "done",
-            okLabel: t("ok"),
-            okColor: "secondary",
-            okTooltip: t("click here to accept data"),
-            inputProps: {
-              rules: [
-                //                  check on invalid characters
-                (v) =>
-                  !v.match(/[\[\].*,;'"`<>\\?]+/) ||
-                  t("Name should not include chractesrs like '{0}'!", "[]*.,;'\"`<>\\?"),
-                (v) => {
-                  //                  console.log("rule OctiveOk", v);
-                  const cname = this.crow && this.crow.stateName;
-                  return (
-                    !Object.keys(this.props.adapterObjects)
-                      .map((i) => this.props.adapterObjects[i].common.name)
-                      .find((i) => i == v && v != cname) || t("Name should not exist in adapter!")
-                  );
-                },
-              ],
-              label: t("Name to change"),
-              hint: t("Please enter name, it must not be used already in your adapter!"),
-            },
-          }}
-        >
-          <br />
-          <TButton
-            label={t("Id also")}
-            tooltip={t("switch on to rename also state id or name only")}
-            icon={idrename ? "radio_button_checked" : "radio_button_unchecked"}
-            onClick={(e) => this.setState({ idrename: !idrename })}
-            color="secondary"
-          />
-          <br />
-        </IDialog>
+        <SbDialog idrename={idrename} />
         {!folded && this.renderTree()}
       </React.Fragment>
     );

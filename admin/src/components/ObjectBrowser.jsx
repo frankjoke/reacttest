@@ -52,7 +52,7 @@ class ObjectBrowser extends React.Component {
       expanded,
       rootName = "",
       value,
-      label=""
+      label = "",
     } = props;
     const ostate = {
       heigth,
@@ -108,18 +108,12 @@ class ObjectBrowser extends React.Component {
   }
 
   static _updateFilter(value, state) {
-    let {
-      filteredLen = 0,
-      rowsFiltered = [],
-      expanded = [],
-      filter = "",
-      rootName = "",
-    } = state;
+    let { filteredLen = 0, rowsFiltered = [], expanded = [], filter = "", rootName = "" } = state;
 
     const list = [];
 
     function createList(name, value, idx = []) {
-      const ida = !idx.length && name==="" ? [] : idx.concat(name);
+      const ida = !idx.length && name === "" ? [] : idx.concat(name);
       const id = ida.join(".");
       const type = Iob.type(value);
       const level = idx.length;
@@ -262,6 +256,7 @@ class ObjectBrowser extends React.Component {
     switch (row.typeof) {
       case "string":
       case "boolean":
+      case "number":
         sval = rval;
       case "object":
       case "array":
@@ -312,7 +307,7 @@ class ObjectBrowser extends React.Component {
           <Typography variant="subtitle2">{row.id}</Typography>
         </TableCell>
         <TableCell {...cellProps} width={columns[2].width} align={columns[2].align}>
-          {`${row.class}/${row.typeof}`}
+          {`${row.class}`}
         </TableCell>
         <TableCell {...cellProps} width={columns[3].width} align={columns[3].align}>
           {`${sval}`}
@@ -321,6 +316,7 @@ class ObjectBrowser extends React.Component {
     );
   }
   render() {
+    const that = this;
     //    console.log(this.props.adapterLog);
     const {
       width,
@@ -352,7 +348,7 @@ class ObjectBrowser extends React.Component {
               label={t("single")}
               tooltip={t("switch between single open tree or allow multiple open trees")}
               icon={singlemode ? "radio_button_checked" : "radio_button_unchecked"}
-              onClick={(e) => this.setState({ singlemode: !singlemode })}
+              onClick={(e) => that.setState({ singlemode: !singlemode })}
               color="inherit"
             />
             <div style={{ flexGrow: 1 }} />
@@ -360,17 +356,17 @@ class ObjectBrowser extends React.Component {
             <InputField
               value={filter}
               placeholder={t("Filter entries")}
-              onChange={(e) => this.setState({ filter: e.target.value })}
+              onChange={(e) => that.setState({ filter: e.target.value })}
               endAdornment={
                 filter ? (
                   <IButton
                     size="small"
                     icon="close"
-                    onClick={(e) => this.setState({ filter: "" })}
+                    onClick={(e) => that.setState({ filter: "" })}
                   />
                 ) : null
               }
-              onKeyDown={(e) => (e.keyCode == 27 ? this.setState({ filter: "" }) : null)}
+              onKeyDown={(e) => (e.keyCode == 27 ? that.setState({ filter: "" }) : null)}
             />
             <Typography variant="subtitle2" noWrap>
               &nbsp;{totalLen == filteredLen ? t("all") : filteredLen}&nbsp;{t("of")}&nbsp;
@@ -381,7 +377,7 @@ class ObjectBrowser extends React.Component {
               icon={folded ? "keyboard_arrow_down" : "keyboard_arrow_left"}
               tooltip={t("fold/unfold data")}
               color="inherit"
-              onClick={(e) => this.setState({ folded: !folded })}
+              onClick={(e) => that.setState({ folded: !folded })}
             ></TButton>
           </Toolbar>
         </AppBar>
@@ -410,10 +406,10 @@ class ObjectBrowser extends React.Component {
                   t("Name should not include chractesrs like '{0}'!", "[]*.,;'\"`<>\\?"),
                 (v) => {
                   //                  console.log("rule OctiveOk", v);
-                  const cname = this.crow && this.crow.stateName;
+                  const cname = that.crow && that.crow.stateName;
                   return (
-                    !Object.keys(this.props.adapterObjects)
-                      .map((i) => this.props.adapterObjects[i].common.name)
+                    !Object.entries(Iob.getStore.adapterObjects)
+                      .map(([k, o]) => o.common.name)
                       .find((i) => i == v && v != cname) || t("Name should not exist in adapter!")
                   );
                 },
@@ -428,12 +424,12 @@ class ObjectBrowser extends React.Component {
             label={t("Id also")}
             tooltip={t("switch on to rename also state id or name only")}
             icon={idrename ? "radio_button_checked" : "radio_button_unchecked"}
-            onClick={(e) => this.setState({ idrename: !idrename })}
+            onClick={(e) => that.setState({ idrename: !idrename })}
             color="secondary"
           />
           <br />
         </IDialog>
-        {!folded && this.renderTree()}
+        {!folded && that.renderTree()}
       </React.Fragment>
     );
   }

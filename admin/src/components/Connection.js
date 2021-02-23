@@ -5,6 +5,7 @@
  *
  **/
 import PropTypes from "prop-types";
+import { Iob } from "./Iob";
 
 /** Possible progress states. */
 export const PROGRESS = {
@@ -151,6 +152,7 @@ class Connection {
     });
 
     this._socket.on("connect", (noTimeout) => {
+//      console.log(this._socket);
       // If the user is not admin it takes some time to install the handlers, because all rights must be checked
       if (noTimeout !== true) {
         setTimeout(

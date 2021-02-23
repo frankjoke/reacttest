@@ -15,6 +15,7 @@ class ConfigList extends React.Component {
     super(props);
     this.classes = props.classes;
     this.state = {};
+//    console.log(props);
     //    const nconf = ConfigSettings.transformConfig(props.configPage);
   }
 

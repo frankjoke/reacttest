@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
     <!-- Load ioBroker scripts and styles
@@ -27,12 +27,68 @@
       console.log(location);
     </script>
 -->
-    <!-- Load our own files --> 
+    <!-- Load our own files -->
     <!--        <link rel="stylesheet" type="text/css" href="./admin/style.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />  
     <link rel="stylesheet" href="./node_modules/material-icons/iconfont/material-icons.css" />
  -->
-    <script>window.registerSocketOnLoad = function (o) {
+    <script>function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+var olocation = {};
+Object.keys(window.location).map(function (i) {
+  if (window.location.hasOwnProperty(i) && typeof window.location[i] === "string") {
+    olocation[i] = window.location[i];
+  }
+});
+var dlocation = {
+  port: "8181",
+  hostname: "localhost",
+  protocol: "http",
+  adapterName: "broadlink2",
+  instance: "0"
+}; //      console.log(olocation);
+
+if (olocation.search && olocation.search.startsWith("?")) olocation.search.slice(1).split("&").map(function (i) {
+  var _i$split = i.split("="),
+      _i$split2 = _slicedToArray(_i$split, 2),
+      name = _i$split2[0],
+      value = _i$split2[1];
+
+  if (name) name = name.trim();
+
+  if (value) {
+    dlocation[name] = value.trim();
+  }
+});
+var protocol = olocation.protocol == "file:" ? dlocation.protocol || olocation.protocol : olocation.protocol;
+var port = olocation.port || "1235";
+var isDev = port == "1234" || port == "1235" || port == "1236";
+var hostname = isDev ? dlocation.hostname || olocation.hostname : olocation.hostname || "localhost";
+port = isDev ? dlocation.port || olocation.port : port;
+var host = hostname + ":" + port;
+window.myLocation = {
+  isDev: isDev,
+  port: port,
+  hostname: hostname,
+  host: host,
+  protocol: protocol,
+  search: olocation.search,
+  olocation: olocation,
+  dlocation: dlocation
+};
+if (isDev) window.myLocation.adapterName = dlocation.adapterName; //      console.log(window.myLocation);
+
+window.registerSocketOnLoad = function (o) {
   window.socketLoadedHandler = o;
 };
 
@@ -42,31 +98,6 @@ script.type = "text/javascript";
 script.onload = function () {
   "function" == typeof window.socketLoadedHandler && window.socketLoadedHandler();
 };
-
-var olocation = {};
-var dport = "8181";
-var dhostname = "localhost";
-var dadapterName = "broadlink2";
-var dprotocol = "http:";
-var dinstance = "0";
-Object.keys(window.location).map(function (i) {
-  if (window.location.hasOwnProperty(i)) olocation[i] = window.location[i];
-});
-var protocol = olocation.protocol == "file:" ? dprotocol : olocation.protocol;
-var port = olocation.port || "1235";
-var isDev = port == "1234" || port == "1235" || port == "1236";
-var hostname = isDev ? dhostname : olocation.hostname || "localhost";
-port = isDev ? dport : port;
-var host = hostname + ":" + port;
-window.myLocation = {
-  port: port,
-  hostname: hostname,
-  host: host,
-  protocol: protocol,
-  search: olocation.search,
-  olocation: olocation
-};
-if (isDev) window.myLocation.adapterName = dadapterName; //      console.log(window.myLocation);
 
 script.src = "".concat(protocol, "//").concat(host, "/socket.io/socket.io.js");
 window.socketUrl = host;

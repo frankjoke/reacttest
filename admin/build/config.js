@@ -1,6 +1,12 @@
 export default function config() {
+  // config file to include:
+  // iconName string for the adapter-icon
+  // configTool [] for the array of pages/Tabs
+  // translations object with translation keys/languages of text to be translated from configTool
   return {
-    configTooly: [
+    iconName: "broadlink.png",
+    encryptedFields: ["password"],
+    configTool_test: [
       {
         icon: "settings",
         spacing: 1,
@@ -17,7 +23,6 @@ export default function config() {
         ],
       },
     ],
-    encryptedFields: ["password"],
     configTool: [
       {
         icon: "settings",
@@ -25,6 +30,42 @@ export default function config() {
         label: "config",
         spacing: 1,
         items: [
+          {
+            label: "Adapter Settings",
+            itype: "$text",
+            variant: "body2",
+            lvariant: "subtitle2",
+            cols: 1,
+          },
+          {
+            label: "set Adapter log",
+            itype: "$select",
+            field: "$undefined",
+            iselect: "||debug|info|warning|error|silly",
+            onClick:
+              "{Iob.connection.extendObject(Iob.getStore.instanceId,{common: {loglevel: value}});}",
+            convertOld: "Iob.getStore.instanceConfig.common.loglevel",
+            hint: "change loglevel for adapter - will restart adapter!",
+            prependIcon: "playlist_add_check",
+            cols: 2,
+          },
+          /*           {
+            label: "set running log level",
+            itype: "$select",
+            vdivider: "start",
+            field: "logLevel",
+            iselect: "||debug|info|warning|error|silly",
+            onClick: "{Iob.setStateValue('.logLevel', value)}",
+            convertOld: "Iob.getStateValue('.logLevel')",
+            hint: "change loglevel within running adapter",
+            prependIcon: "grading",
+            disabled: (props, Iob) => !Iob.getStore.adapterStatus.alive,
+            cols: 2,
+          },
+          {
+            itype: "$divider",
+          },
+*/
           {
             label: "Poll time",
             itype: "$number",
@@ -42,7 +83,8 @@ export default function config() {
           {
             label: "Password",
             itype: "$password",
-            hint: "password with minimal 5 letter length",
+            hint:
+              "password length 8-40 chars, at least one lower and uppercase, one special character and one number",
             rules: [
               "{return typeof $ === 'string' && $.length>=8 || t('should be at least 8 letters long!')}",
               {
@@ -71,8 +113,7 @@ export default function config() {
             ],
             variant: "body2",
             lvariant: "h6",
-            cols: 3,
-            xl: 2,
+            cols: 2,
           },
           {
             itype: "$text",
@@ -84,6 +125,16 @@ export default function config() {
             itype: "$icon",
             icon: "translate",
             size: "large",
+            dropZone: "adapterState",
+            dropAction: (e, that, Iob) =>
+              Iob.logSnackbar(
+                "info;dropped Value '{0}' of {1}",
+                e.dropped.stateName,
+                JSON.stringify(e)
+              ),
+            isOverProps: { style: { backgroundColor: "#C6F6C6" } },
+            //            canDropHere: (e, that, Iob) => that.testRules(e.dropped.stateName) === true,
+
             color: "error",
             tooltip:
               "This is a testicon, you may click on it and copy not implemented translations to clipboard",
@@ -91,9 +142,11 @@ export default function config() {
               "{Iob.logSnackbar('info;!copyToClipboard {0}', Iob.copyToClipboard(Iob.notFoundI18n));}",
             noGrid: true,
           },
-          {
+          /*           {
             itype: "$divider",
           },
+ */
+
           {
             label: "Use specific interface",
             itype: "$select",
@@ -113,14 +166,16 @@ export default function config() {
           {
             label: "Define Unknown Type",
             itype: "$chips",
+            clickable: true,
             vdivider: "start",
             hint: "Add new device type like `0x12ab=RM4`",
             field: "new",
             prependIcon: "library_add",
             rules: [
               {
-                regexp: "/^((0x)?[0-9a-f]+=[0-9a-z]+)*$/i",
-                message: "Need to be something like 0x12ab=RMP",
+                //                regexp: "/^((0x)?[0-9a-f]+=[0-9a-z]+)*$/i",
+                regexp: /^((0x)?[0-9a-f]+=[0-9a-z]+)*$/i,
+                message: "Need to be something like 0x12ab=RMP for `{0}`",
               },
             ],
             cols: 4,
@@ -130,18 +185,51 @@ export default function config() {
           {
             label: "encryptedFields",
             itype: "$chips",
+            //            dropZone: ["adapterState","chipsGroup"],
+            dropZone: ["adapterState", "chipsGroup"],
+            dragZone: "chipsGroup",
+            dropAction: (e, that, Iob) => {
+              const test = that.testRules(e.dropped.stateName);
+              //              console.log("dropAction", e, that, test);
+              test == true
+                ? that.doChangeValue(that.state.value.concat(e.dropped.stateName).sort(), e)
+                : Iob.logSnackbar(
+                    "warning;dropped Value '{0}' invalid because of {1}",
+                    e.dropped.stateName,
+                    test
+                  );
+            },
+            isOverProps: { style: { backgroundColor: "#C6F6C6" } },
+            canDropHere: (e, that, Iob) =>
+              that.testRules(e.value) === true && that.state.value.indexOf(e.value) < 0,
             hint: "Enter field names which should be encrypted in config",
             vdivider: "start",
             field: "encryptedFields",
+            iselect: ($, props, Iob) =>
+              Object.keys(props.inative).filter((i) => typeof props.inative[i] === "string"),
             prependIcon: "enhanced_encryption",
+            freeSolo: false,
+            clickable: false,
+            disableClearable: true,
+            fullWidth: true,
             rules: [
+              ($, t, that) => {
+                if (!Array.isArray($)) $ = [$];
+                const names = Object.keys(that.props.inative).filter(
+                  (i) => typeof that.props.inative[i] === "string"
+                );
+                return (
+                  $.filter((i) => names.indexOf(i) < 0).length == 0 ||
+                  t("need to be one of the inative field names!")
+                );
+              },
               {
-                regexp: "/^[_$\\w]+$/i",
-                message: "Need to be native field names",
+                regexp: "/^[_$\\w]*$/i",
+                message: "Need to be native field name",
               },
             ],
             convertOld: "stringToArrayComma",
-            cols: 2,
+            cols: 3,
           },
           {
             itype: "$divider",
@@ -151,7 +239,6 @@ export default function config() {
             itype: "$switch",
             field: "debug",
             tooltip: "Switch debug mode of adapter on or off",
-            disabled: false,
             prependIcon: "bug_report",
             color: "secondary",
             cols: 2,
@@ -161,7 +248,6 @@ export default function config() {
             label: "debug",
             field: "debug",
             tooltip: "test Checkbox debug mode of adapter on or off",
-            disabled: false,
             labelPlacement: "start",
             prependIcon: "bug_report",
             colorx: "error",
@@ -178,36 +264,11 @@ export default function config() {
               "{if (e.message.id.endsWith('._NewDeviceScan')) {Iob.logSnackbar('info;'+ (!!e.message.state.val ? 'start device scan now' : 'finished device scan'));} }",
             icon: "perm_scan_wifi",
             size: "large",
+            receivedFile: (a, b) => console.log("receivedFile", a, b),
             variant: "contained",
             cols: 2,
           },
-          {
-            label: "set running log level",
-            itype: "$select",
-            vdivider: "start",
-            field: "logLevel",
-            iselect: "||debug|info|warning|error|silly",
-            onClick: "{Iob.setStateValue('.logLevel', value)}",
-            convertOld: "Iob.getStateValue('.logLevel')",
-            hint: "change loglevel within running adapter",
-            prependIcon: "playlist_add_check",
-            defaultValue: "",
-            cols: 2,
-          },
-          {
-            label: "set Adapter log",
-            itype: "$select",
-            field: "$undefined",
-            iselect: "||debug|info|warning|error|silly",
-            onClick:
-              "{Iob.connection.extendObject(Iob.getStore.instanceId,{common: {loglevel: value}});}",
-            convertOld: "Iob.getStore.instanceConfig.common.loglevel",
-            hint: "change loglevel for adapter - will restart adapter!",
-            prependIcon: "playlist_add_check",
-            defaultValue: "",
-            cols: 2,
-          },
-          {
+          /*           {
             label: "Learn RM4",
             itype: "$button",
             tooltip: "Learn IR code on Broadlink RM4",
@@ -222,30 +283,175 @@ export default function config() {
             variant: "contained",
             cols: 1,
           },
+ */
           {
-            label: "Learn RMPRPLUS",
+            label: "Display Language",
+            itype: "$select",
+            iselect: ($, props, Iob) =>
+              Object.keys(Iob.getStore.translations).map((i) => ({ value: i, label: i })),
+            hint: "en, de, .... ",
+            field: "$undefined",
+            convertOld: ($, props, Iob) => Iob.getStore.displayLanguage,
+            onClick: (e, v, Iob) => Iob.changeLanguage(v),
+            native: true,
+            multiple: false,
+            prependIcon: "router",
+            cols: 2,
+            xl: 2,
+          },
+          {
+            label: "Multiline",
+            itype: "$string",
+            multiline: true,
+            hint: "maybe multiline works!",
+            placeholder: "try to enter Text here",
+            defaultValue: "TestText",
+            cols: 2,
+          },
+          {
+            label: "Learn RM..PLUS",
             itype: "$state",
             name: ".RM:RMPROPLUS._Learn",
             cols: 1,
           },
+
           {
-            label: "send sql.0",
-            itype: "$button",
-            field: "$undefined",
-            icon: "perm_data_setting",
-            onClick: (e, value, Iob) => {
-              //            Iob.sendTo("sql.0", "query", "SELECT * FROM datapoints").then((x) =>
-              Iob.sendTo("sql.0", "getEnabledDPs").then((x) =>
-                Iob.logSnackbar(";!sql result=" + JSON.stringify(x))
-              );
-            },
-            cols: 1,
+            itype: "$stateBrowser",
+            dragZone: "adapterState",
+            pageSize: 25,
+            cols: 6,
           },
           {
-            label: "WifiLampe",
-            itype: "$state",
-            name: ".A1:EAIR1.AirQuality",
-            cols: 1,
+            itype: "$grid",
+            spacing: 1,
+            cols: 6,
+            items: [
+              {
+                label: "Learn RM..Plus",
+                itype: "$button",
+                icon: "smart_button",
+                tooltip: "Learn IR code on Broadlink RMProPlus",
+                field: "$undefined",
+                onClick: (e, props, Iob) => {
+                  Iob.setStateValue(".RM:RMPROPLUS._Learn", true);
+                  Iob.logSnackbar("warning;set state {0}", ".RM:RMPROPLUS._Learn");
+                },
+                disabled: "!Iob.getStore.adapterStatus.alive",
+                cols: 2,
+              },
+              {
+                label: "send sql.0",
+                itype: "$button",
+                field: "$undefined",
+                icon: "perm_data_setting",
+                /*             onClickx: (e, value, Iob) => {
+                  //            Iob.sendTo("sql.0", "query", "SELECT * FROM datapoints").then((x) =>
+                  Iob.sendTo("sql.0", "getEnabledDPs").then((x) =>
+                    Iob.logSnackbar(";!sql result=" + JSON.stringify(x))
+                  );
+                },
+                onClicky: (e, value, Iob) => {
+                  //            Iob.sendTo("sql.0", "query", "SELECT * FROM datapoints").then((x) =>
+                  Iob.commandReceiveNoErr('sendToHost', Iob.getStore.instanceConfig.common.host, "getHostInfoShort",  {}).then((x) =>
+                    Iob.logSnackbar(";!gethostinfo result=" + JSON.stringify(x))
+                  );
+                },
+     */
+
+                onClick: (e, value, Iob) => {
+                  //            Iob.sendTo("sql.0", "query", "SELECT * FROM datapoints").then((x) =>
+                  Iob.sendToHost(undefined, "getRepository", {
+                    repo: Iob.getStore.systemConfig.common.activeRepo,
+                  }).then((x) =>
+                    Iob.logSnackbar(
+                      ";!gethostinfo result=" + JSON.stringify(Object.entries(x).slice(0, 1))
+                    )
+                  );
+                },
+                cols: 2,
+              },
+              {
+                label: "getInstalled",
+                itype: "$button",
+                field: "$undefined",
+                icon: "perm_data_setting",
+                onClick: (e, value, Iob) => {
+                  //            Iob.sendTo("sql.0", "query", "SELECT * FROM datapoints").then((x) =>
+                  Iob.sendToHost(undefined, "getInstalled", {}).then((x) =>
+                    Iob.logSnackbar(";!" + JSON.stringify(Object.entries(x).slice(0, 2)))
+                  );
+                },
+                cols: 2,
+              },
+              {
+                label: "WifiLampe",
+                itype: "$state",
+                name: ".A1:EAIR1.AirQuality",
+                cols: 2,
+              },
+              {
+                itype: "$log",
+                pageSize: 25,
+                cols: 12,
+              },
+              {
+                itype: "$objectBrowser",
+                field: "$undefined",
+                label: "inative",
+                convertOld: ($, props, Iob, that) => {
+                  //                  console.log("ObjectBrowser", that, $, props);
+                  /*                   Iob.sendToHost(undefined, "getInstalled", {}).then((x) => {
+                    that.setState({ value: x });
+                  });
+                  return {};
+ */
+
+                  return props.inative;
+                },
+                cols: 12,
+              },
+            ],
+          },
+
+          {
+            itype: "$object",
+            field: "testObject",
+            hideItem: true,
+            cols: 7,
+            items: [
+              {
+                label: "Poll time",
+                itype: "$number",
+                hint: "Poll devices every (15 - 300) seconds, 0 = no polling",
+                field: "poll",
+                min: 15,
+                max: 300,
+                zero: true,
+                fixed: true,
+                fullWidth: true,
+                prependIcon: "hourglass_empty",
+                defaultValue: "30",
+                cols: 6,
+              },
+              {
+                label: "Password",
+                itype: "$password",
+                hint: "password with minimal 5 letter length",
+                rules: [
+                  "{return typeof $ === 'string' && $.length>=8 || t('should be at least 8 letters long!')}",
+                  {
+                    regexp: "/((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^\\w\\s]).{8,40})/",
+                    message:
+                      "need to include one lower case, one upper case, one number and one special character at least 8 and maximal 40 characters long!",
+                  },
+                ],
+                placeholder: "enter password here",
+                field: "password",
+                prependIcon: "vpn_key",
+                fullWidth: true,
+                cols: 6,
+              },
+            ],
           },
           {
             itype: "$divider",
@@ -349,83 +555,111 @@ export default function config() {
               },
             ],
           },
-          {
-            itype: "$log",
-            pageSize: 25,
-            cols: 12,
-            xl: 6,
-          },
         ],
       },
       {
         label: "Scenes",
         icon: "playlist_add",
-        hideItem: "!this.props.inative.debug",
         tooltip: "Create and manage scenes or special actions",
-        spacing: 2,
+        spacing: 1,
         items: [
           {
-            label: "Scene setup",
-            itype: "$table",
-            field: "scenes",
-            "dyisable-sort": true,
-            cols: 12,
-            items: [
-              {
-                headerName: "Name",
-                itype: "$string",
-                field: "name",
-                align: "left",
-                rules: ["uniqueTableRule", "onlyWords"],
-                sortable: true,
-                defaultValue: "newName",
-                width: "20%",
-              },
-              {
-                headerName: "Scene",
-                itype: "$chips",
-                field: "scene",
-                align: "left",
-                sortable: false,
-                width: "75%",
-                convertOld: "stringToArrayComma",
-              },
-            ],
+            itype: "$stateBrowser",
+            pageSize: 25,
+            dragZone: "adapterState",
+            cols: 6,
           },
           {
-            label: "States setup",
-            itype: "$table",
-            field: "switches",
-            "dyisable-sort": true,
-            cols: 12,
+            itype: "$grid",
+            spacing: 1,
+            cols: 6,
             items: [
               {
-                headerName: "Name",
-                itype: "$string",
-                field: "name",
-                align: "left",
-                rules: ["uniqueTableRule", "onlyWords"],
-                sortable: true,
-                defaultValue: "newName",
-                width: "20%",
+                label: "Scene setup",
+                itype: "$table",
+                field: "scenes",
+                "dyisable-sort": true,
+                cols: 12,
+                items: [
+                  {
+                    headerName: "Name",
+                    itype: "$string",
+                    tooltip: "name of combined state",
+                    field: "name",
+                    align: "left",
+                    rules: ["uniqueTableRule", "onlyWords"],
+                    sortable: true,
+                    defaultValue: "newName",
+                    width: "20%",
+                  },
+                  {
+                    headerName: "Scene",
+                    itype: "$chips",
+                    tooltip: "sequence of commands, number=delay",
+                    field: "scene",
+                    align: "left",
+                    clickable: true,
+                    sortable: false,
+                    width: "75%",
+                    iselect: ($, props, Iob) => Object.keys(Iob.getStore.stateNames).sort(),
+                    convertOld: "stringToArrayComma",
+                    dropZone: ["adapterState", "chipsGroup"],
+                    dragZone: "chipsGroup",
+                    dropAction: (e, that, Iob) =>
+                      that.doChangeValue((that.state.value || []).concat(e.dropped.stateName), e),
+                    isOverProps: { style: { backgroundColor: "#C6F6C6" } },
+                  },
+                ],
               },
               {
-                headerName: "On",
-                itype: "$chips",
-                field: "on",
-                align: "left",
-                sortable: false,
-                width: "45%",
-                convertOld: "stringToArrayComma",
-              },
-              {
-                headerName: "Off",
-                itype: "$chips",
-                field: "off",
-                align: "center",
-                sortable: false,
-                width: "30%",
-                convertOld: "stringToArrayComma",
+                label: "States setup",
+                itype: "$table",
+                field: "switches",
+                "dyisable-sort": true,
+                cols: 12,
+                items: [
+                  {
+                    headerName: "Name",
+                    itype: "$string",
+                    field: "name",
+                    align: "left",
+                    rules: ["uniqueTableRule", "onlyWords"],
+                    sortable: true,
+                    defaultValue: "newName",
+                    width: "auto",
+                  },
+                  {
+                    headerName: "On",
+                    itype: "$chips",
+                    field: "on",
+                    align: "left",
+                    clickable: true,
+                    sortable: false,
+                    width: "45%",
+                    iselect: ($, props, Iob) => Object.keys(Iob.getStore.stateNames).sort(),
+                    dropZone: ["adapterState", "chipsGroup"],
+                    dragZone: "chipsGroup",
+                    dropAction: (e, that, Iob) =>
+                      that.doChangeValue((that.state.value || []).concat(e.dropped.stateName), e),
+                    isOverProps: { style: { backgroundColor: "#C6F6C6" } },
+                    convertOld: "stringToArrayComma",
+                  },
+                  {
+                    headerName: "Off",
+                    itype: "$chips",
+                    field: "off",
+                    clickable: true,
+                    align: "center",
+                    sortable: false,
+                    width: "auto",
+                    iselect: ($, props, Iob) => Object.keys(Iob.getStore.stateNames).sort(),
+                    dropZone: ["adapterState", "chipsGroup"],
+                    dropAction: (e, that, Iob) =>
+                      that.doChangeValue((that.state.value || []).concat(e.dropped.stateName), e),
+                    isOverProps: { style: { backgroundColor: "#C6F6C6" } },
+                    convertOld: "stringToArrayComma",
+                  },
+                ],
               },
             ],
           },
@@ -567,13 +801,39 @@ export default function config() {
           },
         ],
       },
+      {
+        label: "Log",
+        tooltip: "",
+        icon: "speaker_notes",
+        hideItem: "!this.props.inative.debug",
+        items: [
+          {
+            itype: "$log",
+            pageSize: 25,
+            cols: 12,
+          },
+        ],
+      },
+      {
+        label: "Adapters",
+        tooltip: "only for Test",
+        icon: "view_list",
+        //        hideItem: "!this.props.inative.debug",
+        items: [
+/*           {
+            itype: "$log",
+            pageSize: 25,
+            cols: 12,
+          },
+ */        ],
+      },
     ],
     translation: {
-      getMissing: { 
+      getMissing: {
         en: "Missing text",
         de: "FehlendeTexte",
       },
-      Enabled: { 
+      Enabled: {
         en: "Enabled",
         de: "Aktiviert",
       },

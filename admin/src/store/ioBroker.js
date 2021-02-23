@@ -54,7 +54,7 @@ const ioBroker = createSlice({
     inativeOld: "",
     adapterInstance: adapterName + "." + instance,
     adapterLog: [],
-    serverName: "http://localhost",
+    serverName: myLocation.protocol + "//" + myLocation.host,
     displayLanguage: window.sysLang || "en",
     adapterStates: {},
     adapterStatus: {},
@@ -112,16 +112,15 @@ const ioBroker = createSlice({
       }
       state.adapterStates = states;
       const stateNames = {};
-      for(const [key, value] of Object.entries(states)) 
-        if(value._name) {
+      for (const [key, value] of Object.entries(states))
+        if (value._name) {
           const name = value._name;
-          const sname = stateNames[name]; 
-          if (sname)  {
-            if (Array.isArray(sname))
-              sname.push(key);
-            else stateNames[name] = [sname, key]
+          const sname = stateNames[name];
+          if (sname) {
+            if (Array.isArray(sname)) sname.push(key);
+            else stateNames[name] = [sname, key];
           } else stateNames[name] = key;
-      }
+        }
       state.stateNames = stateNames;
       const sai = "system.adapter." + adapterInstance;
       let alive = state.adapterStates[sai + ".alive"];
@@ -179,6 +178,7 @@ const ioBroker = createSlice({
       state.inativeChanged = !!action.payload;
     },
     setServerName(state, action) {
+//      console.log("setServerName:", action.payload);
       state.serverName = action.payload;
     },
     setAdapterInstance(state, action) {

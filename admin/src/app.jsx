@@ -10,7 +10,6 @@ import { config } from "chai";
 import Iob from "./components/Iob";
 import { ThemeProvider } from "@material-ui/core/styles";
 import { Loader } from "./components/UiComponents";
-import "./components/loader.css";
 import { DndProvider } from "react-dnd-multi-backend";
 import HTML5toTouch from "react-dnd-multi-backend/dist/esm/HTML5toTouch";
 
@@ -47,7 +46,7 @@ class App extends React.Component {
 
   render() {
     const theme = Iob.getTheme || {};
-    return this.props.loaded ? (
+    return this.props.loaded  ? (
       <div className="App">
         <ThemeProvider theme={theme}>
           <DndProvider options={HTML5toTouch}>
@@ -56,7 +55,7 @@ class App extends React.Component {
         </ThemeProvider>
       </div>
     ) : (
-      <Loader theme={theme} />
+      <Loader theme={theme.palette.type} />
     );
   }
 }

@@ -210,6 +210,8 @@ export default function config() {
             prependIcon: "enhanced_encryption",
             freeSolo: false,
             clickable: false,
+            disableClearable: true,
+            fullWidth: true,
             rules: [
               ($, t, that) => {
                 if (!Array.isArray($)) $ = [$];
@@ -395,12 +397,16 @@ export default function config() {
               {
                 itype: "$objectBrowser",
                 field: "$undefined",
+                label: "inative",
                 convertOld: ($, props, Iob, that) => {
                   //                  console.log("ObjectBrowser", that, $, props);
-                  Iob.sendToHost(undefined, "getInstalled", {}).then((x) => {
+                  /*                   Iob.sendToHost(undefined, "getInstalled", {}).then((x) => {
                     that.setState({ value: x });
                   });
                   return {};
+ */
+
+                  return props.inative;
                 },
                 cols: 12,
               },
@@ -812,14 +818,14 @@ export default function config() {
         label: "Adapters",
         tooltip: "only for Test",
         icon: "view_list",
-//        hideItem: "!this.props.inative.debug",
+        //        hideItem: "!this.props.inative.debug",
         items: [
-           {
+/*           {
             itype: "$log",
             pageSize: 25,
             cols: 12,
           },
-        ],
+ */        ],
       },
     ],
     translation: {

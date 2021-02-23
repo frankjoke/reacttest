@@ -1,28 +1,315 @@
 import React from "react";
-import { withStyles, makeStyles } from "@material-ui/core/styles";
-//import GenericApp from "@iobroker/adapter-react/GenericApp";
-//import InputChips from "./InputChips";
-//import ChipInput from "material-ui-chip-input";
-//import { Iob, t, connect } from "./Iob";
 import { Iob, t, connect } from "./Iob";
-import ConfigItem from "./ConfigItem";
+import { IButton, TButton, UButton, InputField, HtmlComponent } from "./UiComponents";
 import ObjectBrowser from "./ObjectBrowser";
 import {
   Paper,
   Container,
   Grid,
   Divider,
+  Button,
   Card,
   CardActionArea,
   CardActions,
   CardContent,
   CardHeader,
+  Avatar,
+  Typography,
+  Collapse,
 } from "@material-ui/core";
+import { lightBlue, lightGreen, lightGrey } from "@material-ui/core/colors";
+import { isNoSubstitutionTemplateLiteral } from "typescript";
 //import { config } from "chai";
 //import { isNotEmittedStatement } from "typescript";
 
-const AdapterEntry = ({ adapter, settings }) => {
-  return <Grid xs={3} sm={3} lg={2} xl={2}><Card>{adapter}, {Iob.stringify(settings, 1)}</Card></Grid>;
+const AdapterEntry = (props) => {
+  let { adapter, settings, adapterStates, instance, repo, index } = props;
+  const [expanded, setExpanded] = React.useState(false);
+  const [menue, setMenue] = React.useState(0);
+  let { icon, localIcon, title, desc, readme, type, version, controller, instances } = settings;
+  const radapter = repo[adapter];
+  if (adapter == "js-controller" && controller) {
+    icon = "https://raw.githubusercontent.com/ioBroker/ioBroker.admin/master/admin/admin.png";
+    adapter = "ioBroker";
+  }
+  if (localIcon) icon = Iob.getStore.serverName.serverName + localIcon;
+  const ainst = { instance };
+  if (instance) {
+    const { _id, common, native } = instance;
+    ainst.loglevel = common.logLevel || "info";
+    ainst.common = common;
+    if (common && common.titleLang) 
+      title = Iob.getTranslatedDesc(common.titleLang);
+    ainst.native = native;
+    ainst.id = _id;
+    ainst.iid = _id.slice("system.adapter.".length);
+    function getS(name) {
+      let state = adapterStates[_id + "." + name];
+      //      console.log(_id + "." + name, state);
+      if (state) ainst[name] = state.val;
+      return state && state.val;
+    }
+    let astates = Object.keys(adapterStates)
+      .filter((i) => i.startsWith(_id + "."))
+      .map((i) => getS(i.split(".").slice(-1)[0]));
+  }
+  const { iid = adapter, alive = false, connected = false } = ainst;
+  const iprops = {
+    style: {
+      margin: "0px 2px",
+    },
+    //     size: "small",
+  };
+  const rversion = (radapter && radapter.version) || version;
+  const newVersion = rversion != version;
+  function menuOptions(i, options={className:"bottom-border-button"}) {
+    const im = i == menue;
+    return {
+      size: "small",
+      color: im ? "secondary" : "primary",
+      onClick: (e) => (!im ? setMenue(i) : null),
+      className: im ? "bottom-border-button" : ""
+    };
+  }
+  function renderOptions() {
+    return (
+      <>
+        <InputField
+          label={"loglevel"}
+          id={index + "-loglevel"}
+          value={ainst.loglevel}
+          inputProps={{ color: "secondary" }}
+          options={"debug|info|warn|error|silly".split("|")}
+          onChange={(e) =>
+            console.log(`set log of ${iid} to `, e.target.value, ainst, instance) ||
+            Iob.connection.extendObject(ainst.id, { common: { loglevel: e.target.value } })
+          }
+        />
+        {Iob.nbsp(3)}
+        {ainst.common && (
+          <InputField
+            label="restart schedule"
+            id={index + "-schedule"}
+            value={ainst.common.restartSchedule}
+          />
+        )}
+      </>
+    );
+  }
+
+  function renderInstall() {
+    if (controller)
+      return (
+        <>
+          <TButton label="create Backup" icon="add_to_queue" tooltip={t("Create backup")} />
+          <TButton
+            label="change setup"
+            icon="settings_input_component"
+            tooltip={t("change setup for backend", iid)}
+          />
+          <TButton
+            label="version"
+            icon="add_to_drive"
+            tooltip={t("install specific version of js-controller {0}", adapter)}
+          />
+        </>
+      );
+    return (
+      <>
+        <TButton
+          label="add"
+          icon="add_to_queue"
+          tooltip={t("add a new instance for {0}", adapter)}
+        />
+        <TButton
+          label="delete"
+          disabled={adapter == "admin" && instances && instances.length <= 1}
+          icon="remove_from_queue"
+          tooltip={t("remove instance {0} from adapters", iid)}
+        />
+        <TButton
+          label="remove"
+          disabled={adapter == "admin"}
+          icon="remove_shopping_cart"
+          tooltip={t("remove adapter {0} from ioBroker", adapter)}
+        />
+        <TButton
+          label="version"
+          icon="add_to_drive"
+          tooltip={t("install specific version or from Git {0}", adapter)}
+        />
+      </>
+    );
+  }
+
+  function renderHeader() {
+    return (
+      <CardHeader
+        style={{ backgroundColor: lightBlue[50], minHeight: 128 }}
+        title={iid}
+        titleTypographyProps={{ variant: "h6" }}
+        subheaderTypographyProps={{ variant: "caption" }}
+        subheader={
+          <>
+            {title ? (
+              <>
+                {title}
+                <br />
+              </>
+            ) : null}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              {newVersion ? (
+                <>
+                  <IButton
+                    color="secondary"
+                    icon="update"
+                    size="small"
+                    tooltip={t("Update now to version {0}!", rversion)}
+                  />
+                  &nbsp;
+                </>
+              ) : null}
+              {t("version: {0}", version)}
+              {newVersion && <b>{t(", available: {0}", rversion)}</b>}
+            </div>
+            {alive && (
+              <>
+                Events&nbsp;↦{ainst.inputCount}&nbsp;/&nbsp;↦{ainst.outputCount},&nbsp;Mem&nbsp;
+                {ainst.memRss}
+              </>
+            )}
+          </>
+        }
+        avatar={<Avatar src={icon} variant="square" style={{ width: "70px", height: "70px" }} />}
+        action={
+          <>
+            {!controller && (
+              <>
+                <IButton
+                  tooltip={!alive ? t("start adapter") : t("stop adapter")}
+                  {...Iob.mergeProps(iprops, {
+                    style: {
+                      color: !alive ? "red" : connected ? "green" : "orange",
+                    },
+                  })}
+                  onClick={(e) => Iob.enableDisableAdapter(!alive, iid)}
+                  icon={!alive ? "play_circle" : "pause_circle"}
+                />
+                {alive ? (
+                  <IButton
+                    tooltip={t("restart adapter")}
+                    onClick={(e) => Iob.setLoglevel(null, iid)}
+                    icon="replay"
+                    {...iprops}
+                  />
+                ) : null}
+              </>
+            )}
+            <IButton
+              tooltip={t("configure adapter instance")}
+              //                onClick={(e) => Iob.setLoglevel()}
+              icon="settings"
+              {...iprops}
+            />
+            {/*             <IButton icon="more_vert" />
+             */}
+          </>
+        }
+      ></CardHeader>
+    );
+  }
+  //  console.log(adapter, ainst, iprops);
+  return (
+    <Grid item xs={12} sm={6} lg={4} xl={3}>
+      <Card raised>
+        {renderHeader()}
+        <CardActions
+          disableSpacing
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            backgroundColor: lightBlue[50],
+            padding: "1px",
+          }}
+        >
+          <div>
+            <TButton label="options" tooltip="displays adapter description" {...menuOptions(0)} />
+            <TButton label="install" tooltip="install or update adapter" {...menuOptions(1)} />
+            {!controller && (
+              <>
+                <TButton
+                  label="description"
+                  tooltip="set adapter start and log options"
+                  {...menuOptions(2)}
+                />
+                <TButton label="ressources" tooltip="show ressources" {...menuOptions(3)} />
+              </>
+            )}{" "}
+          </div>
+          <div>
+            <IButton
+              tooltip={t("open adapter help")}
+              src={readme}
+              //                onClick={(e) => Iob.setLoglevel()}
+              icon="help_outline"
+              {...iprops}
+            />
+            <IButton icon="more_vert" tooltip="whatever other options you may add as a menu..." />
+          </div>
+        </CardActions>
+        <Divider />
+        <CardContent style={{ minHeight: "80px", padding: "8px" }}>
+          {menue == 0 ? renderOptions() : null}
+          {menue == 1 ? renderInstall() : null}
+          {menue == 2 ? (
+            <Typography variant="body2">{Iob.getTranslatedDesc(desc)}</Typography>
+          ) : null}
+          {menue == 3 ? (
+            <>
+              ainst:
+              <HtmlComponent
+                component="pre"
+                html={Iob.syntaxHighlight(Iob.stringify(ainst, 1, "\t"))}
+              />
+              <br />
+              common:
+              <HtmlComponent
+                component="pre"
+                html={Iob.syntaxHighlight(Iob.stringify(ainst.common, 2, "\t"))}
+              />
+              <br />
+              native:
+              <HtmlComponent
+                component="pre"
+                html={Iob.syntaxHighlight(Iob.stringify(ainst.native, 2, "\t"))}
+              />
+            </>
+          ) : null}
+        </CardContent>
+        {/*         <Divider />
+        <CardActions disableSpacing>
+          <IButton
+            icon={expanded ? "expand_less" : "expand_more"}
+            tooltip={expanded ? "close expanded" : "open expanded"}
+            onClick={(e) => setExpanded(!expanded)}
+            style={{ marginLeft: "auto" }}
+          />
+        </CardActions>
+        <Collapse in={expanded} timeout="auto" unmountOnExit>
+          <CardContent>
+            
+            {Iob.stringify(ainst, 1, null, 1)}
+          </CardContent>
+        </Collapse>
+ */}
+      </Card>
+    </Grid>
+  );
 };
 
 class AdapterList extends React.Component {
@@ -34,8 +321,9 @@ class AdapterList extends React.Component {
     Iob.sendToHost(undefined, "getInstalled", {})
       .then((x) => {
         for (const [adapter, value] of Object.entries(x))
-          if (adapter!="js-controller") Iob.connection.getAdapterInstances(adapter).then(i => value.instances = i)
-        this.setState({ installed: x })
+          if (adapter != "js-controller")
+            Iob.connection.getAdapterInstances(adapter).then((i) => (value.instances = i));
+        this.setState({ installed: x });
       })
       .then((_) =>
         Iob.sendToHost(undefined, "getRepository", {
@@ -48,26 +336,50 @@ class AdapterList extends React.Component {
 
   render() {
     //    console.log(this.props.adapterLog);
-    const { adapterStates } = this.props;
+    const { adapterStates, adapterStatus } = this.props;
     const { repo, installed, page } = this.state;
-    //    console.log(repo, installed);
+    const alist = [];
+    const anames = {};
+    Object.entries(installed).map(([adapter, settings], index) => {
+      const { controller, instances = [null] } = settings;
+      //              if (index>5) return null;
+      instances.map((ai, ii) => {
+        const { _id } = ai || {};
+        let alive = _id && adapterStates[_id + ".alive"];
+        //        console.log(_id, alive);
+        alive = (alive && alive.val) || controller;
+        const aname = (alive ? " " : ".") + (controller ? " " : ".") + adapter + ii;
+        const nlist = {
+          adapter,
+          settings,
+          id: _id,
+          alive,
+          instance: ai,
+          key: `${index}-${ii}`,
+          index: `AdapterList-${index}-${ii}`,
+        };
+        anames[aname] = nlist;
+        alist.push(nlist);
+      });
+    });
+    //    console.log(alist);
     return (
       <Container maxWidth={false} disableGutters style={{ overflow: "hidden" }}>
-        <Paper elevation={2} style={{ padding: "4px 4px", margin: "3px 3px" }}>
-          <Grid container spacing={2} style={{ paddingTop: "4px", paddingBottom: "8px" }}>
-            {Object.entries(installed).map(([adapter, settings], index) => (
-              <AdapterEntry key={index} adapter={adapter} settings={settings} />
+        <Grid container spacing={1} style={{ paddingTop: "4px", paddingBottom: "8px" }}>
+          {Object.keys(anames)
+            .sort()
+            .map((a) => (
+              <AdapterEntry {...anames[a]} adapterStates={adapterStates} repo={repo} />
             ))}
-          </Grid>
-          <ObjectBrowser label="Installed" value={installed} />
-          <ObjectBrowser label="repo" value={repo} />
-        </Paper>
+        </Grid>
+        <ObjectBrowser label="Installed" value={installed} />
+        <ObjectBrowser label="repo" value={repo} />
       </Container>
     );
   }
 }
 
 export default connect((state) => {
-  const { adapterStates, systemConfig } = state;
-  return { adapterStates, systemConfig };
+  const { adapterStatus, adapterStates, systemConfig } = state;
+  return { adapterStatus, adapterStates, systemConfig };
 })(AdapterList);

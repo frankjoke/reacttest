@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
     <!-- Load ioBroker scripts and styles
@@ -27,43 +27,75 @@
       console.log(location);
     </script>
 -->
-    <!-- Load our own files --> 
+    <!-- Load our own files -->
     <!--        <link rel="stylesheet" type="text/css" href="./admin/style.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />  
     <link rel="stylesheet" href="./node_modules/material-icons/iconfont/material-icons.css" />
  -->
     <script>
+      const olocation = {};
+      Object.keys(window.location).map((i) => {
+        if (window.location.hasOwnProperty(i) && typeof window.location[i] === "string") {
+          olocation[i] = window.location[i];
+        }
+      });
+
+      const dlocation = {
+        port: "8181",
+        hostname: "localhost",
+        protocol: "http",
+        adapterName: "broadlink2",
+        instance: "0",
+      };
+      //      console.log(olocation);
+      if (olocation.search && olocation.search.startsWith("?"))
+        olocation.search
+          .slice(1)
+          .split("&")
+          .map((i) => {
+            let [name, value] = i.split("=");
+            if (name) name = name.trim();
+            if (value) {
+              dlocation[name] = value.trim();
+            }
+          });
+      let protocol =
+        olocation.protocol == "file:"
+          ? dlocation.protocol || olocation.protocol
+          : olocation.protocol;
+      let port = olocation.port || "1235";
+      let isDev = port = "1234" || port == "1235" || port == "1236" || port == "1237" || port == "1238" || port == "1239";
+      let hostname = isDev
+        ? dlocation.hostname || olocation.hostname
+        : olocation.hostname || "localhost";
+      port = isDev ? dlocation.port || olocation.port : port;
+      let host = hostname + ":" + port;
+      window.myLocation = {
+        isDev,
+        port,
+        hostname,
+        host,
+        protocol,
+        search: olocation.search,
+        olocation,
+        dlocation,
+      };
+      if (isDev) window.myLocation.adapterName = dlocation.adapterName;
+//      console.log(window.myLocation);
+
       window.registerSocketOnLoad = function (o) {
         window.socketLoadedHandler = o;
       };
+
       const script = document.createElement("script");
       script.type = "text/javascript";
       script.onload = () => {
         "function" == typeof window.socketLoadedHandler && window.socketLoadedHandler();
       };
-      const olocation = {};
-      const dport = "8181";
-      const dhostname = "localhost";
-      const dadapterName = "broadlink2";
-      const dprotocol = "http:";
-      const dinstance = "0";
-      Object.keys(window.location).map((i) => {
-        if (window.location.hasOwnProperty(i)) olocation[i] = window.location[i];
-      });
- 
-      let protocol = olocation.protocol == "file:" ? dprotocol : olocation.protocol;
-      let port = olocation.port || "1235";
-      let isDev = port == "1234" || port== "1235" || port=="1236";
-      let hostname = isDev ? dhostname : olocation.hostname || "localhost";
-      port = isDev ? dport : port;
-      let host = hostname + ":" + port;
-      window.myLocation = { port, hostname, host, protocol, search: olocation.search, olocation };
-      if (isDev) window.myLocation.adapterName = dadapterName;
-//      console.log(window.myLocation);
       script.src = `${protocol}//${host}/socket.io/socket.io.js`;
       window.socketUrl = host;
       document.head.appendChild(script); // now socket.io is loaded from destination server!
-//      console.log(window.location, window.myLocation, script.src);
+      //      console.log(window.location, window.myLocation, script.src);
     </script>
   </head>
 

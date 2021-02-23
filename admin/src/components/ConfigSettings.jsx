@@ -242,7 +242,7 @@ class ConfigSettings extends React.Component {
   render() {
     const { tab, page, config } = this.state;
     //    console.log(tab, page);
-    if (!page || !page.items || !page.items.length) return null;
+    if (!page || !page.items) return null;
     const { inative } = this.props;
     let ti = 0;
     const pi = [];

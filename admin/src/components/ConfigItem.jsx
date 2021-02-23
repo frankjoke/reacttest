@@ -511,7 +511,7 @@ class ConfigItem extends React.Component {
     const value = this.state.value || "";
     const helper = this.error ? this.errorString : hint ? hint : "";
     //    console.log("select:", `'${value}'`, key, iselect, items);
-    const sw = (
+/*     const sw = (
       <FormControl
         {...{ required, size, margin, disabled, fullWidth }}
         hiddenLabel={true}
@@ -535,6 +535,30 @@ class ConfigItem extends React.Component {
         ></Autocomplete>
         {helper ? <FormHelperText>{helper}</FormHelperText> : null}
       </FormControl>
+    );
+ */
+    const sw = (
+      <InputField
+        {...{ required, size, margin, disabled, fullWidth }}
+        error={this.error}
+        label={label}
+        errorString={this.errorString}
+        helper={hint}
+          value={value}
+          options={iselect}
+          id={key}
+          key={key}
+          size={size}
+          color={color}
+          disabled={disabled}
+          disableClearable
+//          getOptionSelected={(o, v) => o.value == v}
+          onChange={(e, v) => /* console.log(`switch change`,e,v) || */ this.doChangeValue(e.target.value.value)}
+          getOptionLabel={(option) =>
+            typeof option === "object" ? option.label : oselect[option] || ""
+          }
+//          renderInput={(params) => <TextField {...params} label={label} size="small" />}
+          />
     );
     return AddIcon(prependIcon, AddTooltip(tooltip, sw));
   }
@@ -574,6 +598,7 @@ class ConfigItem extends React.Component {
         options={iselect}
         dragZone={dragZone}
         error={this.error}
+        errorString={this.errorString}
         onChange={(e) => this.doChangeValue(e.target.value)}
         id={key}
         type="chips"
@@ -582,78 +607,7 @@ class ConfigItem extends React.Component {
         {...items}
       />
     );
-    /*     let sw1 = (
-      <FormControl
-        {...{ required, size, margin, disabled }}
-        hiddenLabel={!label}
-        error={this.error}
-        fullWidth={fullWidth}
-      >
-        <Autocomplete
-          value={value}
-          multiple
-          id={key}
-          options={iselect}
-          freeSolo={freeSolo === false ? false : true}
-          renderTags={(value, getTagProps) =>
-            value.map(
-              (option, index) => (
-                <MyChip
-                  key={`${key}-${option}-${index}`}
-                  dropZone={dragZone}
-                  dragValue={{ value: option, dropped: option, index, that: this }}
-                  dragProps={{ style: { opacity: 0.5, cursor: "move" } }}
-                  dragTest={
-                    ({ dropZone, props, isDragging, dragHandle, dragValue }) => true
-                    //                console.log(`'${dropZone}'`, props, isDragging, dragHandle, dragValue)
-                  }
-                  onDoubleClick={(e) => clickable && this.onChangeFun(option)}
-                  onDelete={(e) =>
-                    this.doChangeValue(value.slice(0, index).concat(value.slice(index + 1)))
-                  }
-                  moveChip={(src, dst) => {
-                    let arr = Array.from(value);
-                    var element = arr[src];
-                    arr.splice(src, 1);
-                    arr.splice(dst, 0, element);
-                    this.doChangeValue(arr);
-                  }}
-                  //                  key={key + index}
-                  //            {...getTagProps(index)}
-                  clickable={clickable}
-                  index={index}
-                  label={option}
-                  size="small"
-                />
-              ),
-              this
-            )
-          }
-          renderInput={(params) => {
-            this.onChangeFun =
-              params.inputProps && params.inputProps.onChange
-                ? (v) => params.inputProps.onChange({ target: { value: v } })
-                : () => null;
-
-            return (
-              <TextField
-                {...params}
-                label={label}
-                onKeyUp={(e) => (e.key == "Escape" ? this.onChangeFun("") : null)}
-                fullWidth={fullWidth}
-                placeholder={placeholder}
-              />
-            );
-          }}
-          onChange={(e, v) => {
-            v.map((c) => this.checkRules(c));
-            this.doChangeValue(v, e);
-          }}
-        />
-        {helperText ? <FormHelperText>{helperText}</FormHelperText> : null}
-      </FormControl>
-    );
- */ return AddIcon(
+    return AddIcon(
       prependIcon,
       sw
     );
@@ -844,7 +798,7 @@ class ConfigItem extends React.Component {
           return test === true;
         }}
         dropAction={(e) => {
-          console.log("dropAction", dropZone, e);
+//          console.log("dropAction", dropZone, e);
           if (dropAction) return dropAction(e, this, Iob);
           const test = this.testRules(e.value);
           test === true
