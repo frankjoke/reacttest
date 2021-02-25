@@ -102,13 +102,22 @@ class ObjectBrowser extends React.Component {
       }
     if (ncount) newState = nstate;
     if (props.value !== undefined)
-      newState = { ...nstate, ...ObjectBrowser._updateFilter(props.value, state) };
+      newState = {
+        ...nstate,
+        ...ObjectBrowser._updateFilter(props.value, state),
+      };
     //    console.log(newState);
     return newState;
   }
 
   static _updateFilter(value, state) {
-    let { filteredLen = 0, rowsFiltered = [], expanded = [], filter = "", rootName = "" } = state;
+    let {
+      filteredLen = 0,
+      rowsFiltered = [],
+      expanded = [],
+      filter = "",
+      rootName = "",
+    } = state;
 
     const list = [];
 
@@ -124,14 +133,16 @@ class ObjectBrowser extends React.Component {
         if (value.length) {
           item.expandable = true;
           item.isexpanded = expanded.indexOf(id) >= 0;
-          if (item.isexpanded) value.map((v, i) => createList(`[${i}]`, v, ida));
+          if (item.isexpanded)
+            value.map((v, i) => createList(`[${i}]`, v, ida));
         }
       } else if (type.typeof === "object") {
         const obs = Object.entries(value);
         if (obs.length) {
           item.expandable = true;
           item.isexpanded = expanded.indexOf(id) >= 0;
-          if (item.isexpanded) for (const [key, value] of obs) createList(key, value, ida);
+          if (item.isexpanded)
+            for (const [key, value] of obs) createList(key, value, ida);
         }
       }
     }
@@ -212,7 +223,15 @@ class ObjectBrowser extends React.Component {
 
   renderRow(row, ri) {
     const { expandable, isexpanded, id, level, name, stateName } = row;
-    const { expanded, page, pageSize, singlemode, dragZone, value, columns } = this.state;
+    const {
+      expanded,
+      page,
+      pageSize,
+      singlemode,
+      dragZone,
+      value,
+      columns,
+    } = this.state;
     const rin = page * pageSize + ri;
     const cellProps = {
       component: "td",
@@ -276,7 +295,11 @@ class ObjectBrowser extends React.Component {
     }
     const key = (this.props.index || ObjectBrowser) + "h" + ri;
     return (
-      <TableRow key={key} hover style={isexpanded ? { backgroundColor: lightBlue[50] } : {}}>
+      <TableRow
+        key={key}
+        hover
+        style={isexpanded ? { backgroundColor: lightBlue[50] } : {}}
+      >
         <TableCell
           {...cellProps}
           width={columns[0].width}
@@ -298,18 +321,33 @@ class ObjectBrowser extends React.Component {
             ) : (
               <IButton size="small" icon="chevron_right" />
             )}
-            <Typography variant="subtitle2" title={`${name} = ${row.class}\n${id}\n${row.value}`}>
+            <Typography
+              variant="subtitle2"
+              title={`${name} = ${row.class}\n${id}\n${row.value}`}
+            >
               <strong>{name}</strong>{" "}
             </Typography>
           </div>
         </TableCell>
-        <TableCell {...cellProps} width={columns[1].width} align={columns[1].align}>
+        <TableCell
+          {...cellProps}
+          width={columns[1].width}
+          align={columns[1].align}
+        >
           <Typography variant="subtitle2">{row.id}</Typography>
         </TableCell>
-        <TableCell {...cellProps} width={columns[2].width} align={columns[2].align}>
+        <TableCell
+          {...cellProps}
+          width={columns[2].width}
+          align={columns[2].align}
+        >
           {`${row.class}`}
         </TableCell>
-        <TableCell {...cellProps} width={columns[3].width} align={columns[3].align}>
+        <TableCell
+          {...cellProps}
+          width={columns[3].width}
+          align={columns[3].align}
+        >
           {`${sval}`}
         </TableCell>
       </TableRow>
@@ -346,8 +384,12 @@ class ObjectBrowser extends React.Component {
             </Typography>
             <TButton
               label={t("single")}
-              tooltip={t("switch between single open tree or allow multiple open trees")}
-              icon={singlemode ? "radio_button_checked" : "radio_button_unchecked"}
+              tooltip={t(
+                "switch between single open tree or allow multiple open trees"
+              )}
+              icon={
+                singlemode ? "radio_button_checked" : "radio_button_unchecked"
+              }
               onClick={(e) => that.setState({ singlemode: !singlemode })}
               color="inherit"
             />
@@ -366,10 +408,13 @@ class ObjectBrowser extends React.Component {
                   />
                 ) : null
               }
-              onKeyDown={(e) => (e.keyCode == 27 ? that.setState({ filter: "" }) : null)}
+              onKeyDown={(e) =>
+                e.keyCode == 27 ? that.setState({ filter: "" }) : null
+              }
             />
             <Typography variant="subtitle2" noWrap>
-              &nbsp;{totalLen == filteredLen ? t("all") : filteredLen}&nbsp;{t("of")}&nbsp;
+              &nbsp;{totalLen == filteredLen ? t("all") : filteredLen}&nbsp;
+              {t("of")}&nbsp;
               {totalLen ? totalLen : t("none")}
             </Typography>
             <div style={{ flexGrow: 1 }} />
@@ -386,7 +431,7 @@ class ObjectBrowser extends React.Component {
     return (
       <React.Fragment>
         {sw}
-        <IDialog
+        {/* <IDialog
           type="activeOk"
 //          updateProps={() => idrename}
           options={{
@@ -429,7 +474,7 @@ class ObjectBrowser extends React.Component {
             color="secondary"
           />
           <br />
-        </IDialog>
+        </IDialog> */}
         {!folded && that.renderTree()}
       </React.Fragment>
     );

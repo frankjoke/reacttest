@@ -1,6 +1,12 @@
 import React from "react";
 import { Iob, t, connect } from "./Iob";
-import { IButton, TButton, UButton, InputField, HtmlComponent } from "./UiComponents";
+import {
+  IButton,
+  TButton,
+  UButton,
+  InputField,
+  HtmlComponent,
+} from "./UiComponents";
 import ObjectBrowser from "./ObjectBrowser";
 import {
   Paper,
@@ -17,7 +23,12 @@ import {
   Typography,
   Collapse,
 } from "@material-ui/core";
-import { lightBlue, lightGreen, lightGrey, orange } from "@material-ui/core/colors";
+import {
+  lightBlue,
+  lightGreen,
+  lightGrey,
+  orange,
+} from "@material-ui/core/colors";
 import { isNoSubstitutionTemplateLiteral } from "typescript";
 //import { config } from "chai";
 //import { isNotEmittedStatement } from "typescript";
@@ -26,10 +37,21 @@ const AdapterEntry = (props) => {
   let { adapter, settings, adapterStates, instance, repo, index } = props;
   const [expanded, setExpanded] = React.useState(false);
   const [menue, setMenue] = React.useState(0);
-  let { icon, localIcon, title, desc, readme, type, version, controller, instances } = settings;
+  let {
+    icon,
+    localIcon,
+    title,
+    desc,
+    readme,
+    type,
+    version,
+    controller,
+    instances,
+  } = settings;
   const radapter = repo[adapter];
   if (adapter == "js-controller" && controller) {
-    icon = "https://raw.githubusercontent.com/ioBroker/ioBroker.admin/master/admin/admin.png";
+    icon =
+      "https://raw.githubusercontent.com/ioBroker/ioBroker.admin/master/admin/admin.png";
     adapter = "ioBroker";
   }
   if (localIcon) icon = Iob.getStore.serverName.serverName + localIcon;
@@ -38,7 +60,8 @@ const AdapterEntry = (props) => {
     const { _id, common, native } = instance;
     ainst.loglevel = common.logLevel || "info";
     ainst.common = common;
-    if (common && common.titleLang) title = Iob.getTranslatedDesc(common.titleLang);
+    if (common && common.titleLang)
+      title = Iob.getTranslatedDesc(common.titleLang);
     ainst.native = native;
     ainst.id = _id;
     ainst.iid = _id.slice("system.adapter.".length);
@@ -80,8 +103,15 @@ const AdapterEntry = (props) => {
           inputProps={{ color: "secondary" }}
           options={"debug|info|warn|error|silly".split("|")}
           onChange={(e) =>
-            console.log(`set log of ${iid} to `, e.target.value, ainst, instance) ||
-            Iob.connection.extendObject(ainst.id, { common: { loglevel: e.target.value } })
+            console.log(
+              `set log of ${iid} to `,
+              e.target.value,
+              ainst,
+              instance
+            ) ||
+            Iob.connection.extendObject(ainst.id, {
+              common: { loglevel: e.target.value },
+            })
           }
         />
         {Iob.nbsp(3)}
@@ -100,7 +130,11 @@ const AdapterEntry = (props) => {
     if (controller)
       return (
         <>
-          <TButton label="create Backup" icon="add_to_queue" tooltip={t("Create backup")} />
+          <TButton
+            label="create Backup"
+            icon="add_to_queue"
+            tooltip={t("Create backup")}
+          />
           <TButton
             label="change setup"
             icon="settings_input_component"
@@ -109,7 +143,10 @@ const AdapterEntry = (props) => {
           <TButton
             label="version"
             icon="add_to_drive"
-            tooltip={t("install specific version of js-controller {0}", adapter)}
+            tooltip={t(
+              "install specific version of js-controller {0}",
+              adapter
+            )}
           />
         </>
       );
@@ -178,45 +215,31 @@ const AdapterEntry = (props) => {
             </div>
             {alive && (
               <>
-                Events&nbsp;↦{ainst.inputCount}&nbsp;/&nbsp;↦{ainst.outputCount},&nbsp;Mem&nbsp;
+                Events&nbsp;↦{ainst.inputCount}&nbsp;/&nbsp;↦{ainst.outputCount}
+                ,&nbsp;Mem&nbsp;
                 {ainst.memRss}
               </>
             )}
           </>
         }
-        avatar={<Avatar src={icon} variant="square" style={{ width: "70px", height: "70px" }} />}
+        avatar={
+          <Avatar
+            src={icon}
+            variant="square"
+            style={{ width: "70px", height: "70px" }}
+          />
+        }
         action={
-          <>
-            {!controller && (
-              <>
-                <IButton
-                  tooltip={!alive ? t("start adapter") : t("stop adapter")}
-                  {...iprops}
-                  onClick={(e) => Iob.enableDisableAdapter(!alive, iid)}
-                  icon={!alive ? "play_circle" : "pause_circle"}
-                />
-                <IButton
-                  disabled={!alive}
-                  tooltip={t("restart adapter")}
-                  onClick={(e) => Iob.setLoglevel(null, iid)}
-                  icon="replay_circle_filled"
-                  {...Iob.mergeProps(iprops, {
-                    style: {
-                      color: !alive ? "red" : connected ? "green" : "orange",
-                    },
-                  })}
-                />
-              </>
-            )}
-            <IButton
-              tooltip={t("configure adapter instance")}
-              //                onClick={(e) => Iob.setLoglevel()}
-              icon="settings"
-              {...iprops}
-            />
-            {/*             <IButton icon="more_vert" />
-             */}
-          </>
+          <IButton
+            tooltip={t("configure adapter instance")}
+            //                onClick={(e) => Iob.setLoglevel()}
+            icon="settings"
+            {...iprops}
+          />
+          // <IButton
+          //   icon="more_vert"
+          //   tooltip="whatever other options you may add as a menu..."
+          // />
         }
       ></CardHeader>
     );
@@ -236,8 +259,16 @@ const AdapterEntry = (props) => {
           }}
         >
           <div>
-            <TButton label="options" tooltip="displays adapter description" {...menuOptions(0)} />
-            <TButton label="install" tooltip="install or update adapter" {...menuOptions(1)} />
+            <TButton
+              label="options"
+              tooltip="displays adapter description"
+              {...menuOptions(0)}
+            />
+            <TButton
+              label="install"
+              tooltip="install or update adapter"
+              {...menuOptions(1)}
+            />
             {!controller && (
               <>
                 <TButton
@@ -245,11 +276,41 @@ const AdapterEntry = (props) => {
                   tooltip="set adapter start and log options"
                   {...menuOptions(2)}
                 />
-                <TButton label="ressources" tooltip="show ressources" {...menuOptions(3)} />
+                <TButton
+                  label="ressources"
+                  tooltip="show ressources"
+                  {...menuOptions(3)}
+                />
               </>
-            )}{" "}
+            )}
           </div>
           <div>
+            {!controller && (
+              <>
+                <IButton
+                  tooltip={!alive ? t("start adapter") : t("stop adapter")}
+                  onClick={(e) => Iob.enableDisableAdapter(!alive, iid)}
+                  icon={!alive ? "play_circle" : "pause_circle"}
+                  {...Iob.mergeProps(iprops, {
+                    style: {
+                      color: alive ? "red" : "secondary",
+                    },
+                  })}
+                />
+                <IButton
+                  disabled={!alive}
+                  tooltip={t("restart adapter")}
+                  onClick={(e) => Iob.setLoglevel(null, iid)}
+                  icon="replay_circle_filled"
+                  {...Iob.mergeProps(iprops, {
+                    style: {
+                      color: !alive ? "red" : connected ? "green" : "orange",
+                    },
+                  })}
+                />
+              </>
+            )}
+
             <IButton
               tooltip={t("open adapter help")}
               src={readme}
@@ -257,7 +318,6 @@ const AdapterEntry = (props) => {
               icon="help_outline"
               {...iprops}
             />
-            <IButton icon="more_vert" tooltip="whatever other options you may add as a menu..." />
           </div>
         </CardActions>
         <Divider />
@@ -265,7 +325,9 @@ const AdapterEntry = (props) => {
           {menue == 0 ? renderOptions() : null}
           {menue == 1 ? renderInstall() : null}
           {menue == 2 ? (
-            <Typography variant="body2">{Iob.getTranslatedDesc(desc)}</Typography>
+            <Typography variant="body2">
+              {Iob.getTranslatedDesc(desc)}
+            </Typography>
           ) : null}
           {menue == 3 ? (
             <>
@@ -320,7 +382,9 @@ class AdapterList extends React.Component {
       .then((x) => {
         for (const [adapter, value] of Object.entries(x))
           if (adapter != "js-controller")
-            Iob.connection.getAdapterInstances(adapter).then((i) => (value.instances = i));
+            Iob.connection
+              .getAdapterInstances(adapter)
+              .then((i) => (value.instances = i));
         this.setState({ installed: x });
       })
       .then((_) =>
@@ -328,7 +392,9 @@ class AdapterList extends React.Component {
           repo: Iob.getStore.systemConfig.common.activeRepo,
         }).then((x) => this.setState({ repo: x }))
       )
-      .catch((e) => Iob.logSnackbar("error;could not load installed adapter list!"));
+      .catch((e) =>
+        Iob.logSnackbar("error;could not load installed adapter list!")
+      );
     //    const nconf = ConfigSettings.transformConfig(props.configPage);
   }
 
@@ -346,7 +412,8 @@ class AdapterList extends React.Component {
         let alive = _id && adapterStates[_id + ".alive"];
         //        console.log(_id, alive);
         alive = (alive && alive.val) || controller;
-        const aname = (alive ? " " : ".") + (controller ? " " : ".") + adapter + ii;
+        const aname =
+          (alive ? " " : ".") + (controller ? " " : ".") + adapter + ii;
         const nlist = {
           adapter,
           settings,
@@ -363,11 +430,19 @@ class AdapterList extends React.Component {
     //    console.log(alist);
     return (
       <Container maxWidth={false} disableGutters style={{ overflow: "hidden" }}>
-        <Grid container spacing={1} style={{ paddingTop: "4px", paddingBottom: "8px" }}>
+        <Grid
+          container
+          spacing={1}
+          style={{ paddingTop: "4px", paddingBottom: "8px" }}
+        >
           {Object.keys(anames)
             .sort()
             .map((a) => (
-              <AdapterEntry {...anames[a]} adapterStates={adapterStates} repo={repo} />
+              <AdapterEntry
+                {...anames[a]}
+                adapterStates={adapterStates}
+                repo={repo}
+              />
             ))}
         </Grid>
         <ObjectBrowser label="Installed" value={installed} />

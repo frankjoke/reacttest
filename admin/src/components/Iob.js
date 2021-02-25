@@ -1,6 +1,10 @@
 import React from "react";
 import I18next from "i18next";
-import store, { ioBroker, connect, bindActionCreators } from "../store/ioBroker";
+import store, {
+  ioBroker,
+  connect,
+  bindActionCreators,
+} from "../store/ioBroker";
 import { saveAs } from "file-saver";
 import theme from "./Theme";
 import Connection, { PROGRESS } from "./Connection";
@@ -13,7 +17,20 @@ import { IconButton } from "@material-ui/core";
 
 const NAMESPACE = "material";
 const days = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-const months = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const months = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 store.$i18n = store.$i18n || I18next.createInstance();
 store.$notFoundI18n = store.$notFoundI18n || {};
@@ -24,7 +41,10 @@ store.$dialogs = store.$dialogs || {};
 //console.log("events:", store.$events);
 
 class Iob {
-  static boundActionCreators = bindActionCreators(ioBroker.actions, store.dispatch);
+  static boundActionCreators = bindActionCreators(
+    ioBroker.actions,
+    store.dispatch
+  );
   static connect = connect;
   static store = store;
   static ioBroker = ioBroker;
@@ -34,7 +54,9 @@ class Iob {
 
   static styles(theme) {
     const light = theme.palette.type === "light";
-    const bottomLineColor = light ? "rgba(0, 0, 0, 0.42)" : "rgba(255, 255, 255, 0.7)";
+    const bottomLineColor = light
+      ? "rgba(0, 0, 0, 0.42)"
+      : "rgba(255, 255, 255, 0.7)";
 
     return {
       root: {},
@@ -188,51 +210,64 @@ class Iob {
     //    if (text == "add new entry to {0}") debugger;
     if (text.startsWith("!")) text = text.slice(1);
     else {
-      const nargs = args.length && Iob.type(args[0]).object ? args : args.length ? [args] : [];
+      const nargs =
+        args.length && Iob.type(args[0]).object
+          ? args
+          : args.length
+          ? [args]
+          : [];
       const ntext = Iob.i18n.t(text, ...nargs);
       if (ntext && ntext != text) text = ntext;
       else {
         //        console.log("Translate not found:", text, ntext, args);
-        Iob.notFoundI18n[text] ? ++Iob.notFoundI18n[text] : (Iob.notFoundI18n[text] = 1);
+        Iob.notFoundI18n[text]
+          ? ++Iob.notFoundI18n[text]
+          : (Iob.notFoundI18n[text] = 1);
       }
     }
 
-    if (args.length) text = text.replace(/\{\s*([0-9]+)\s*\}/g, (m, i) => args[parseInt(i)]);
+    if (args.length)
+      text = text.replace(/\{\s*([0-9]+)\s*\}/g, (m, i) => args[parseInt(i)]);
     return text;
   }
 
   static syntaxHighlight(json) {
-    const 
-    _number = 'color:darkgreen',
-    _string = 'color:maroon',
-    _boolean = 'color:blue',
-    _null = 'color:magenta',
-    _key = 'color:red';
-    json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    return json.replace(
-      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-      function (match) {
-        var cls = _number;
-        if (/^"/.test(match)) {
-          if (/:$/.test(match)) {
-            cls = _key;
-          } else {
-            cls = _string;
+    const _number = "color:darkgreen",
+      _string = "color:maroon",
+      _boolean = "color:blue",
+      _null = "color:magenta",
+      _key = "color:red";
+    json = json
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    return json
+      .replace(
+        /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        function (match) {
+          var cls = _number;
+          if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+              cls = _key;
+            } else {
+              cls = _string;
+            }
+          } else if (/true|false/.test(match)) {
+            cls = _boolean;
+          } else if (/null/.test(match)) {
+            cls = _null;
           }
-        } else if (/true|false/.test(match)) {
-          cls = _boolean;
-        } else if (/null/.test(match)) {
-          cls = _null;
+          return '<span style="' + cls + ';">' + match + "</span>";
         }
-        return '<span style="' + cls + ';">' + match + "</span>";
-      }
-    ).replace(/\n/g, "<br/>").replace(/\t/g,"\u00a0\u00a0\u00a0\u00a0");
+      )
+      .replace(/\n/g, "<br/>")
+      .replace(/\t/g, "\u00a0\u00a0\u00a0\u00a0");
   }
 
   static stringify(val, depth, replacer, space) {
     if (typeof replacer === "string" && space === undefined) {
       space = replacer;
-      replacer=null;
+      replacer = null;
     }
     depth = isNaN(+depth) ? 1 : depth;
     function _build(key, val, depth, o, a) {
@@ -269,32 +304,55 @@ class Iob {
   }
 
   static nbsp(text = " ") {
-    if (typeof text==="number") {
-      let num = text>100 ? 100 : text;
-      num = num<1 ? 1 : num;
+    if (typeof text === "number") {
+      let num = text > 100 ? 100 : text;
+      num = num < 1 ? 1 : num;
       text = "";
-      while(num) {
+      while (num) {
         --num;
         text += "\u00a0";
       }
       return text;
     }
-    if (typeof text ==="string") return text.replace(/ /g, "\u00a0");
+    if (typeof text === "string") return text.replace(/ /g, "\u00a0");
     return "\u00a0";
   }
 
-  static timeStamp(ts) {
+  static timeDiffA(ts) {
+    let diff = Date.now() - ts;
+    let dd = 1000 * 60 * 60 * 24;
+    let s = [];
+    function dod(div, txt) {
+      const rest = diff % dd;
+      const ndiff = diff - rest;
+      const res = ndiff / dd;
+      dd = dd / div;
+      diff = rest;
+      s.push([res, txt]);
+    }
+    dod(24, "days");
+    dod(60, "hours");
+    dod(60, "minutes");
+    dod(1000, "seconds");
+    s.push([diff, "ms"]);
+    return s;
+  }
+
+  static timeStamp(ts, addDays = false) {
     function digits(v, p) {
       p = p || 2;
       v = v.toString();
       while (v.length < p) v = "0" + v;
       return v;
     }
+    const now = Date.now();
     const d = new Date(ts);
-    return `${digits(d.getHours())}:${digits(d.getMinutes())}:${digits(d.getSeconds())}.${digits(
-      d.getMilliseconds(),
-      3
-    )}`;
+    const timeAgo = now - ts;
+    let days = -Math.floor(timeAgo / 1000.0 / 60.0 / 60.0 / 24.0);
+    days = addDays && days < 0 ? days.toString() + "@" : "";
+    return `${days}${digits(d.getHours())}:${digits(d.getMinutes())}:${digits(
+      d.getSeconds()
+    )}.${digits(d.getMilliseconds(), 3)}`;
   }
 
   static initI18n(lang) {
@@ -364,7 +422,8 @@ class Iob {
         {
           callback: (r) => {
             if (opts.rejectResult) {
-              if (r === false || r === null || r === undefined) return reject(r);
+              if (r === false || r === null || r === undefined)
+                return reject(r);
             }
             resolve(r);
           },
@@ -395,9 +454,13 @@ class Iob {
       onReady: (objects, scripts) => {
         const systemConfig = objects && objects["system.config"];
         //        console.log("SystemConfig", systemConfig);
-        if (!systemConfig) return console.log("error: did not get system config!");
+        if (!systemConfig)
+          return console.log("error: did not get system config!");
 
-        (systemConfig ? Promise.resolve(systemConfig) : nsocket.getObject("system.config"))
+        (systemConfig
+          ? Promise.resolve(systemConfig)
+          : nsocket.getObject("system.config")
+        )
           .then((obj) => {
             //                                                    this.common = obj && obj.common;
             Iob.setStore.setSystemConfig(obj);
@@ -405,7 +468,8 @@ class Iob {
             Iob.initI18n(obj.common.language);
 
             store.$secret =
-              (typeof obj !== "undefined" && obj.native && obj.native.secret) || "Zgfr56gFe87jJOM";
+              (typeof obj !== "undefined" && obj.native && obj.native.secret) ||
+              "Zgfr56gFe87jJOM";
             return nsocket.getObject(Iob.getStore.instanceId);
           })
           .then((obj) => {
@@ -472,11 +536,17 @@ class Iob {
     if (!conn || !conn.connected) return Promise.reject(NOT_CONNECTED);
 
     return new Promise((resolve, reject) =>
-      conn._socket.emit(cmd, ...args, (err, result) => (err ? reject(err) : resolve(result)))
+      conn._socket.emit(cmd, ...args, (err, result) =>
+        err ? reject(err) : resolve(result)
+      )
     );
   }
 
-  static sendToHost(host = Iob.getStore.instanceConfig.common.host, cmd, ...args) {
+  static sendToHost(
+    host = Iob.getStore.instanceConfig.common.host,
+    cmd,
+    ...args
+  ) {
     const conn = store.$connection;
     if (!conn || !conn.connected) return Promise.reject(NOT_CONNECTED);
 
@@ -496,7 +566,9 @@ class Iob {
     if (!conn || !conn.connected) return Promise.reject(NOT_CONNECTED);
     instance = instance || Iob.getStore.adapterInstance;
     return new Promise((resolve) =>
-      conn._socket.emit("sendTo", instance, command, data, (result) => resolve(result))
+      conn._socket.emit("sendTo", instance, command, data, (result) =>
+        resolve(result)
+      )
     );
   }
 
@@ -517,14 +589,24 @@ class Iob {
   static addLanguageData(lng, translation) {
     //    console.log("addLanguageData", lng, translation);
     if (typeof Iob.i18n.addResourceBundle === "function")
-      return Iob.i18n.addResourceBundle(lng, "translation", translation, true, true);
+      return Iob.i18n.addResourceBundle(
+        lng,
+        "translation",
+        translation,
+        true,
+        true
+      );
   }
 
   static changeLanguage(lng = "en") {
     const { displayLanguage, translations } = Iob.getStore;
 
     if (/* lng != "en" &&  */ translations[lng]) {
-      return Promise.resolve(Iob.addLanguageData(lng, translations[lng]), true, true)
+      return Promise.resolve(
+        Iob.addLanguageData(lng, translations[lng]),
+        true,
+        true
+      )
         .then(() => {
           //          console.log("change lang", lng, Iob.i18n)
           Iob.i18n.changeLanguage(lng);
@@ -542,8 +624,13 @@ class Iob {
     Object.keys(ntranslations).forEach((lang) => {
       if (!ctrans[lang]) ctrans[lang] = {};
       // console.log(ctrans[lang], ntranslations[lang]);
-      const ntrans = (ctrans[lang] = Object.assign({}, ctrans[lang], ntranslations[lang]));
-      if (lang == displayLanguage || lang == "en") Iob.addLanguageData(lang, ntrans);
+      const ntrans = (ctrans[lang] = Object.assign(
+        {},
+        ctrans[lang],
+        ntranslations[lang]
+      ));
+      if (lang == displayLanguage || lang == "en")
+        Iob.addLanguageData(lang, ntrans);
     });
     Iob.setStore.setTranslations(ctrans);
   }
@@ -559,7 +646,12 @@ class Iob {
   }
 
   static saveFile(what, opts, e) {
-    let { mime = "text/plain", name = "filename", stringify = false, ending = ".txt" } = opts || {};
+    let {
+      mime = "text/plain",
+      name = "filename",
+      stringify = false,
+      ending = ".txt",
+    } = opts || {};
 
     if (stringify || typeof what !== "string")
       try {
@@ -590,7 +682,8 @@ class Iob {
   }
 
   static trimL(text = "", len = 50, end = 3) {
-    if (text.length > len - 3) return text.slice(0, len - 3 - end) + "..." + text.slice(-end);
+    if (text.length > len - 3)
+      return text.slice(0, len - 3 - end) + "..." + text.slice(-end);
     return text;
   }
 
@@ -616,7 +709,10 @@ class Iob {
     if (!table || !field) return true;
     const v = ("" + val).trim();
     const found = table.filter((i) => ("" + i[field]).trim() == v);
-    return found.length < 1 || t("This item can only be once per table in this field!");
+    return (
+      found.length < 1 ||
+      t("This item can only be once per table in this field!")
+    );
   }
 
   static onlyWords(val) {
@@ -658,7 +754,8 @@ class Iob {
         return f.bind(that);
       }
     } else if (typeof from === "string" && from.trim()) {
-      if (that && that.from && typeof that[from] === "function") return that[from].bind(that);
+      if (that && that.from && typeof that[from] === "function")
+        return that[from].bind(that);
       if (that && typeof Iob[from] === "function") return Iob[from].bind(that);
       from = [...args, from.trim()];
       try {
@@ -667,13 +764,22 @@ class Iob {
         from[from.length - 1] = b;
         /*         const t = t;
         const React = React;
- */ const f = new Function(...from);
+ */ const f = new Function(
+          ...from
+        );
         return that ? f.bind(that) : f;
       } catch (e) {
-        console.log(`makeFunction error ${e} in function generation with: ${from}`);
-        Iob.logSnackbar("error;makeFunction error {0} in function generation with: {0}", e, from);
+        console.log(
+          `makeFunction error ${e} in function generation with: ${from}`
+        );
+        Iob.logSnackbar(
+          "error;makeFunction error {0} in function generation with: {0}",
+          e,
+          from
+        );
       }
-    } else console.log("makeFunction - Invalid function content in rule:", from);
+    } else
+      console.log("makeFunction - Invalid function content in rule:", from);
     return null;
   }
 
@@ -685,7 +791,8 @@ class Iob {
         if (item.indexOf(text) > -1) return true;
       }
       if (typeof item === "object")
-        for (const [i, v] of Object.entries(item)) if (find(v, text)) return true;
+        for (const [i, v] of Object.entries(item))
+          if (find(v, text)) return true;
       return false;
     }
 
@@ -771,7 +878,9 @@ class Iob {
     } else {
       obj[attr] = obj[attr] || {};
       if (typeof obj[attr] !== "object" && !Array.isArray(obj[attr])) {
-        throw new Error("attribute " + attr + " is no object, but " + typeof obj[attr]);
+        throw new Error(
+          "attribute " + attr + " is no object, but " + typeof obj[attr]
+        );
       }
       return Iob.updateObjectValue(obj[attr], attrs, value);
     }
@@ -779,7 +888,8 @@ class Iob {
 
   static updateInativeValue(inative, attr, value) {
     const native = JSON.parse(JSON.stringify(inative));
-    if (Iob.updateObjectValue(native, attr, value)) Iob.setStore.updateInativeValue(native);
+    if (Iob.updateObjectValue(native, attr, value))
+      Iob.setStore.updateInativeValue(native);
     return native;
   }
 
@@ -799,7 +909,8 @@ class Iob {
     let result = "";
     for (let i = 0; i < value.length; i++) {
       result += String.fromCharCode(
-        store.$secret[i % store.$secret.length].charCodeAt(0) ^ value.charCodeAt(i)
+        store.$secret[i % store.$secret.length].charCodeAt(0) ^
+          value.charCodeAt(i)
       );
     }
     return result;
@@ -814,7 +925,8 @@ class Iob {
     let result = "";
     for (let i = 0; i < value.length; i++) {
       result += String.fromCharCode(
-        store.$secret[i % store.$secret.length].charCodeAt(0) ^ value.charCodeAt(i)
+        store.$secret[i % store.$secret.length].charCodeAt(0) ^
+          value.charCodeAt(i)
       );
     }
     return result;
@@ -823,7 +935,10 @@ class Iob {
   static mergeProps(old, add) {
     const { style: oldStyle, ...oldRest } = old || {};
     const { style: addStyle, ...addRest } = add || {};
-    const style = oldStyle || addStyle ? { style: { ...oldStyle, ...addStyle } } : undefined;
+    const style =
+      oldStyle || addStyle
+        ? { style: { ...oldStyle, ...addStyle } }
+        : undefined;
     return Object.assign({}, oldRest, addRest, style);
   }
 
@@ -833,7 +948,10 @@ class Iob {
     const { configPage, inative } = Iob.getStore;
     Iob.setStore.setInstanceConfig(i);
     if (native) {
-      native = Iob.onPrepareLoad(native, configPage && configPage.encryptedFields);
+      native = Iob.onPrepareLoad(
+        native,
+        configPage && configPage.encryptedFields
+      );
       Iob.setStore.setInative({ iNew: native, iOld: inative });
     } else Iob.logSnackbar("error;inative not loaded {0}", e);
   }
@@ -869,11 +987,14 @@ class Iob {
       Iob.emitEvent("stateChange", obj);
     });
 
-    socket.subscribeState(/* instanceId + "*" */ "system.adapter.*", (id, state) => {
-      const obj = { id, state };
-      storeHandler("updateAdapterStates", obj, 50);
-      Iob.emitEvent("stateChange", obj);
-    });
+    socket.subscribeState(
+      /* instanceId + "*" */ "system.adapter.*",
+      (id, state) => {
+        const obj = { id, state };
+        storeHandler("updateAdapterStates", obj, 50);
+        Iob.emitEvent("stateChange", obj);
+      }
+    );
 
     socket.subscribeObject(adapterInstance + "*", (id, newObj, oldObj) => {
       const obj = { id, newObj, oldObj };
@@ -899,7 +1020,9 @@ class Iob {
         .catch((e) => console.log("Error in changeNanguage:", e))
         .then(() => {
           //        this.forceUpdate();
-          socket.getObjects((objects) => Iob.setStore.setAdapterObjects(objects));
+          socket.getObjects((objects) =>
+            Iob.setStore.setAdapterObjects(objects)
+          );
         })
         .then(() => Iob.setInstanceConfig(iConfig)),
 
@@ -935,7 +1058,8 @@ class Iob {
         .then((r) => {
           setStore.setConfigPage(r);
           const translation = r.translation;
-          if (typeof translation === "object") Iob.mergeCombinedTranslation(translation);
+          if (typeof translation === "object")
+            Iob.mergeCombinedTranslation(translation);
         })
         .catch((e) => Iob.logSnackbar("error;config.json not loaded {0}", e)),
     ]).then(() =>
@@ -987,7 +1111,10 @@ class Iob {
 
   static getExtendableInstances() {
     return Iob.commandReceive("getObjectView", "system", "instance", null).then(
-      (doc) => doc.rows.filter((item) => item.value.common.webExtendable).map((item) => item.value),
+      (doc) =>
+        doc.rows
+          .filter((item) => item.value.common.webExtendable)
+          .map((item) => item.value),
       (err) => []
     );
   }
@@ -999,41 +1126,63 @@ class Iob {
   static getIpAddresses(host) {
     const { common } = Iob.getStore.instanceConfig;
     return new Promise((resolve, reject) => {
-      store.$connection._socket.emit("getHostByIp", host || common.host, (ip, _host) => {
-        //        console.log(host, common, _host, ip);
-        const IPs4 = [
-          {
-            name: "[IPv4] 0.0.0.0 - " + t("ra_Listen on all IPs"),
-            address: "0.0.0.0",
-            family: "ipv4",
-          },
-        ];
-        const IPs6 = [{ name: "[IPv6] ::", address: "::", family: "ipv6" }];
-        if (_host) {
-          host = _host;
-          if (host.native.hardware && host.native.hardware.networkInterfaces) {
-            Object.keys(host.native.hardware.networkInterfaces).forEach((eth) =>
-              host.native.hardware.networkInterfaces[eth].forEach((inter) => {
-                if (inter.family !== "IPv6") {
-                  IPs4.push({
-                    name: "[" + inter.family + "] " + inter.address + " - " + eth,
-                    address: inter.address,
-                    family: "ipv4",
-                  });
-                } else {
-                  IPs6.push({
-                    name: "[" + inter.family + "] " + inter.address + " - " + eth,
-                    address: inter.address,
-                    family: "ipv6",
-                  });
-                }
-              })
-            );
+      store.$connection._socket.emit(
+        "getHostByIp",
+        host || common.host,
+        (ip, _host) => {
+          //        console.log(host, common, _host, ip);
+          const IPs4 = [
+            {
+              name: "[IPv4] 0.0.0.0 - " + t("ra_Listen on all IPs"),
+              address: "0.0.0.0",
+              family: "ipv4",
+            },
+          ];
+          const IPs6 = [{ name: "[IPv6] ::", address: "::", family: "ipv6" }];
+          if (_host) {
+            host = _host;
+            if (
+              host.native.hardware &&
+              host.native.hardware.networkInterfaces
+            ) {
+              Object.keys(host.native.hardware.networkInterfaces).forEach(
+                (eth) =>
+                  host.native.hardware.networkInterfaces[eth].forEach(
+                    (inter) => {
+                      if (inter.family !== "IPv6") {
+                        IPs4.push({
+                          name:
+                            "[" +
+                            inter.family +
+                            "] " +
+                            inter.address +
+                            " - " +
+                            eth,
+                          address: inter.address,
+                          family: "ipv4",
+                        });
+                      } else {
+                        IPs6.push({
+                          name:
+                            "[" +
+                            inter.family +
+                            "] " +
+                            inter.address +
+                            " - " +
+                            eth,
+                          address: inter.address,
+                          family: "ipv6",
+                        });
+                      }
+                    }
+                  )
+              );
+            }
+            IPs6.forEach((ip) => IPs4.push(ip));
           }
-          IPs6.forEach((ip) => IPs4.push(ip));
+          resolve(IPs4);
         }
-        resolve(IPs4);
-      });
+      );
     });
   }
   static storetimeouts = {};
@@ -1150,7 +1299,9 @@ class Iob {
     return (name || "")
       .split(/[\s_]/)
       .filter((item) => item)
-      .map((word) => (word ? word[0].toUpperCase() + word.substring(1).toLowerCase() : ""))
+      .map((word) =>
+        word ? word[0].toUpperCase() + word.substring(1).toLowerCase() : ""
+      )
       .join(" ");
   }
 
@@ -1267,7 +1418,9 @@ class Iob {
       if (settings && settings[user]) {
         if (forEnumId) {
           if (settings[user].subOrder && settings[user].subOrder[forEnumId]) {
-            return JSON.parse(JSON.stringify(settings[user].subOrder[forEnumId]));
+            return JSON.parse(
+              JSON.stringify(settings[user].subOrder[forEnumId])
+            );
           }
         } else {
           if (settings[user].order) {
@@ -1295,7 +1448,9 @@ class Iob {
       if (settings && settings[user]) {
         if (forEnumId) {
           if (settings[user].subURLs && settings[user].subURLs[forEnumId]) {
-            return JSON.parse(JSON.stringify(settings[user].subURLs[forEnumId]));
+            return JSON.parse(
+              JSON.stringify(settings[user].subURLs[forEnumId])
+            );
           }
         } else {
           if (settings[user].URLs) {
@@ -1335,7 +1490,9 @@ class Iob {
       settings = obj.custom || {};
       settings =
         settings[NAMESPACE] && settings[NAMESPACE][options.user || "admin"]
-          ? JSON.parse(JSON.stringify(settings[NAMESPACE][options.user || "admin"]))
+          ? JSON.parse(
+              JSON.stringify(settings[NAMESPACE][options.user || "admin"])
+            )
           : { enabled: true };
     } else {
       settings = {
@@ -1372,7 +1529,8 @@ class Iob {
       settings.name = (settings.name || "").toString().replace(/_/g, " ");
 
       if (settings.name === settings.name.toUpperCase()) {
-        settings.name = settings.name[0] + settings.name.substring(1).toLowerCase();
+        settings.name =
+          settings.name[0] + settings.name.substring(1).toLowerCase();
       }
     }
     if (!settings.name && id) {
@@ -1435,7 +1593,9 @@ class Iob {
       if (settings.icon.length <= 2) {
         return <span style={style || {}}>{settings.icon}</span>;
       } else if (settings.icon.startsWith("data:image")) {
-        return <img alt={settings.name} src={settings.icon} style={style || {}} />;
+        return (
+          <img alt={settings.name} src={settings.icon} style={style || {}} />
+        );
       } else {
         // may be later some changes for second type
         return (
@@ -1473,9 +1633,11 @@ class Iob {
       } else {
         const parts = id.split(".");
         if (parts[0] === "system") {
-          icon = "adapter/" + parts[2] + (icon.startsWith("/") ? "" : "/") + icon;
+          icon =
+            "adapter/" + parts[2] + (icon.startsWith("/") ? "" : "/") + icon;
         } else {
-          icon = "adapter/" + parts[0] + (icon.startsWith("/") ? "" : "/") + icon;
+          icon =
+            "adapter/" + parts[0] + (icon.startsWith("/") ? "" : "/") + icon;
         }
 
         if (window.location.pathname.match(/adapter\/[^/]+\/[^/]+\.html/)) {
@@ -1556,7 +1718,9 @@ class Iob {
     let g;
     let b;
 
-    const rgb = color.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+    const rgb = color.match(
+      /^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i
+    );
     if (rgb && rgb.length === 4) {
       r = parseInt(rgb[1], 10);
       g = parseInt(rgb[2], 10);
@@ -1705,7 +1869,10 @@ class Iob {
             }
           }
           // DD MM
-          else if (Iob.dateFormat[0][0] === "D" && Iob.dateFormat[1][0] === "M") {
+          else if (
+            Iob.dateFormat[0][0] === "D" &&
+            Iob.dateFormat[1][0] === "M"
+          ) {
             now = new Date(year, a[1] - 1, a[0]);
             if (Math.abs(now.getTime - Date.now()) > 3600000 * 24 * 10) {
               now = new Date(year, a[0] - 1, a[1]);
@@ -1742,7 +1909,8 @@ class Iob {
       let key = 1;
       do {
         let href = m[0].match(/href="([^"]+)"/) || m[0].match(/href='([^']+)'/);
-        let target = m[0].match(/target="([^"]+)"/) || m[0].match(/target='([^']+)'/);
+        let target =
+          m[0].match(/target="([^"]+)"/) || m[0].match(/target='([^']+)'/);
         let rel = m[0].match(/rel="([^"]+)"/) || m[0].match(/rel='([^']+)'/);
         const title = m[0].match(/>([^<]*)</);
 
@@ -1793,7 +1961,10 @@ class Iob {
         if (states && !states.common) {
           return states.smartName;
         } else {
-          return states && states.common && states.common.custom && states.common.custom[instanceId]
+          return states &&
+            states.common &&
+            states.common.custom &&
+            states.common.custom[instanceId]
             ? states.common.custom[instanceId].smartName
             : undefined;
         }
@@ -1831,7 +2002,10 @@ class Iob {
       if (obj && !obj.common) {
         return obj.smartName;
       } else {
-        return obj && obj.common && obj.common.custom && obj.common.custom[instanceId]
+        return obj &&
+          obj.common &&
+          obj.common.custom &&
+          obj.common.custom[instanceId]
           ? obj.common.custom[instanceId].smartName
           : undefined;
       }
@@ -1879,7 +2053,14 @@ class Iob {
    * @param {string} instanceId
    * @param {boolean} [noCommon]
    */
-  static updateSmartName(obj, newSmartName, byON, smartType, instanceId, noCommon) {
+  static updateSmartName(
+    obj,
+    newSmartName,
+    byON,
+    smartType,
+    instanceId,
+    noCommon
+  ) {
     const language = I18n.getLanguage();
 
     // convert Old format
@@ -1904,7 +2085,8 @@ class Iob {
       if (noCommon) {
         obj.common.custom = obj.common.custom || {};
         obj.common.custom[instanceId] = obj.common.custom[instanceId] || {};
-        obj.common.custom[instanceId].smartName = obj.common.custom[instanceId].smartName || {};
+        obj.common.custom[instanceId].smartName =
+          obj.common.custom[instanceId].smartName || {};
         if (!smartType) {
           delete obj.common.custom[instanceId].smartName.smartType;
         } else {
@@ -1923,7 +2105,8 @@ class Iob {
       if (noCommon) {
         obj.common.custom = obj.common.custom || {};
         obj.common.custom[instanceId] = obj.common.custom[instanceId] || {};
-        obj.common.custom[instanceId].smartName = obj.common.custom[instanceId].smartName || {};
+        obj.common.custom[instanceId].smartName =
+          obj.common.custom[instanceId].smartName || {};
         obj.common.custom[instanceId].smartName.byON = byON;
       } else {
         obj.common.smartName = obj.common.smartName || {};
@@ -1935,7 +2118,8 @@ class Iob {
       if (noCommon) {
         obj.common.custom = obj.common.custom || {};
         obj.common.custom[instanceId] = obj.common.custom[instanceId] || {};
-        obj.common.custom[instanceId].smartName = obj.common.custom[instanceId].smartName || {};
+        obj.common.custom[instanceId].smartName =
+          obj.common.custom[instanceId].smartName || {};
         smartName = obj.common.custom[instanceId].smartName;
       } else {
         obj.common.smartName = obj.common.smartName || {};

@@ -4,7 +4,7 @@ import React from "react";
 //import InputChips from "./InputChips";
 //import ChipInput from "material-ui-chip-input";
 import { AddTooltip, AddIcon, IButton } from "./UiComponents";
-import { Iob, connect } from "./Iob";
+import { Iob, connect, t } from "./Iob";
 import {
   Typography,
   Checkbox,
@@ -62,7 +62,7 @@ class EditState extends React.PureComponent {
     //    console.log("SetState", this.name, "to", val);
     Iob.setStateValue(this.state.name, { val, ack: false });
   }
-/*
+  /*
   shouldComponentUpdate(nextProps, nextState) {
     //    console.log('Greeting - shouldComponentUpdate lifecycle');
     //    const store = Iob.getStore;
@@ -113,9 +113,9 @@ class EditState extends React.PureComponent {
       );
     }
     //    style.width = "100%";
-    const title = `val=${val !== undefined && val.toString()}\nts=${Iob.timeStamp(
-      ts
-    )}\nack=${ack}, q=${q}\nfrom=${from}`;
+    const title = `val=${
+      val !== undefined && val.toString()
+    }\nts=${Iob.timeStamp(ts, true)}\nack=${ack}, q=${q}\nfrom=${from}`;
     //    nprops.style = style;
     if (!tooltip) {
       rest.title = title;
@@ -128,7 +128,11 @@ class EditState extends React.PureComponent {
       case "boolean":
         sr =
           role == "button" ? (
-            <IButton color={color} icon="touch_app" onClick={(e) => this.onChangeValue(true, e)} />
+            <IButton
+              color={color}
+              icon="touch_app"
+              onClick={(e) => this.onChangeValue(true, e)}
+            />
           ) : (
             <Checkbox
               {...rest}
@@ -154,7 +158,10 @@ class EditState extends React.PureComponent {
           //          console.log(nst, nsl, l);
           if (write) {
             sr = (
-              <Select value={val} onChange={(e) => this.onChangeValue(e.target.value, e)}>
+              <Select
+                value={val}
+                onChange={(e) => this.onChangeValue(e.target.value, e)}
+              >
                 {nst.map((i, index) => (
                   <MenuItem key={index} value={i[0]}>
                     {i[1]}
@@ -167,12 +174,16 @@ class EditState extends React.PureComponent {
           sr = (
             <Input
               value={value}
+              placeholder={t("Empty")}
               onChange={(e) => this.setState({ value: e.target.value })}
               onKeyDown={(e) => {
                 if (e.key == "Escape") {
                   this.setState({ value: val });
                 } else if (e.key == "Enter") {
-                  this.onChangeValue(type === "number" ? Number(value) : value, e);
+                  this.onChangeValue(
+                    type === "number" ? Number(value) : value,
+                    e
+                  );
                 }
               }}
               endAdornment={
@@ -182,7 +193,10 @@ class EditState extends React.PureComponent {
                     <IButton
                       icon="done"
                       onClick={(e) =>
-                        this.onChangeValue(type === "number" ? Number(value) : value, e)
+                        this.onChangeValue(
+                          type === "number" ? Number(value) : value,
+                          e
+                        )
                       }
                     />
                   </InputAdornment>
@@ -215,6 +229,11 @@ class EditState extends React.PureComponent {
 }
 
 export default connect((state) => {
-  const { adapterStatus, adapterStates, adapterObjects, adapterInstance } = state;
+  const {
+    adapterStatus,
+    adapterStates,
+    adapterObjects,
+    adapterInstance,
+  } = state;
   return { adapterStatus, adapterStates, adapterObjects, adapterInstance };
 })(EditState);

@@ -39,11 +39,10 @@ import EditState from "./EditState";
 import { lightBlue } from "@material-ui/core/colors";
 //import { isNotEmittedStatement } from "typescript";
 
-
 function SnDialog(props) {
   const { idrename } = props;
   const [myrename, setRename] = React.useState(idrename);
-//  const [justUpdate, setUpdate] = React.useState(0);
+  //  const [justUpdate, setUpdate] = React.useState(0);
   //  if (idrename != myrename) setRename(idrename);
   //  console.log(myrename, setRename);
   return (
@@ -66,20 +65,26 @@ function SnDialog(props) {
             //                  check on invalid characters
             (v) =>
               !v.match(/[\[\].*,;'"`<>\\?]+/) ||
-              t("Name should not include chractesrs like '{0}'!", "[]*.,;'\"`<>\\?"),
+              t(
+                "Name should not include chractesrs like '{0}'!",
+                "[]*.,;'\"`<>\\?"
+              ),
             (v) => {
               //                  console.log("rule OctiveOk", v);
-//              console.log("rule2", v);
+              //              console.log("rule2", v);
               const aobjects = Iob.getStore.adapterObjects;
               return (
                 Object.keys(aobjects)
                   .map((i) => aobjects[i].common.name)
-                  .filter((i) => i == v).length == 0 || t("Name should not exist in adapter!")
+                  .filter((i) => i == v).length == 0 ||
+                t("Name should not exist in adapter!")
               );
             },
           ],
           label: t("Name to change"),
-          hint: t("Please enter name, it must not be used already in your adapter!"),
+          hint: t(
+            "Please enter name, it must not be used already in your adapter!"
+          ),
         },
       }}
     >
@@ -177,7 +182,8 @@ class StateBrowser extends React.Component {
     let totalLen = states.length;
     filter = filter && filter.toLowerCase();
 
-    if (filter) rowsFiltered = states.filter((i) => Iob.customFilter(i, filter));
+    if (filter)
+      rowsFiltered = states.filter((i) => Iob.customFilter(i, filter));
     else rowsFiltered = states;
     const titems = [];
     for (const [key] of rowsFiltered) {
@@ -196,7 +202,8 @@ class StateBrowser extends React.Component {
           found = {
             id,
             item: name,
-            stateName: id != key ? "" : value && value.common ? value.common.name : "",
+            stateName:
+              id != key ? "" : value && value.common ? value.common.name : "",
             items: [],
             level: treen - 1,
             name: Iob.trimL(name),
@@ -233,7 +240,15 @@ class StateBrowser extends React.Component {
     renderItems(titems);
     //    console.log(titems);
     filteredLen = rowsFiltered.length;
-    return { states, titems, filter, filteredLen, rowsFiltered, totalLen, rows };
+    return {
+      states,
+      titems,
+      filter,
+      filteredLen,
+      rowsFiltered,
+      totalLen,
+      rows,
+    };
   }
 
   handleChangePage = (event, newPage) => {
@@ -305,7 +320,14 @@ class StateBrowser extends React.Component {
 
   renderRow(row, ri) {
     const { expandable, isexpanded, id, level, name, stateName } = row;
-    const { expanded, page, pageSize, singlemode, dragZone, idDragDrop } = this.state;
+    const {
+      expanded,
+      page,
+      pageSize,
+      singlemode,
+      dragZone,
+      idDragDrop,
+    } = this.state;
     const rin = page * pageSize + ri;
     const cellProps = {
       component: "td",
@@ -352,7 +374,8 @@ class StateBrowser extends React.Component {
       dstyle.canDropHere = (d) =>
         idDragDrop.canDropHere
           ? idDragDrop.canDropHere(d, row, Iob, this)
-          : !row.id.startsWith(d.value) && row.id != d.value.split(".").slice(0, -1).join(".");
+          : !row.id.startsWith(d.value) &&
+            row.id != d.value.split(".").slice(0, -1).join(".");
       dstyle.dropAction = (d) => {
         const from = d.value;
         const to = row.id + "." + from.split(".").slice(-1)[0];
@@ -361,12 +384,20 @@ class StateBrowser extends React.Component {
           : console.log("move", from, "to", to) ||
             Iob.getDialog({
               type: "renameId",
-              html: t("Rename state '<b>{0}</b>' <br/>to '<b>{1}'</b>", from, to),
+              html: t(
+                "Rename state '<b>{0}</b>' <br/>to '<b>{1}'</b>",
+                from,
+                to
+              ),
             }).then((r) => console.log(r));
       };
     }
     return (
-      <TableRow key={key} hover style={isexpanded ? { backgroundColor: lightBlue[50] } : {}}>
+      <TableRow
+        key={key}
+        hover
+        style={isexpanded ? { backgroundColor: lightBlue[50] } : {}}
+      >
         <TableCell
           {...cellProps}
           style={expandable ? { cursor: "pointer" } : { cursor: "default" }}
@@ -380,12 +411,21 @@ class StateBrowser extends React.Component {
               <IButton size="small" icon="chevron_right" />
             )}
             <MakeDraggable
-              dragValue={{ value: row.id, dropped: row, index: rin, component: this }}
+              dragValue={{
+                value: row.id,
+                dropped: row,
+                index: rin,
+                component: this,
+              }}
               dragZone={ddZone}
             >
               <Typography
                 variant="subtitle2"
-                title={`${row.id}\n${row.stateName}\n${Object.keys(row.value || {})}`}
+                title={`${row.id}\n${row.stateName}\n${Iob.stringify(
+                  row.value || {},
+                  1,
+                  "  "
+                )}`}
               >
                 <b>{row.name}</b>
               </Typography>
@@ -407,7 +447,12 @@ class StateBrowser extends React.Component {
         <TableCell {...cellProps}>
           <MakeDraggable
             dragDisable={!row.stateName}
-            dragValue={{ value: row.stateName, dropped: row, index: rin, component: this }}
+            dragValue={{
+              value: row.stateName,
+              dropped: row,
+              index: rin,
+              component: this,
+            }}
             dragZone={dragZone}
             dragProps={{ style: { opacity: 0.5, cursor: "move" } }}
           >
@@ -430,7 +475,9 @@ class StateBrowser extends React.Component {
                   text: t("Rename state text from id '{0}'", row.id),
                 }).then((r) =>
                   typeof r === "string"
-                    ? Iob.connection.extendObject(row.id, { common: { name: r } })
+                    ? Iob.connection.extendObject(row.id, {
+                        common: { name: r },
+                      })
                     : null
                 );
                 //                Iob.logSnackbar("warning;rename not implemented '{0}'", row);
@@ -490,8 +537,12 @@ class StateBrowser extends React.Component {
           */}
             <TButton
               label={t("single")}
-              tooltip={t("switch between single open tree or allow multiple open trees")}
-              icon={singlemode ? "radio_button_checked" : "radio_button_unchecked"}
+              tooltip={t(
+                "switch between single open tree or allow multiple open trees"
+              )}
+              icon={
+                singlemode ? "radio_button_checked" : "radio_button_unchecked"
+              }
               onClick={(e) => this.setState({ singlemode: !singlemode })}
               color="inherit"
             />
@@ -510,10 +561,13 @@ class StateBrowser extends React.Component {
                   />
                 ) : null
               }
-              onKeyDown={(e) => (e.keyCode == 27 ? this.setState({ filter: "" }) : null)}
+              onKeyDown={(e) =>
+                e.keyCode == 27 ? this.setState({ filter: "" }) : null
+              }
             />
             <Typography variant="subtitle2" noWrap>
-              &nbsp;{totalLen == filteredLen ? t("all") : filteredLen}&nbsp;{t("of")}&nbsp;
+              &nbsp;{totalLen == filteredLen ? t("all") : filteredLen}&nbsp;
+              {t("of")}&nbsp;
               {totalLen ? totalLen : t("none")}
             </Typography>
             <div style={{ flexGrow: 1 }} />
@@ -561,6 +615,18 @@ class StateBrowser extends React.Component {
 }
 
 export default connect((state) => {
-  const { adapterInstance, adapterStatus, instanceConfig, adapterStates, adapterObjects } = state;
-  return { adapterInstance, adapterStatus, instanceConfig, adapterStates, adapterObjects };
+  const {
+    adapterInstance,
+    adapterStatus,
+    instanceConfig,
+    adapterStates,
+    adapterObjects,
+  } = state;
+  return {
+    adapterInstance,
+    adapterStatus,
+    instanceConfig,
+    adapterStates,
+    adapterObjects,
+  };
 })(StateBrowser);
