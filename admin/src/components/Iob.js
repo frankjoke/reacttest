@@ -362,7 +362,6 @@ class Iob {
       const opts = Object.assign(
         {},
         {
-          inputValue: "",
           callback: (r) => {
             if (opts.rejectResult) {
               if (r === false || r === null || r === undefined) return reject(r);

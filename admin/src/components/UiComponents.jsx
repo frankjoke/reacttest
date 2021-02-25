@@ -161,7 +161,7 @@ const MakeDroppable = React.forwardRef((dprops, dref) => {
         : Iob.logSnackbar(
             "warning;no drop action defined for {0} with value {1}",
             dropZone,
-            Iob.stringify(what,1," ")
+            Iob.stringify(what, 1, " ")
           );
     },
     canDrop: (what) => canDropHere(what),
@@ -480,7 +480,7 @@ class InputField extends React.Component {
     const useOptions = Array.isArray(this.props.options) && this.props.options.length;
     const offsetWidth =
       (this.myInput.current && this.myInput.current.offsetWidth) || window.innerWidth / 4;
-//      console.log(offsetWidth);
+    //      console.log(offsetWidth);
     const listStyle = {
       display: "flex",
       flexFlow: "row wrap",
@@ -559,7 +559,11 @@ class InputField extends React.Component {
     const ias = startAdornment ? (
       <InputAdornment position="start">{startAdornment}</InputAdornment>
     ) : (
-      chipList && <div position="start" style={listStyle}>{chipList}</div>
+      chipList && (
+        <div position="start" style={listStyle}>
+          {chipList}
+        </div>
+      )
     );
     const iField = useOptions ? (
       <>
@@ -849,7 +853,7 @@ function TButton(props) {
     "aria-label": label ? label : "",
     ...passThroughProps,
   };
-//  if (addProps) console.log(label, addProps, nprops);
+  //  if (addProps) console.log(label, addProps, nprops);
   const iFontSize = nprops.size == "small" || nprops.size == "large" ? nprops.size : "default";
   if (startIcon)
     nprops.startIcon =
@@ -860,7 +864,7 @@ function TButton(props) {
     nprops.endIcon =
       typeof endIcon === "string" ? <Icon fontSize={iFontSize}>{endIcon}</Icon> : endIcon;
   let sw = <Button {...nprops}>{!narrow ? label : null}</Button>;
-//  if (addProps) sw = <span {...addProps}>{sw}</span>
+  //  if (addProps) sw = <span {...addProps}>{sw}</span>
   return (disabled && sw) || AddTooltip(tooltip, sw);
 }
 
@@ -927,16 +931,20 @@ class HtmlComponent extends React.Component {
   }
 
   render() {
-    const { html, component="span", children, ...rest } = this.props;
+    const { html, component = "span", children, ...rest } = this.props;
     const TagName = component;
-    return <TagName ref={this.divRef} {...rest}>{children}</TagName>;
+    return (
+      <TagName ref={this.divRef} {...rest}>
+        {children}
+      </TagName>
+    );
   }
 }
 
 class IDialog extends React.Component {
   constructor(props) {
     super(props);
-    const { type = "default", options = {}, children, ...rprops } = props;
+    const { type = "default", options = {}, children, justUpdate, ...rprops } = props;
     this.state = {
       type,
       options: Object.assign(
@@ -971,11 +979,14 @@ class IDialog extends React.Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-//    console.log(this.props,nextProps, this.state, nextState);
-    let {children, ...tprops} = this.props;
-    let nprops = {...nextProps};
+    let { children, ...tprops } = this.props;
+    let nprops = { ...nextProps };
     delete nprops["children"];
-    if (JSON.stringify(tprops) == JSON.stringify(nprops) && JSON.stringify(this.state) == JSON.stringify(nextState)) {
+//    if (this.state.type=="activeOk") console.log(tprops,nprops, this.state, nextState);
+    if (
+      (JSON.stringify(tprops) == JSON.stringify(nprops) &&
+        JSON.stringify(this.state) == JSON.stringify(nextState))
+    ) {
       return false;
     } else {
       return true;
@@ -996,6 +1007,7 @@ class IDialog extends React.Component {
     const {
       title = t("please select"),
       text,
+      html,
       cancelIcon,
       okIcon,
       okTooltip,
@@ -1019,7 +1031,6 @@ class IDialog extends React.Component {
         </Draggable>
       );
     }
-
     return (
       <Dialog
         open={open}
@@ -1033,7 +1044,13 @@ class IDialog extends React.Component {
       >
         {title && <DialogTitle id={handle}>{title}</DialogTitle>}
         <DialogContent>
-          {text && <DialogContentText>{text}</DialogContentText>}
+          {text ||
+            (html && (
+              <DialogContentText>
+                {text}
+                {html ? <HtmlComponent html={html}></HtmlComponent> : null}
+              </DialogContentText>
+            ))}
           {this.props.children}
           {inputProps && (
             <InputField

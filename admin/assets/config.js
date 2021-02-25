@@ -320,6 +320,7 @@ export default function config() {
             itype: "$stateBrowser",
             dragZone: "adapterState",
             pageSize: 25,
+            idDragDrop: {},
             cols: 6,
           },
           {

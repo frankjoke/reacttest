@@ -1,5 +1,5 @@
 import React from "react";
-import { withStyles, makeStyles } from "@material-ui/core/styles";
+//import { withStyles, makeStyles } from "@material-ui/core/styles";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
 //import InputChips from "./InputChips";
 //import ChipInput from "material-ui-chip-input";
@@ -33,20 +33,26 @@ import {
 } from "@material-ui/core";
 import { TreeView, TreeItem } from "@material-ui/lab";
 import EditState from "./EditState";
-import { isIterationStatement } from "typescript";
+// import { isIterationStatement } from "typescript";
 
-import { useDrag } from "react-dnd"; //import { config } from "chai";
+//import { useDrag } from "react-dnd"; //import { config } from "chai";
 import { lightBlue } from "@material-ui/core/colors";
 //import { isNotEmittedStatement } from "typescript";
-function SbDialog(props) {
+
+
+function SnDialog(props) {
   const { idrename } = props;
   const [myrename, setRename] = React.useState(idrename);
+//  const [justUpdate, setUpdate] = React.useState(0);
   //  if (idrename != myrename) setRename(idrename);
+  //  console.log(myrename, setRename);
   return (
     <IDialog
-      type="activeOk"
+      type="stateNameOk"
+      justUpdate={myrename}
       options={{
         okOnEnter: true,
+        inputValue: "",
         title: t("Rename state name"),
         cancelIcon: "close",
         cancelColor: "primary",
@@ -63,12 +69,12 @@ function SbDialog(props) {
               t("Name should not include chractesrs like '{0}'!", "[]*.,;'\"`<>\\?"),
             (v) => {
               //                  console.log("rule OctiveOk", v);
-              const cname = this.crow && this.crow.stateName;
+//              console.log("rule2", v);
               const aobjects = Iob.getStore.adapterObjects;
               return (
-                !Object.keys(aobjects)
+                Object.keys(aobjects)
                   .map((i) => aobjects[i].common.name)
-                  .find((i) => i == v && v != cname) || t("Name should not exist in adapter!")
+                  .filter((i) => i == v).length == 0 || t("Name should not exist in adapter!")
               );
             },
           ],
@@ -82,7 +88,9 @@ function SbDialog(props) {
         label={t("Id also")}
         tooltip={t("switch on to rename also state id or name only")}
         icon={myrename ? "radio_button_checked" : "radio_button_unchecked"}
-        onClick={(e) => this.setRename(!myrename)}
+        onClick={(e) => {
+          setRename(!myrename);
+        }}
         color="secondary"
       />
       <br />
@@ -102,6 +110,7 @@ class StateBrowser extends React.Component {
       dragZone,
       itype,
       folded = false,
+      idDragDrop,
       expanded = [props.adapterInstance],
       ...items
     } = props.item;
@@ -116,6 +125,7 @@ class StateBrowser extends React.Component {
       folded,
       page: 0,
       expanded,
+      idDragDrop,
       filter: "",
       dragZone,
       adapterObjects: props.adapterObjects,
@@ -295,7 +305,7 @@ class StateBrowser extends React.Component {
 
   renderRow(row, ri) {
     const { expandable, isexpanded, id, level, name, stateName } = row;
-    const { expanded, page, pageSize, singlemode, dragZone } = this.state;
+    const { expanded, page, pageSize, singlemode, dragZone, idDragDrop } = this.state;
     const rin = page * pageSize + ri;
     const cellProps = {
       component: "td",
@@ -326,7 +336,7 @@ class StateBrowser extends React.Component {
     let longName = row.stateName || "";
     while (row.stateName && longName.length < 40) longName += "\u00A0\u00A0";
     const key = this.props.index + "h" + rin;
-    const Dtyp = expandable ? MakeDroppable : "div";
+    let Dtyp = "div";
     const dstyle = {
       style: {
         paddingLeft: 24 * level + (expandable ? 0 : 12),
@@ -335,9 +345,25 @@ class StateBrowser extends React.Component {
       },
       onClick: (e) => toggleExpand(this),
     };
-    const ddZone = "folder-" + this.props.index;
-    if (expandable) {
+    const ddZone = idDragDrop && "folder-" + this.props.index;
+    if (expandable && ddZone) {
+      Dtyp = MakeDroppable;
       dstyle.dropZone = ddZone;
+      dstyle.canDropHere = (d) =>
+        idDragDrop.canDropHere
+          ? idDragDrop.canDropHere(d, row, Iob, this)
+          : !row.id.startsWith(d.value) && row.id != d.value.split(".").slice(0, -1).join(".");
+      dstyle.dropAction = (d) => {
+        const from = d.value;
+        const to = row.id + "." + from.split(".").slice(-1)[0];
+        idDragDrop.dropAction
+          ? idDragDrop.dropAction(d, row, Iob, this)
+          : console.log("move", from, "to", to) ||
+            Iob.getDialog({
+              type: "renameId",
+              html: t("Rename state '<b>{0}</b>' <br/>to '<b>{1}'</b>", from, to),
+            }).then((r) => console.log(r));
+      };
     }
     return (
       <TableRow key={key} hover style={isexpanded ? { backgroundColor: lightBlue[50] } : {}}>
@@ -353,9 +379,10 @@ class StateBrowser extends React.Component {
             ) : (
               <IButton size="small" icon="chevron_right" />
             )}
-            <MakeDraggable 
-            dragValue={{ value: row.id, dropped: row, index: rin, component: this }}
-            dragZone={ddZone}>
+            <MakeDraggable
+              dragValue={{ value: row.id, dropped: row, index: rin, component: this }}
+              dragZone={ddZone}
+            >
               <Typography
                 variant="subtitle2"
                 title={`${row.id}\n${row.stateName}\n${Object.keys(row.value || {})}`}
@@ -398,7 +425,7 @@ class StateBrowser extends React.Component {
               onClick={(e) => {
                 this.crow = row;
                 Iob.getDialog({
-                  type: "activeOk",
+                  type: "stateNameOk",
                   inputValue: row.stateName,
                   text: t("Rename state text from id '{0}'", row.id),
                 }).then((r) =>
@@ -511,7 +538,22 @@ class StateBrowser extends React.Component {
     return (
       <React.Fragment>
         {sw}
-        <SbDialog idrename={idrename} />
+        <IDialog
+          type="renameId"
+          options={{
+            okOnEnter: true,
+            title: t("Rename state Id"),
+            cancelIcon: "close",
+            cancelColor: "primary",
+            cancelLabel: t("cancel"),
+            okIcon: "done",
+            okLabel: t("ok"),
+            okColor: "secondary",
+            okTooltip: t("click here to accept rename"),
+          }}
+        ></IDialog>
+
+        <SnDialog idrename={idrename} />
         {!folded && this.renderTree()}
       </React.Fragment>
     );

@@ -388,6 +388,7 @@ class ObjectBrowser extends React.Component {
         {sw}
         <IDialog
           type="activeOk"
+//          updateProps={() => idrename}
           options={{
             okOnEnter: true,
             title: t("Rename state name"),

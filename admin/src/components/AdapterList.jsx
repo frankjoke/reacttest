@@ -38,8 +38,7 @@ const AdapterEntry = (props) => {
     const { _id, common, native } = instance;
     ainst.loglevel = common.logLevel || "info";
     ainst.common = common;
-    if (common && common.titleLang) 
-      title = Iob.getTranslatedDesc(common.titleLang);
+    if (common && common.titleLang) title = Iob.getTranslatedDesc(common.titleLang);
     ainst.native = native;
     ainst.id = _id;
     ainst.iid = _id.slice("system.adapter.".length);
@@ -62,13 +61,13 @@ const AdapterEntry = (props) => {
   };
   const rversion = (radapter && radapter.version) || version;
   const newVersion = rversion != version;
-  function menuOptions(i, options={className:"bottom-border-button"}) {
+  function menuOptions(i, options = { className: "bottom-border-button" }) {
     const im = i == menue;
     return {
       size: "small",
       color: im ? "secondary" : "primary",
       onClick: (e) => (!im ? setMenue(i) : null),
-      className: im ? "bottom-border-button" : ""
+      className: im ? "bottom-border-button" : "",
     };
   }
   function renderOptions() {
@@ -192,22 +191,21 @@ const AdapterEntry = (props) => {
               <>
                 <IButton
                   tooltip={!alive ? t("start adapter") : t("stop adapter")}
+                  {...iprops}
+                  onClick={(e) => Iob.enableDisableAdapter(!alive, iid)}
+                  icon={!alive ? "play_circle" : "pause_circle"}
+                />
+                <IButton
+                  disabled={!alive}
+                  tooltip={t("restart adapter")}
+                  onClick={(e) => Iob.setLoglevel(null, iid)}
+                  icon="replay_circle_filled"
                   {...Iob.mergeProps(iprops, {
                     style: {
                       color: !alive ? "red" : connected ? "green" : "orange",
                     },
                   })}
-                  onClick={(e) => Iob.enableDisableAdapter(!alive, iid)}
-                  icon={!alive ? "play_circle" : "pause_circle"}
                 />
-                {alive ? (
-                  <IButton
-                    tooltip={t("restart adapter")}
-                    onClick={(e) => Iob.setLoglevel(null, iid)}
-                    icon="replay"
-                    {...iprops}
-                  />
-                ) : null}
               </>
             )}
             <IButton
