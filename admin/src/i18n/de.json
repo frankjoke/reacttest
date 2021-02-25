@@ -18,5 +18,6 @@
   "ra_Save": "Speichern",
   "ttSaveClose": "speichere Konfiguration und gehe zurück zu Admin",
   "raSaveclose": "Speichern und Schließen",
-  "dcancel": "Abbruch"
+  "dcancel": "Abbruch",
+  "Message": "Meldung"
 }

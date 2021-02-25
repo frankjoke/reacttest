@@ -17,7 +17,7 @@ import {
   Typography,
   Collapse,
 } from "@material-ui/core";
-import { lightBlue, lightGreen, lightGrey } from "@material-ui/core/colors";
+import { lightBlue, lightGreen, lightGrey, orange } from "@material-ui/core/colors";
 import { isNoSubstitutionTemplateLiteral } from "typescript";
 //import { config } from "chai";
 //import { isNotEmittedStatement } from "typescript";
@@ -231,7 +231,7 @@ const AdapterEntry = (props) => {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            backgroundColor: lightBlue[50],
+            backgroundColor: alive ? lightGreen[50] : lightBlue[50],
             padding: "1px",
           }}
         >
