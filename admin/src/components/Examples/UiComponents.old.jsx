@@ -29,29 +29,35 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@material-ui/core";
-import Autocomplete, { createFilterOptions } from "@material-ui/lab/Autocomplete";
-//import { LinkedErrors } from "@sentry/browser/dist/integrations";
-//import { config } from "chai";
-//import { isNotEmittedStatement } from "typescript";
+import Autocomplete, {
+  createFilterOptions,
+} from "@material-ui/lab/Autocomplete";
+
 import PropTypes from "prop-types";
 import { useDrop, useDrag } from "react-dnd";
 import Draggable from "react-draggable";
 import { NativeTypes } from "react-dnd-html5-backend";
 
-function useSingleAndDoubleClick(actionSimpleClick, actionDoubleClick, delay = 250) {
+function useSingleAndDoubleClick(
+  actionSimpleClick,
+  actionDoubleClick,
+  delay = 250
+) {
   const [click, setClick] = useState(0);
   const [event, setEvent] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       // simple click
-      if (click === 1 && typeof actionSimpleClick === "function") actionSimpleClick(event);
+      if (click === 1 && typeof actionSimpleClick === "function")
+        actionSimpleClick(event);
       setClick(0);
     }, delay);
 
     // the duration between this click and the previous one
     // is less than the value of delay = double-click
-    if (click === 2 && typeof actionDoubleClick === "function") actionDoubleClick(event);
+    if (click === 2 && typeof actionDoubleClick === "function")
+      actionDoubleClick(event);
 
     return () => clearTimeout(timer);
   }, [click]);
@@ -209,7 +215,8 @@ class MyChip extends React.Component {
             // Determine rectangle on screen
             const hoverBoundingRect = ref.current?.getBoundingClientRect();
             // Get vertical middle
-            const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+            const hoverMiddleY =
+              (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
             // Determine mouse position
             const clientOffset = monitor.getClientOffset();
             // Get pixels to the top
@@ -323,16 +330,33 @@ class Loader extends React.Component {
   render() {
     const theme = this.props.themeType || this.props.theme || "light";
     return (
-      <div key={this.props.key} className={"logo-back logo-background-" + theme}>
-        <div className="logo-div" style={{ width: this.size, height: this.size }}>
-          <div className={"logo-top logo-background-" + theme} style={{ left: "37%" }} />
-          <div className={"logo-top logo-background-" + theme} style={{ left: "57%" }} />
+      <div
+        key={this.props.key}
+        className={"logo-back logo-background-" + theme}
+      >
+        <div
+          className="logo-div"
+          style={{ width: this.size, height: this.size }}
+        >
           <div
-            className={"logo-border logo-background-" + theme + " logo-animate-wait"}
+            className={"logo-top logo-background-" + theme}
+            style={{ left: "37%" }}
+          />
+          <div
+            className={"logo-top logo-background-" + theme}
+            style={{ left: "57%" }}
+          />
+          <div
+            className={
+              "logo-border logo-background-" + theme + " logo-animate-wait"
+            }
             style={{ borderWidth: this.size * 0.132 }}
           />
           <div className={"logo-i logo-animate-color-inside-" + theme} />
-          <div className={"logo-i-top logo-animate-color-inside-" + theme} style={{ top: "18%" }} />
+          <div
+            className={"logo-i-top logo-animate-color-inside-" + theme}
+            style={{ top: "18%" }}
+          />
           <div
             className={"logo-i-top logo-animate-color-inside-" + theme}
             style={{ bottom: "18%" }}
@@ -415,7 +439,12 @@ const MakeDroppable = React.forwardRef((dprops, dref) => {
     //    dref(...Array.from(a));
   }
   dropMonitor &&
-    setTimeout(dropMonitor, 10, { dropKey, isOver, canDrop, droppable: isOver && canDrop });
+    setTimeout(dropMonitor, 10, {
+      dropKey,
+      isOver,
+      canDrop,
+      droppable: isOver && canDrop,
+    });
   if (isOver) props = Iob.mergeProps(props, isOverProps);
   if (isOver && !canDrop) props = Iob.mergeProps(props, cannotDropProps);
   return (
@@ -452,7 +481,8 @@ function MakeDraggable(cprops) {
   let props = { ref: drag, ...rest };
   const { onClick, onDoubleClick } = child.props;
   //  console.log(onClick, onDoubleClick);
-  if (onDoubleClick) props.onClick = useSingleAndDoubleClick(onClick, onDoubleClick);
+  if (onDoubleClick)
+    props.onClick = useSingleAndDoubleClick(onClick, onDoubleClick);
   dragTest && dragTest({ dropZone, props, isDragging, dragHandle, dragValue });
   //    children.ref = drag;
   //    Object.assign(children.props,dragProps);
@@ -479,7 +509,9 @@ function AutocompleteSelect(props) {
   const { inputProps, getOptionLabel = getOlabel, onChange, ...rest } = props;
   let { renderInput = ri, options = { "": "" }, ...defaultProps } = rest;
   if (typeof options === "string") {
-    const opt = options.split("|").map((i) => ({ label: i.trim(), value: i.trim() }));
+    const opt = options
+      .split("|")
+      .map((i) => ({ label: i.trim(), value: i.trim() }));
     options = opt;
   }
   //  console.log(defaultProps, onChange);
@@ -555,7 +587,11 @@ class InputField extends React.Component {
         endAdornment
       );
     return (
-      <FormControl {...{ required, size, margin, disabled }} hiddenLabel={!label} error={nerror}>
+      <FormControl
+        {...{ required, size, margin, disabled }}
+        hiddenLabel={!label}
+        error={nerror}
+      >
         {label && <InputLabel htmlFor={this.key}>{label}</InputLabel>}
         <div style={{ display: "flex", flexFlow: "row wrap" }}>
           {renderTags}
@@ -563,7 +599,9 @@ class InputField extends React.Component {
             value={value}
             id={this.key}
             onChange={(e) =>
-              typeof this.props.onChange === "function" ? this.props.onChange(e) : null
+              typeof this.props.onChange === "function"
+                ? this.props.onChange(e)
+                : null
             }
             endAdornment={
               iae && typeof iae === "string" ? (
@@ -574,7 +612,9 @@ class InputField extends React.Component {
             }
             startAdornment={
               startAdornment && typeof startAdornment === "string" ? (
-                <InputAdornment position="start">{startAdornment}</InputAdornment>
+                <InputAdornment position="start">
+                  {startAdornment}
+                </InputAdornment>
               ) : (
                 startAdornment
               )
@@ -641,12 +681,25 @@ class UButton extends React.Component {
     const iFontSize = size == "small" || size == "large" ? size : "default";
     if (startIcon)
       state.startIcon =
-        typeof startIcon === "string" ? <Icon fontSize={iFontSize}>{startIcon}</Icon> : startIcon;
+        typeof startIcon === "string" ? (
+          <Icon fontSize={iFontSize}>{startIcon}</Icon>
+        ) : (
+          startIcon
+        );
     else if (icon)
-      state.startIcon = typeof icon === "string" ? <Icon fontSize={iFontSize}>{icon}</Icon> : icon;
+      state.startIcon =
+        typeof icon === "string" ? (
+          <Icon fontSize={iFontSize}>{icon}</Icon>
+        ) : (
+          icon
+        );
     else if (endIcon)
       state.endIcon =
-        typeof endIcon === "string" ? <Icon fontSize={iFontSize}>{endIcon}</Icon> : endIcon;
+        typeof endIcon === "string" ? (
+          <Icon fontSize={iFontSize}>{endIcon}</Icon>
+        ) : (
+          endIcon
+        );
 
     this.state = state;
   }
@@ -731,15 +784,29 @@ function TButton(props) {
     "aria-label": label ? label : "",
     ...passThroughProps,
   };
-  const iFontSize = nprops.size == "small" || nprops.size == "large" ? nprops.size : "default";
+  const iFontSize =
+    nprops.size == "small" || nprops.size == "large" ? nprops.size : "default";
   if (startIcon)
     nprops.startIcon =
-      typeof startIcon === "string" ? <Icon fontSize={iFontSize}>{startIcon}</Icon> : startIcon;
+      typeof startIcon === "string" ? (
+        <Icon fontSize={iFontSize}>{startIcon}</Icon>
+      ) : (
+        startIcon
+      );
   else if (icon)
-    nprops.startIcon = typeof icon === "string" ? <Icon fontSize={iFontSize}>{icon}</Icon> : icon;
+    nprops.startIcon =
+      typeof icon === "string" ? (
+        <Icon fontSize={iFontSize}>{icon}</Icon>
+      ) : (
+        icon
+      );
   else if (endIcon)
     nprops.endIcon =
-      typeof endIcon === "string" ? <Icon fontSize={iFontSize}>{endIcon}</Icon> : endIcon;
+      typeof endIcon === "string" ? (
+        <Icon fontSize={iFontSize}>{endIcon}</Icon>
+      ) : (
+        endIcon
+      );
   const sw = <Button {...nprops}>{!narrow ? label : null}</Button>;
   return (disabled && sw) || AddTooltip(tooltip, sw);
 }
@@ -931,7 +998,8 @@ class IDialog extends React.Component {
       const nstate = { open: !!setToShow };
       if (typeof setToShow === "object" && setToShow !== null) {
         nstate.show = setToShow;
-        this.callback = typeof setToShow.callback === "function" ? setToShow.callback : null;
+        this.callback =
+          typeof setToShow.callback === "function" ? setToShow.callback : null;
         if (setToShow.inputValue && setToShow.inputValue != this.state.vale)
           nstate.value = setToShow.inputValue;
       }
@@ -973,7 +1041,10 @@ class IDialog extends React.Component {
     //    console.log(type, open, show, options);
     function DragPaper(props) {
       return (
-        <Draggable handle={"#" + handle} cancel={'[class*="MuiDialogContent-root"]'}>
+        <Draggable
+          handle={"#" + handle}
+          cancel={'[class*="MuiDialogContent-root"]'}
+        >
           <Paper {...props} />
         </Draggable>
       );
@@ -999,7 +1070,9 @@ class IDialog extends React.Component {
               {...inputProps}
               autoFocus
               value={value}
-              onKeyUp={(e) => (e.key == "Enter" && okOnEnter ? this.handleClose(true, e) : null)}
+              onKeyUp={(e) =>
+                e.key == "Enter" && okOnEnter ? this.handleClose(true, e) : null
+              }
               onChange={(e) => this.setState({ value: e.target.value })}
             />
           )}

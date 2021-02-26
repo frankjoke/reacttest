@@ -29,10 +29,9 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@material-ui/core";
-import Autocomplete, { createFilterOptions } from "@material-ui/lab/Autocomplete";
-//import { LinkedErrors } from "@sentry/browser/dist/integrations";
-//import { config } from "chai";
-//import { isNotEmittedStatement } from "typescript";
+import Autocomplete, {
+  createFilterOptions,
+} from "@material-ui/lab/Autocomplete";
 import "./loader.css";
 import PropTypes from "prop-types";
 import { DragSource, useDrop, useDrag } from "react-dnd";
@@ -40,20 +39,26 @@ import Draggable from "react-draggable";
 import { NativeTypes } from "react-dnd-html5-backend";
 import { green, pink } from "@material-ui/core/colors";
 
-function useSingleAndDoubleClick(actionSimpleClick, actionDoubleClick, delay = 250) {
+function useSingleAndDoubleClick(
+  actionSimpleClick,
+  actionDoubleClick,
+  delay = 250
+) {
   const [click, setClick] = useState(0);
   const [event, setEvent] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       // simple click
-      if (click === 1 && typeof actionSimpleClick === "function") actionSimpleClick(event);
+      if (click === 1 && typeof actionSimpleClick === "function")
+        actionSimpleClick(event);
       setClick(0);
     }, delay);
 
     // the duration between this click and the previous one
     // is less than the value of delay = double-click
-    if (click === 2 && typeof actionDoubleClick === "function") actionDoubleClick(event);
+    if (click === 2 && typeof actionDoubleClick === "function")
+      actionDoubleClick(event);
 
     return () => clearTimeout(timer);
   }, [click]);
@@ -85,16 +90,33 @@ class Loader extends React.Component {
   render() {
     const theme = this.props.themeType || this.props.theme || "light";
     return (
-      <div key={this.props.key} className={"logo-back logo-background-" + theme}>
-        <div className="logo-div" style={{ width: this.size, height: this.size }}>
-          <div className={"logo-top logo-background-" + theme} style={{ left: "37%" }} />
-          <div className={"logo-top logo-background-" + theme} style={{ left: "57%" }} />
+      <div
+        key={this.props.key}
+        className={"logo-back logo-background-" + theme}
+      >
+        <div
+          className="logo-div"
+          style={{ width: this.size, height: this.size }}
+        >
           <div
-            className={"logo-border logo-background-" + theme + " logo-animate-wait"}
+            className={"logo-top logo-background-" + theme}
+            style={{ left: "37%" }}
+          />
+          <div
+            className={"logo-top logo-background-" + theme}
+            style={{ left: "57%" }}
+          />
+          <div
+            className={
+              "logo-border logo-background-" + theme + " logo-animate-wait"
+            }
             style={{ borderWidth: this.size * 0.132 }}
           />
           <div className={"logo-i logo-animate-color-inside-" + theme} />
-          <div className={"logo-i-top logo-animate-color-inside-" + theme} style={{ top: "18%" }} />
+          <div
+            className={"logo-i-top logo-animate-color-inside-" + theme}
+            style={{ top: "18%" }}
+          />
           <div
             className={"logo-i-top logo-animate-color-inside-" + theme}
             style={{ bottom: "18%" }}
@@ -179,7 +201,12 @@ const MakeDroppable = React.forwardRef((dprops, dref) => {
     //    dref(...Array.from(a));
   }
   dropMonitor &&
-    setTimeout(dropMonitor, 10, { dropKey, isOver, canDrop, dropZone: isOver && canDrop });
+    setTimeout(dropMonitor, 10, {
+      dropKey,
+      isOver,
+      canDrop,
+      dropZone: isOver && canDrop,
+    });
   if (isOver) props = Iob.mergeProps(props, isOverProps);
   if (isOver && !canDrop) props = Iob.mergeProps(props, cannotDropProps);
   return (
@@ -216,7 +243,8 @@ function MakeDraggable(cprops) {
   let props = { ref: drag, ...rest };
   const { onClick, onDoubleClick } = child.props;
   //  console.log(onClick, onDoubleClick);
-  if (onDoubleClick) props.onClick = useSingleAndDoubleClick(onClick, onDoubleClick);
+  if (onDoubleClick)
+    props.onClick = useSingleAndDoubleClick(onClick, onDoubleClick);
   dragTest && dragTest({ dragZone, props, isDragging, dragHandle, dragValue });
   //    children.ref = drag;
   //    Object.assign(children.props,dragProps);
@@ -243,7 +271,9 @@ function AutocompleteSelect(props) {
   const { inputProps, getOptionLabel = getOlabel, onChange, ...rest } = props;
   let { renderInput = ri, options = { "": "" }, ...defaultProps } = rest;
   if (typeof options === "string") {
-    const opt = options.split("|").map((i) => ({ label: i.trim(), value: i.trim() }));
+    const opt = options
+      .split("|")
+      .map((i) => ({ label: i.trim(), value: i.trim() }));
     options = opt;
   }
   //  console.log(defaultProps, onChange);
@@ -368,7 +398,8 @@ class InputField extends React.Component {
       canRearrange,
       value,
     };
-    if (!dragZone && chips && canRearrange) this.state.dragZone = "chips-drop-" + this.key;
+    if (!dragZone && chips && canRearrange)
+      this.state.dragZone = "chips-drop-" + this.key;
     //    const nconf = ConfigSettings.transformConfig(props.configPage);
   }
   static getDerivedStateFromProps(props, state) {
@@ -382,7 +413,14 @@ class InputField extends React.Component {
       errorString !== state.errorString
     ) {
       //      console.log("Prop value changed!", state.opvalue, props.value, state.value);
-      newState = { value, options, o_value: value, o_options: options, error, errorString };
+      newState = {
+        value,
+        options,
+        o_value: value,
+        o_options: options,
+        error,
+        errorString,
+      };
     }
     return newState;
   }
@@ -477,15 +515,21 @@ class InputField extends React.Component {
           : typeof defaultValue === "string"
           ? defaultValue
           : "";
-    const useOptions = Array.isArray(this.props.options) && this.props.options.length;
+    const useOptions =
+      Array.isArray(this.props.options) && this.props.options.length;
     const offsetWidth =
-      (this.myInput.current && this.myInput.current.offsetWidth) || window.innerWidth / 4;
+      (this.myInput.current && this.myInput.current.offsetWidth) ||
+      window.innerWidth / 4;
     //      console.log(offsetWidth);
     const listStyle = {
       display: "flex",
       flexFlow: "row wrap",
       marginRight: "6px",
-      minWidth: minWidth ? minWidth : offsetWidth ? Math.floor(offsetWidth / 3).toString() : "30vw",
+      minWidth: minWidth
+        ? minWidth
+        : offsetWidth
+        ? Math.floor(offsetWidth / 3).toString()
+        : "30vw",
       //      width: offsetWidth ? Math.floor(offsetWidth/1.4).toString() : "20vw",
       maxWidth: offsetWidth ? Math.floor(offsetWidth / 1.7).toString() : "50vw",
     };
@@ -542,8 +586,14 @@ class InputField extends React.Component {
               ({ dragZone, props, isDragging, dragHandle, dragValue }) => true
               //                console.log(`'${dragZone}'`, props, isDragging, dragHandle, dragValue)
             }
-            onDoubleClick={(e) => console.log(option) && this.setState({ inputValue: option })}
-            onDelete={(e) => this.doChange(value.slice(0, index).concat(value.slice(index + 1)))}
+            onDoubleClick={(e) =>
+              console.log(option) && this.setState({ inputValue: option })
+            }
+            onDelete={(e) =>
+              this.doChange(
+                value.slice(0, index).concat(value.slice(index + 1))
+              )
+            }
             onChange={(e) => this.doChange(e.target.value)}
             clickable={clickable}
             index={index}
@@ -583,12 +633,16 @@ class InputField extends React.Component {
           getOptionLabel={
             getOptionLabel ||
             ((o) =>
-              /* console.log(`getOptionLabel '${o}'`, id) || */ typeof o === "string" ? o : o.label)
+              /* console.log(`getOptionLabel '${o}'`, id) || */ typeof o ===
+              "string"
+                ? o
+                : o.label)
           }
           getOptionSelected={
             getOptionSelected ||
             ((o, t) =>
-              /* console.log(`getOptionSelected '${o}', '${t}'`, id) || */ typeof o === "string"
+              /* console.log(`getOptionSelected '${o}', '${t}'`, id) || */ typeof o ===
+              "string"
                 ? o == t
                 : o.value == t)
           }
@@ -616,13 +670,20 @@ class InputField extends React.Component {
               return (
                 <TextField
                   {...Iob.mergeProps(params, {
-                    style: { fontSize: 14, ...(fullWidth ? {} : { width, minWidth }) },
+                    style: {
+                      fontSize: 14,
+                      ...(fullWidth ? {} : { width, minWidth }),
+                    },
                   })}
                   //                value={inputValue}
                   label={label}
                   fullWidth={fullWidth}
-                  onChange={(e) => this.setState({ inputValue: e.target.value })}
-                  onKeyUp={(e) => (e.key == "Escape" ? this.setState({ inputValue: "" }) : null)}
+                  onChange={(e) =>
+                    this.setState({ inputValue: e.target.value })
+                  }
+                  onKeyUp={(e) =>
+                    e.key == "Escape" ? this.setState({ inputValue: "" }) : null
+                  }
                   //                    fullWidth={fullWidth}
                   error={nerror}
                   {...params.inputProps}
@@ -676,7 +737,8 @@ class InputField extends React.Component {
         onChange={(e) => {
           const en = e.nativeEvent;
           const value = e.target.value;
-          this.avoidDelete = en.inputType === "deleteContentBackward" && value === "";
+          this.avoidDelete =
+            en.inputType === "deleteContentBackward" && value === "";
           this.onChangeInputValue(value);
         }}
         {...more}
@@ -705,7 +767,9 @@ class InputField extends React.Component {
         hiddenLabel={!label}
         error={nerror}
       >
-        {!useOptions && label ? <InputLabel htmlFor={this.key}>{label}</InputLabel> : null}
+        {!useOptions && label ? (
+          <InputLabel htmlFor={this.key}>{label}</InputLabel>
+        ) : null}
         {iField}
         {helperText ? <FormHelperText>{helperText}</FormHelperText> : null}
       </FormControl>
@@ -714,17 +778,29 @@ class InputField extends React.Component {
 }
 
 function IButton(props) {
-  const { tooltip, size, icon, onClick, src, disabled, ...passThroughProps } = props;
+  const {
+    tooltip,
+    size,
+    icon,
+    onClick,
+    src,
+    disabled,
+    ...passThroughProps
+  } = props;
   function handleClick(e) {
     if (src) window.open(src, "_blank");
     if (onClick) onClick(e);
   }
-  const nstyle = onClick || src ? { style: { cursor: "pointer" } } : { style: {} };
+  const nstyle =
+    onClick || src ? { style: { cursor: "pointer" } } : { style: {} };
   if (disabled) nstyle.style.color = "grey";
 
   if (size) passThroughProps.fontSize = size;
   const sw = (
-    <Icon {...Iob.mergeProps(passThroughProps, nstyle)} onClick={(e) => handleClick(e)}>
+    <Icon
+      {...Iob.mergeProps(passThroughProps, nstyle)}
+      onClick={(e) => handleClick(e)}
+    >
       {icon}
     </Icon>
   );
@@ -763,12 +839,25 @@ class UButton extends React.Component {
     const iFontSize = size == "small" || size == "large" ? size : "default";
     if (startIcon)
       state.startIcon =
-        typeof startIcon === "string" ? <Icon fontSize={iFontSize}>{startIcon}</Icon> : startIcon;
+        typeof startIcon === "string" ? (
+          <Icon fontSize={iFontSize}>{startIcon}</Icon>
+        ) : (
+          startIcon
+        );
     else if (icon)
-      state.startIcon = typeof icon === "string" ? <Icon fontSize={iFontSize}>{icon}</Icon> : icon;
+      state.startIcon =
+        typeof icon === "string" ? (
+          <Icon fontSize={iFontSize}>{icon}</Icon>
+        ) : (
+          icon
+        );
     else if (endIcon)
       state.endIcon =
-        typeof endIcon === "string" ? <Icon fontSize={iFontSize}>{endIcon}</Icon> : endIcon;
+        typeof endIcon === "string" ? (
+          <Icon fontSize={iFontSize}>{endIcon}</Icon>
+        ) : (
+          endIcon
+        );
 
     this.state = state;
   }
@@ -854,15 +943,29 @@ function TButton(props) {
     ...passThroughProps,
   };
   //  if (addProps) console.log(label, addProps, nprops);
-  const iFontSize = nprops.size == "small" || nprops.size == "large" ? nprops.size : "default";
+  const iFontSize =
+    nprops.size == "small" || nprops.size == "large" ? nprops.size : "default";
   if (startIcon)
     nprops.startIcon =
-      typeof startIcon === "string" ? <Icon fontSize={iFontSize}>{startIcon}</Icon> : startIcon;
+      typeof startIcon === "string" ? (
+        <Icon fontSize={iFontSize}>{startIcon}</Icon>
+      ) : (
+        startIcon
+      );
   else if (icon)
-    nprops.startIcon = typeof icon === "string" ? <Icon fontSize={iFontSize}>{icon}</Icon> : icon;
+    nprops.startIcon =
+      typeof icon === "string" ? (
+        <Icon fontSize={iFontSize}>{icon}</Icon>
+      ) : (
+        icon
+      );
   else if (endIcon)
     nprops.endIcon =
-      typeof endIcon === "string" ? <Icon fontSize={iFontSize}>{endIcon}</Icon> : endIcon;
+      typeof endIcon === "string" ? (
+        <Icon fontSize={iFontSize}>{endIcon}</Icon>
+      ) : (
+        endIcon
+      );
   let sw = <Button {...nprops}>{!narrow ? label : null}</Button>;
   //  if (addProps) sw = <span {...addProps}>{sw}</span>
   return (disabled && sw) || AddTooltip(tooltip, sw);
@@ -944,7 +1047,13 @@ class HtmlComponent extends React.Component {
 class IDialog extends React.Component {
   constructor(props) {
     super(props);
-    const { type = "default", options = {}, children, justUpdate, ...rprops } = props;
+    const {
+      type = "default",
+      options = {},
+      children,
+      justUpdate,
+      ...rprops
+    } = props;
     this.state = {
       type,
       options: Object.assign(
@@ -968,7 +1077,8 @@ class IDialog extends React.Component {
       const nstate = { open: !!setToShow };
       if (typeof setToShow === "object" && setToShow !== null) {
         nstate.show = setToShow;
-        this.callback = typeof setToShow.callback === "function" ? setToShow.callback : null;
+        this.callback =
+          typeof setToShow.callback === "function" ? setToShow.callback : null;
         if (setToShow.inputValue && setToShow.inputValue != this.state.vale)
           nstate.value = setToShow.inputValue;
       }
@@ -982,10 +1092,10 @@ class IDialog extends React.Component {
     let { children, ...tprops } = this.props;
     let nprops = { ...nextProps };
     delete nprops["children"];
-//    if (this.state.type=="activeOk") console.log(tprops,nprops, this.state, nextState);
+    //    if (this.state.type=="activeOk") console.log(tprops,nprops, this.state, nextState);
     if (
-      (JSON.stringify(tprops) == JSON.stringify(nprops) &&
-        JSON.stringify(this.state) == JSON.stringify(nextState))
+      JSON.stringify(tprops) == JSON.stringify(nprops) &&
+      JSON.stringify(this.state) == JSON.stringify(nextState)
     ) {
       return false;
     } else {
@@ -1026,7 +1136,10 @@ class IDialog extends React.Component {
     //    console.log(type, open, show, options);
     function DragPaper(props) {
       return (
-        <Draggable handle={"#" + handle} cancel={'[class*="MuiDialogContent-root"]'}>
+        <Draggable
+          handle={"#" + handle}
+          cancel={'[class*="MuiDialogContent-root"]'}
+        >
           <Paper {...props} />
         </Draggable>
       );
@@ -1057,7 +1170,9 @@ class IDialog extends React.Component {
               {...inputProps}
               autoFocus
               value={value}
-              onKeyUp={(e) => (e.key == "Enter" && okOnEnter ? this.handleClose(true, e) : null)}
+              onKeyUp={(e) =>
+                e.key == "Enter" && okOnEnter ? this.handleClose(true, e) : null
+              }
               onChange={(e) => this.setState({ value: e.target.value })}
             />
           )}

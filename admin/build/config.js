@@ -171,6 +171,7 @@ export default function config() {
             hint: "Add new device type like `0x12ab=RM4`",
             field: "new",
             prependIcon: "library_add",
+            minWidth: "240px",
             rules: [
               {
                 //                regexp: "/^((0x)?[0-9a-f]+=[0-9a-z]+)*$/i",
@@ -319,6 +320,7 @@ export default function config() {
             itype: "$stateBrowser",
             dragZone: "adapterState",
             pageSize: 25,
+            idDragDrop: {},
             cols: 6,
           },
           {

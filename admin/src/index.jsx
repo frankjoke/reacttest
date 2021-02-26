@@ -25,7 +25,6 @@ function MySnackbar() {
 }
 
 //import Iob from "./components/Iob";
-//import 'overlayscrollbars/css/OverlayScrollbars.css';
 function build() {
   ReactDOM.render(
     <SnackbarProvider

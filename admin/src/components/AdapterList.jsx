@@ -413,7 +413,7 @@ class AdapterList extends React.Component {
         //        console.log(_id, alive);
         alive = (alive && alive.val) || controller;
         const aname =
-          (alive ? " " : ".") + (controller ? " " : ".") + adapter + ii;
+          /* (alive ? " " : ".") + */ (controller ? " " : ".") + adapter + ii;
         const nlist = {
           adapter,
           settings,
