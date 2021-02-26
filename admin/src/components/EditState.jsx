@@ -115,7 +115,7 @@ class EditState extends React.PureComponent {
     //    style.width = "100%";
     const title = `val=${
       val !== undefined && val.toString()
-    }\nts=${Iob.timeStamp(ts, true)}\nack=${ack}, q=${q}\nfrom=${from}`;
+    }\nts=${Iob.timeDiffS(ts)}\nack=${ack}, q=${q}\nfrom=${from}`;
     //    nprops.style = style;
     if (!tooltip) {
       rest.title = title;
@@ -174,7 +174,7 @@ class EditState extends React.PureComponent {
           sr = (
             <Input
               value={value}
-              placeholder={t("Empty")}
+              placeholder={t("Empty text")}
               onChange={(e) => this.setState({ value: e.target.value })}
               onKeyDown={(e) => {
                 if (e.key == "Escape") {

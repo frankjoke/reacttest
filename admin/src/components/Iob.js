@@ -232,6 +232,7 @@ class Iob {
   }
 
   static syntaxHighlight(json) {
+    if (typeof json !== "string") return "";
     const _number = "color:darkgreen",
       _string = "color:maroon",
       _boolean = "color:blue",
@@ -336,6 +337,24 @@ class Iob {
     dod(1000, "seconds");
     s.push([diff, "ms"]);
     return s;
+  }
+
+  static timeDiffS(ts) {
+    const a = Iob.timeDiffA(ts);
+    let i = 0;
+    let s = "";
+    while (i < a.length && !a[i][0]) ++i;
+    if (i >= a.length - 1) return "now";
+    let [rest, name] = a[i];
+    return rest + name[0] + " ago";
+    while (i < a.length - 1) {
+      const [rest, name] = a[i];
+      let rs = rest.toString();
+      if (i && rs.length < 2) rs = "0" + rs;
+      s += (i < 4 ? "" : " ") + rs + (i == 0 ? "d " : i < 3 ? ":" : "");
+      ++i;
+    }
+    return s + (s.length == 2 ? "''" : "") + " ago";
   }
 
   static timeStamp(ts, addDays = false) {
@@ -981,27 +1000,6 @@ class Iob {
     const setStore = Iob.setStore;
     const { adapterInstance, instanceId } = Iob.getStore;
     Iob.addConnection(Iob.connection);
-    socket.subscribeState(adapterInstance + "*", (id, state) => {
-      const obj = { id, state };
-      storeHandler("updateAdapterStates", obj, 50);
-      Iob.emitEvent("stateChange", obj);
-    });
-
-    socket.subscribeState(
-      /* instanceId + "*" */ "system.adapter.*",
-      (id, state) => {
-        const obj = { id, state };
-        storeHandler("updateAdapterStates", obj, 50);
-        Iob.emitEvent("stateChange", obj);
-      }
-    );
-
-    socket.subscribeObject(adapterInstance + "*", (id, newObj, oldObj) => {
-      const obj = { id, newObj, oldObj };
-      Iob.emitEvent("objectChange", obj);
-      if (obj.id == instanceId) Iob.setInstanceConfig(obj.newObj);
-      storeHandler("updateAdapterObjects", obj, 30);
-    });
 
     socket.registerLogHandler((message) => {
       message.tss = Iob.timeStamp(message.ts);
@@ -1062,11 +1060,35 @@ class Iob {
             Iob.mergeCombinedTranslation(translation);
         })
         .catch((e) => Iob.logSnackbar("error;config.json not loaded {0}", e)),
-    ]).then(() =>
-      Iob.getIpAddresses()
-        .then((r) => setStore.setIpAddresses(r))
-        .catch((e) => Iob.logSnackbar("error;ipAddress not loaded {0}", e))
-    );
+    ])
+      .then(() =>
+        Iob.getIpAddresses()
+          .then((r) => setStore.setIpAddresses(r))
+          .catch((e) => Iob.logSnackbar("error;ipAddress not loaded {0}", e))
+      )
+      .then(() => {
+        socket.subscribeObject(adapterInstance + "*", (id, newObj, oldObj) => {
+          const obj = { id, newObj, oldObj };
+          Iob.emitEvent("objectChange", obj);
+          if (obj.id == instanceId) Iob.setInstanceConfig(obj.newObj);
+          storeHandler("updateAdapterObjects", obj, 30);
+        });
+
+        socket.subscribeState(adapterInstance + "*", (id, state) => {
+          const obj = { id, state };
+          storeHandler("updateAdapterStates", obj, 50);
+          Iob.emitEvent("stateChange", obj);
+        });
+
+        socket.subscribeState(
+          /* instanceId + "*" */ "system.adapter.*",
+          (id, state) => {
+            const obj = { id, state };
+            storeHandler("updateAdapterStates", obj, 50);
+            Iob.emitEvent("stateChange", obj);
+          }
+        );
+      });
   }
 
   /**
@@ -1240,20 +1262,26 @@ class Iob {
     Iob.enqueueSnackbar(message, options);
   }
   static _findStateName(name) {
-    const store = Iob.getStore;
+    const adapterObjects = Object.assign({}, Iob.getStore.adapterObjects);
+    const { adapterStates, adapterInstance } = Iob.getStore;
     if (name.startsWith(".")) name = store.adapterInstance + name;
-    let state = store.adapterStates[name];
+    let state = adapterStates[name];
     if (!state) {
       name = "system.adapter." + name;
-      state = store.adapterStates[name];
+      state = adapterStates[name];
     }
-    const obj = store.adapterObjects[name];
+    const obj = adapterObjects[name];
     return { state, name: state ? name : "", common: obj && obj.common };
   }
 
   static getState(sname) {
-    const { state, name, common } = this._findStateName(sname);
-    const nstate = Object.assign({}, state, { _id: name, common });
+    const { state, name, common } = Iob._findStateName(sname);
+    //    console.log(name, state, common);
+    const nstate = Object.assign({}, state, {
+      _id: name,
+    });
+    if (common && common.name) nstate._common = common;
+    else delete nstate._common;
     return nstate;
   }
 

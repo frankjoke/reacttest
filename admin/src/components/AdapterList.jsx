@@ -44,6 +44,7 @@ const AdapterEntry = (props) => {
     desc,
     readme,
     type,
+    mode,
     version,
     controller,
     instances,
@@ -60,6 +61,7 @@ const AdapterEntry = (props) => {
     const { _id, common, native } = instance;
     ainst.loglevel = common.logLevel || "info";
     ainst.common = common;
+    mode = common.mode;
     if (common && common.titleLang)
       title = Iob.getTranslatedDesc(common.titleLang);
     ainst.native = native;
@@ -179,6 +181,8 @@ const AdapterEntry = (props) => {
   }
 
   function renderHeader() {
+    const l = Iob.getStore.location;
+
     return (
       <CardHeader
         style={{ backgroundColor: lightBlue[50], minHeight: 128 }}
@@ -234,6 +238,7 @@ const AdapterEntry = (props) => {
             tooltip={t("configure adapter instance")}
             //                onClick={(e) => Iob.setLoglevel()}
             icon="settings"
+            src={`${l.olocation.href}?hostname=${l.hostname}&port=${l.port}&adapterName=${adapter}`}
             {...iprops}
           />
           // <IButton
@@ -276,16 +281,16 @@ const AdapterEntry = (props) => {
                   tooltip="set adapter start and log options"
                   {...menuOptions(2)}
                 />
-                <TButton
-                  label="ressources"
-                  tooltip="show ressources"
-                  {...menuOptions(3)}
-                />
               </>
             )}
+            <TButton
+              label="ressources"
+              tooltip="show ressources"
+              {...menuOptions(3)}
+            />
           </div>
           <div>
-            {!controller && (
+            {!(controller || mode == "none") && (
               <>
                 <IButton
                   tooltip={!alive ? t("start adapter") : t("stop adapter")}

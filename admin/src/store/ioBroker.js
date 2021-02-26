@@ -1,5 +1,6 @@
 // @ts-nocheck
 //import { combineReducers } from 'redux';
+import { common } from "@material-ui/core/colors";
 import {
   createSlice,
   configureStore,
@@ -31,7 +32,11 @@ const instance =
     : parseInt(myLocation.search.slice(1), 10) || 0;
 // extract adapter name from URL
 const tmp = (myLocation.pathname || myLocation.olocation.pathname).split("/");
-const { host, port, adapterName = window.adapterName || tmp[tmp.length - 2] || "iot" } = myLocation;
+const {
+  host,
+  port,
+  adapterName = window.adapterName || tmp[tmp.length - 2] || "iot",
+} = myLocation;
 const instanceId = "system.adapter." + adapterName + "." + instance;
 
 //console.log(port, host, instance, adapterName);
@@ -44,7 +49,11 @@ const ioBroker = createSlice({
     common: {},
     instanceConfig: {},
     ipAddresses: [
-      { name: "[IPv4] 0.0.0.0 - Listen on all IPs", address: "0.0.0.0", family: "ipv4" },
+      {
+        name: "[IPv4] 0.0.0.0 - Listen on all IPs",
+        address: "0.0.0.0",
+        family: "ipv4",
+      },
     ],
     adapterName,
     instance,
@@ -64,7 +73,9 @@ const ioBroker = createSlice({
     width: "xs",
     narrowWidth: false,
     theme: {},
-    themeName: window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "colored",
+    themeName: window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "colored",
     themeType: "",
     loaded: false,
     connected: false,
@@ -73,7 +84,8 @@ const ioBroker = createSlice({
     setThemeName(state, action) {
       const themeName = action.payload;
       state.themeName = themeName;
-      state.themeType = themeName === "dark" || themeName === "blue" ? "dark" : "light";
+      state.themeType =
+        themeName === "dark" || themeName === "blue" ? "dark" : "light";
     },
 
     setLoaded(state, action) {
@@ -98,14 +110,22 @@ const ioBroker = createSlice({
 
     updateAdapterStates(state, action) {
       const states = Object.assign({}, state.adapterStates);
-      const { adapterInstance, adapterObjects, adapterStates } = state;
+      const adapterObjects = Object.assign({}, state.adapterObjects);
+      const { adapterInstance } = state;
       for (const { id, state } of action.payload) {
         if (!state) delete states[id];
         else {
           state._id = id;
           if (id.startsWith(adapterInstance + ".") && state) {
-            const ido = adapterObjects[id];
-            if (ido && ido.common && ido.common.name) state._name = ido.common.name;
+            const ido = Object.assign({}, adapterObjects[id]);
+            if (ido && ido.common) {
+              const common = Object.assign({}, ido.common);
+              //              console.log(id, state, common);
+              if (common.name) {
+                state._common = common;
+                state._name = common.name;
+              }
+            }
           } else state._name = id.split(".").slice(2).join(".");
           states[id] = state;
         }
@@ -127,7 +147,8 @@ const ioBroker = createSlice({
       alive = alive && alive.val;
       let connected = state.adapterStates[sai + ".connected"];
       connected = connected && connected.val;
-      let connection = state.adapterStates[state.iobrokerAdapterInstance + ".info.connection"];
+      let connection =
+        state.adapterStates[state.iobrokerAdapterInstance + ".info.connection"];
       connection = !connection || connection.val;
       const status = alive ? (connection ? 2 : 0) : 0;
       const r = {
@@ -136,7 +157,8 @@ const ioBroker = createSlice({
         connection,
         status,
       };
-      if (JSON.stringify(r) != JSON.stringify(state.adapterStatus)) state.adapterStatus = r;
+      if (JSON.stringify(r) != JSON.stringify(state.adapterStatus))
+        state.adapterStatus = r;
     },
 
     updateAdapterObjects(state, action) {
@@ -178,7 +200,7 @@ const ioBroker = createSlice({
       state.inativeChanged = !!action.payload;
     },
     setServerName(state, action) {
-//      console.log("setServerName:", action.payload);
+      //      console.log("setServerName:", action.payload);
       state.serverName = action.payload;
     },
     setAdapterInstance(state, action) {

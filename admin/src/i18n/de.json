@@ -19,5 +19,6 @@
   "ttSaveClose": "speichere Konfiguration und gehe zurück zu Admin",
   "raSaveclose": "Speichern und Schließen",
   "dcancel": "Abbruch",
-  "Message": "Meldung"
+  "Message": "Meldung",
+  "Empty text": "Leerer Text"
 }

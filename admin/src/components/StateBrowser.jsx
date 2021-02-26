@@ -173,7 +173,7 @@ class StateBrowser extends React.Component {
   }
 
   static _updateFilter(props, state = {}) {
-    const states = Object.entries(props.adapterStates || {}).sort((a, b) =>
+    const states = Object.entries(props.adapterObjects || {}).sort((a, b) =>
       a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0
     );
 
@@ -197,17 +197,28 @@ class StateBrowser extends React.Component {
         let found = treew.find((i) => i.item == name);
         if (!found) {
           const id = akey.slice(0, treen).join(".");
+          const obj = props.adapterObjects[id];
+          const common = obj && obj.common;
           const value = Iob.getState(id);
-          //          if (value.common) console.log(value);
+          //          console.log(id, key, common, value);
+          //          if (value._common) console.log(value);
           found = {
             id,
             item: name,
             stateName:
-              id != key ? "" : value && value.common ? value.common.name : "",
+              id != key
+                ? ""
+                : common && common.name
+                ? common.name
+                : value._name
+                ? value._name
+                : "",
             items: [],
             level: treen - 1,
-            name: Iob.trimL(name),
+            name: Iob.trimL(name, 35),
           };
+          if (typeof found.stateName !== "string")
+            found.stateName = Iob.getTranslatedDesc(found.stateName);
           if (id == key && value) found.value = value;
           treew.push(found);
         }
@@ -423,7 +434,7 @@ class StateBrowser extends React.Component {
                 variant="subtitle2"
                 title={`${row.id}\n${row.stateName}\n${Iob.stringify(
                   row.value || {},
-                  1,
+                  2,
                   "  "
                 )}`}
               >
@@ -457,7 +468,7 @@ class StateBrowser extends React.Component {
             dragProps={{ style: { opacity: 0.5, cursor: "move" } }}
           >
             <Typography style={{ cursor: "pointer" }} variant="caption">
-              {longName}
+              {longName.toString()}
             </Typography>
           </MakeDraggable>
         </TableCell>

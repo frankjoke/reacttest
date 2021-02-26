@@ -3,7 +3,14 @@ import { withStyles } from "@material-ui/core/styles";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
 import ConfigList from "./ConfigList";
 import AdapterList from "./AdapterList";
-import { styles, AddTooltip, IButton, TButton, ScrollTop, UButton } from "./UiComponents";
+import {
+  styles,
+  AddTooltip,
+  IButton,
+  TButton,
+  ScrollTop,
+  UButton,
+} from "./UiComponents";
 //import ChipInput from "material-ui-chip-input";
 import { Iob, t, logSnackbar } from "./Iob";
 import {
@@ -59,8 +66,14 @@ class ConfigSettings extends React.Component {
         const res = Object.keys(other).map(
           (name) =>
             (tnew[name] =
-              ["label", "tooltip", "placeholder", "hint", "text", "html"].indexOf(name) >= 0 &&
-              typeof other[name] === "string"
+              [
+                "label",
+                "tooltip",
+                "placeholder",
+                "hint",
+                "text",
+                "html",
+              ].indexOf(name) >= 0 && typeof other[name] === "string"
                 ? t(other[name])
                 : other[name])
         );
@@ -87,7 +100,11 @@ class ConfigSettings extends React.Component {
       adapterStatus,
       configPage,
     } = this.props;
-    let readme = (instanceConfig && instanceConfig.common && instanceConfig.common.readme) || "#";
+    let readme =
+      (instanceConfig &&
+        instanceConfig.common &&
+        instanceConfig.common.readme) ||
+      "#";
     const lang = displayLanguage;
     if (lang != "en")
       readme = `https://translate.google.com/translate?sl=auto&tl=${lang}&u=${encodeURIComponent(
@@ -97,12 +114,15 @@ class ConfigSettings extends React.Component {
     return (
       <React.Fragment>
         <Paper elevation={0} variant="outlined">
-          <Avatar src={"./" + configPage.iconName || instanceConfig.common.icon} variant="square" />
+          <Avatar
+            src={"./" + configPage.iconName || instanceConfig.common.icon}
+            variant="square"
+          />
         </Paper>
-        <Typography variant="h6" color="inherit">
+        <Typography variant="h6" color="inherit" noWrap>
           &nbsp;&nbsp;{adapterInstance}&nbsp;
         </Typography>
-        <Typography variant="subtitle2" color="inherit">
+        <Typography variant="subtitle2" color="inherit" noWrap>
           &nbsp;v{instanceConfig.common.version}&nbsp;&nbsp;
         </Typography>
         {AddTooltip(
@@ -119,10 +139,16 @@ class ConfigSettings extends React.Component {
           </IconButton>
         )}
         <IButton
-          tooltip={!adapterStatus.status ? t("start adapter") : t("stop adapter")}
+          tooltip={
+            !adapterStatus.status ? t("start adapter") : t("stop adapter")
+          }
           style={{
             margin: "0px 10px",
-            color: !adapterStatus.alive ? "red" : adapterStatus.connected ? "green" : "orange",
+            color: !adapterStatus.alive
+              ? "red"
+              : adapterStatus.connected
+              ? "green"
+              : "orange",
           }}
           onClick={(e) => Iob.enableDisableAdapter(!adapterStatus.alive)}
           icon={!adapterStatus.status ? "play_circle" : "pause_circle"}
@@ -267,15 +293,26 @@ class ConfigSettings extends React.Component {
                 const key = `tab${i}`;
                 if (typeof hideItem === "string")
                   try {
-                    const fun = Iob.makeFunction(hideItem, this, "props", "Iob");
+                    const fun = Iob.makeFunction(
+                      hideItem,
+                      this,
+                      "props",
+                      "Iob"
+                    );
                     const res = fun(this.props, Iob);
                     //          console.log("hideItem", key, hideItem, res);
                     if (res) return null;
                   } catch (e) {
-                    Iob.logSnackbar("error; error in 'hideItem' for " + key + ":" + e);
+                    Iob.logSnackbar(
+                      "error; error in 'hideItem' for " + key + ":" + e
+                    );
                   }
                 else if (typeof hideItem === "boolean" && hideItem) return null;
-                else if (typeof hideItem === "function" && hideItem(this.props, Iob)) return null;
+                else if (
+                  typeof hideItem === "function" &&
+                  hideItem(this.props, Iob)
+                )
+                  return null;
                 const index = ti++;
                 pi[index] = i;
                 const tab = (
@@ -302,7 +339,9 @@ class ConfigSettings extends React.Component {
             inative={inative}
             index={tab.toString()}
             attr={""}
-            onUpdateValue={(attr, value) => Iob.updateInativeValue(inative, attr, value)}
+            onUpdateValue={(attr, value) =>
+              Iob.updateInativeValue(inative, attr, value)
+            }
           />
         )}
       </React.Fragment>
