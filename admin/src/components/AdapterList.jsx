@@ -32,7 +32,6 @@ import {
 import { isNoSubstitutionTemplateLiteral } from "typescript";
 //import { config } from "chai";
 //import { isNotEmittedStatement } from "typescript";
-
 const AdapterEntry = (props) => {
   let { adapter, settings, adapterStates, instance, repo, index } = props;
   const [expanded, setExpanded] = React.useState(false);
