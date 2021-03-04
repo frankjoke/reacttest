@@ -343,7 +343,7 @@ class CommandDialog extends React.Component {
         <DialogActions>
           <RButton
             label="close on exit"
-            value={closeOnExit}
+            checked={closeOnExit}
             onChange={(e) =>
               console.log("RButton onChange", e) ||
               this.setState({ closeOnExit: e })

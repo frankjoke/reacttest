@@ -698,7 +698,7 @@ class ConfigItem extends React.Component {
       <RButton
         key={this.getKey()}
         {...item}
-        value={value}
+        checked={value}
         onChange={(e) =>
           //          console.log("onChangeButton", this.getKey(), value, e) ||
           this.doChangeValue(e)

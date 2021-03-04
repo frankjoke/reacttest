@@ -95,7 +95,7 @@ function SnDialog(props) {
       <br />
       <RButton
         label={t("Id also")}
-        value={myrename}
+        checked={myrename}
         tooltip={t("switch on to rename also state id or name only")}
         onChange={(e) => setRename(e)}
         color="secondary"
@@ -567,7 +567,7 @@ class StateBrowser extends React.Component {
               tooltip={t(
                 "switch between single open tree or allow multiple open trees"
               )}
-              value={singlemode}
+              checked={singlemode}
               onChange={(e) => this.setState({ singlemode: !singlemode })}
               color="inherit"
             />
