@@ -369,19 +369,25 @@ export default function config() {
                 itype: "$button",
                 field: "$undefined",
                 icon: "perm_data_setting",
-                /*             onClickx: (e, value, Iob) => {
+                onClick: (e, value, Iob) => {
                   //            Iob.sendTo("sql.0", "query", "SELECT * FROM datapoints").then((x) =>
                   Iob.sendTo("sql.0", "getEnabledDPs").then((x) =>
                     Iob.logSnackbar(";!sql result=" + JSON.stringify(x))
                   );
                 },
-                onClicky: (e, value, Iob) => {
+                /*                
+                onClick: (e, value, Iob) => {
                   //            Iob.sendTo("sql.0", "query", "SELECT * FROM datapoints").then((x) =>
-                  Iob.commandReceiveNoErr('sendToHost', Iob.getStore.instanceConfig.common.host, "getHostInfoShort",  {}).then((x) =>
+                  Iob.commandReceiveNoErr(
+                    "sendToHost",
+                    Iob.getStore.instanceConfig.common.host,
+                    "getHostInfoShort",
+                    {}
+                  ).then((x) =>
                     Iob.logSnackbar(";!gethostinfo result=" + JSON.stringify(x))
                   );
                 },
-     */
+                
 
                 onClick: (e, value, Iob) => {
                   //            Iob.sendTo("sql.0", "query", "SELECT * FROM datapoints").then((x) =>
@@ -394,6 +400,7 @@ export default function config() {
                     )
                   );
                 },
+    */
                 cols: 3,
               },
               {

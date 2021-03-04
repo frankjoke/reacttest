@@ -954,14 +954,18 @@ class UButton extends React.Component {
 }
 
 function RButton(props) {
-  const { value, onChange, ...rest } = props;
-  const [checked, setChecked] = useState(!!value);
+  const { checked, onChange, iconOn, iconOff, ...rest } = props;
+  const [isChecked, setChecked] = useState(!!checked);
   return (
     <TButton
-      icon={checked ? "radio_button_checked" : "radio_button_unchecked"}
+      icon={
+        isChecked
+          ? iconOn || "radio_button_checked"
+          : iconOff || "radio_button_unchecked"
+      }
       onClick={(e) => {
-        onChange && onChange(!checked);
-        setChecked(!checked);
+        onChange && onChange(!isChecked);
+        setChecked(!isChecked);
       }}
       {...rest}
     />
@@ -996,7 +1000,7 @@ function TButton(props) {
       ) : (
         startIcon
       );
-  else if (icon)
+  else if (icon && label && !narrow)
     nprops.startIcon =
       typeof icon === "string" ? (
         <Icon fontSize={iFontSize}>{icon}</Icon>
@@ -1010,7 +1014,15 @@ function TButton(props) {
       ) : (
         endIcon
       );
-  let sw = <Button {...nprops}>{!narrow ? label : null}</Button>;
+  let sw = (
+    <Button {...nprops}>
+      {!narrow && label ? (
+        label
+      ) : icon ? (
+        <Icon fontSize={iFontSize}>{icon}</Icon>
+      ) : null}
+    </Button>
+  );
   //  if (addProps) sw = <span {...addProps}>{sw}</span>
   return (disabled && sw) || AddTooltip(tooltip, sw);
 }

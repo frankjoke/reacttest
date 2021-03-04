@@ -288,7 +288,7 @@ class ConfigLog extends React.Component {
               size="small"
               options={"debug|info|warn|error|silly".split("|")}
               disableClearable
-              disabled={!adapterStatus.alive}
+              disabled={!adapterStatus.alive || folded}
               value={
                 Iob.getStateValue(".logLevel") || instanceConfig.common.loglevel
               }
@@ -299,6 +299,7 @@ class ConfigLog extends React.Component {
             <TextField
               value={filter}
               placeholder={t("Filter log report")}
+              disabled={!adapterStatus.alive || folded}
               onChange={
                 (e) =>
                   console.log(e.target.value, filter) ||

@@ -3,7 +3,7 @@ import React from "react";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
 //import InputChips from "./InputChips";
 //import ChipInput from "material-ui-chip-input";
-import { AddTooltip, AddIcon, IButton } from "./UiComponents";
+import { AddTooltip, AddIcon, IButton, RButton } from "./UiComponents";
 import { Iob, connect, t } from "./Iob";
 import {
   Typography,
@@ -98,13 +98,14 @@ class EditState extends React.PureComponent {
       prependIcon,
       style = {},
       disabled,
-      size = "medium",
+      size = "small",
       key = iKey,
+      margin = "dense",
       variant = "body2",
       color = "primary",
       ...nprops
     } = item;
-    const rest = { ...nprops, size, key, variant };
+    const rest = { ...nprops, size, key, variant, margin };
     function typogaphy(text) {
       return (
         <Typography color={color} {...rest}>
@@ -132,14 +133,19 @@ class EditState extends React.PureComponent {
               color={color}
               icon="touch_app"
               onClick={(e) => this.onChangeValue(true, e)}
+              tooltip={t("start {0}", id)}
             />
           ) : (
-            <Checkbox
-              {...rest}
+            <RButton
+              //              {...rest}
+              size={size}
+              iconOn="check_box"
+              iconOff="check_box_outline_blank"
               checked={!!val}
               disabled={!write}
               onChange={(e) => this.onChangeValue(!val, e)}
               color={color}
+              tooltip={!!val ? t("switch off {0}", id) : t("switch on {0}", id)}
             />
           );
         break;

@@ -258,8 +258,8 @@ const AdapterEntry = (props) => {
         >
           <div>
             <TButton
-              label="options"
-              tooltip="displays adapter description"
+              label="description"
+              tooltip="set adapter start and log options"
               {...menuOptions(0)}
             />
             <TButton
@@ -267,15 +267,11 @@ const AdapterEntry = (props) => {
               tooltip="install or update adapter"
               {...menuOptions(1)}
             />
-            {!controller && (
-              <>
-                <TButton
-                  label="description"
-                  tooltip="set adapter start and log options"
-                  {...menuOptions(2)}
-                />
-              </>
-            )}
+            <TButton
+              label="options"
+              tooltip="displays adapter description"
+              {...menuOptions(2)}
+            />
             <TButton
               label="ressources"
               tooltip="show ressources"
@@ -320,9 +316,9 @@ const AdapterEntry = (props) => {
         </CardActions>
         <Divider />
         <CardContent style={{ minHeight: "80px", padding: "8px" }}>
-          {menue == 0 ? renderOptions() : null}
+          {menue == 2 ? renderOptions() : null}
           {menue == 1 ? renderInstall() : null}
-          {menue == 2 ? (
+          {menue == 0 ? (
             <Typography variant="body2">
               {Iob.getTranslatedDesc(desc)}
             </Typography>
