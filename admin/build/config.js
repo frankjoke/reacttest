@@ -88,7 +88,8 @@ export default function config() {
             rules: [
               "{return typeof $ === 'string' && $.length>=8 || t('should be at least 8 letters long!')}",
               {
-                regexp: "/((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^\\w\\s]).{8,40})/",
+                regexp:
+                  "/((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^\\w\\s]).{8,40})/",
                 message:
                   "need to include one lower case, one upper case, one number and one special character at least 8 and maximal 40 characters long!",
               },
@@ -193,7 +194,10 @@ export default function config() {
               const test = that.testRules(e.dropped.stateName);
               //              console.log("dropAction", e, that, test);
               test == true
-                ? that.doChangeValue(that.state.value.concat(e.dropped.stateName).sort(), e)
+                ? that.doChangeValue(
+                    that.state.value.concat(e.dropped.stateName).sort(),
+                    e
+                  )
                 : Iob.logSnackbar(
                     "warning;dropped Value '{0}' invalid because of {1}",
                     e.dropped.stateName,
@@ -202,12 +206,15 @@ export default function config() {
             },
             isOverProps: { style: { backgroundColor: "#C6F6C6" } },
             canDropHere: (e, that, Iob) =>
-              that.testRules(e.value) === true && that.state.value.indexOf(e.value) < 0,
+              that.testRules(e.value) === true &&
+              that.state.value.indexOf(e.value) < 0,
             hint: "Enter field names which should be encrypted in config",
             vdivider: "start",
             field: "encryptedFields",
             iselect: ($, props, Iob) =>
-              Object.keys(props.inative).filter((i) => typeof props.inative[i] === "string"),
+              Object.keys(props.inative).filter(
+                (i) => typeof props.inative[i] === "string"
+              ),
             prependIcon: "enhanced_encryption",
             freeSolo: false,
             clickable: false,
@@ -260,7 +267,8 @@ export default function config() {
             tooltip: "Start a complete device scan",
             field: "debug",
             onClick: "{Iob.sendTo(null,'device_scan','.');}",
-            disabled: "!Iob.getStore.adapterStatus.alive || !!Iob.getStateValue('._NewDeviceScan')",
+            disabled:
+              "!Iob.getStore.adapterStatus.alive || !!Iob.getStateValue('._NewDeviceScan')",
             onStateChange:
               "{if (e.message.id.endsWith('._NewDeviceScan')) {Iob.logSnackbar('info;'+ (!!e.message.state.val ? 'start device scan now' : 'finished device scan'));} }",
             icon: "perm_scan_wifi",
@@ -289,7 +297,10 @@ export default function config() {
             label: "Display Language",
             itype: "$select",
             iselect: ($, props, Iob) =>
-              Object.keys(Iob.getStore.translations).map((i) => ({ value: i, label: i })),
+              Object.keys(Iob.getStore.translations).map((i) => ({
+                value: i,
+                label: i,
+              })),
             hint: "en, de, .... ",
             field: "$undefined",
             convertOld: ($, props, Iob) => Iob.getStore.displayLanguage,
@@ -336,10 +347,13 @@ export default function config() {
                 field: "$undefined",
                 onClick: (e, props, Iob) => {
                   Iob.setStateValue(".RM:RMPROPLUS._Learn", true);
-                  Iob.logSnackbar("warning;set state {0}", ".RM:RMPROPLUS._Learn");
+                  Iob.logSnackbar(
+                    "warning;set state {0}",
+                    ".RM:RMPROPLUS._Learn"
+                  );
                 },
                 disabled: "!Iob.getStore.adapterStatus.alive",
-                cols: 2,
+                cols: 3,
               },
               {
                 label: "send sql.0",
@@ -366,11 +380,12 @@ export default function config() {
                     repo: Iob.getStore.systemConfig.common.activeRepo,
                   }).then((x) =>
                     Iob.logSnackbar(
-                      ";!gethostinfo result=" + JSON.stringify(Object.entries(x).slice(0, 1))
+                      ";!gethostinfo result=" +
+                        JSON.stringify(Object.entries(x).slice(0, 1))
                     )
                   );
                 },
-                cols: 2,
+                cols: 3,
               },
               {
                 label: "getInstalled",
@@ -380,16 +395,18 @@ export default function config() {
                 onClick: (e, value, Iob) => {
                   //            Iob.sendTo("sql.0", "query", "SELECT * FROM datapoints").then((x) =>
                   Iob.sendToHost(undefined, "getInstalled", {}).then((x) =>
-                    Iob.logSnackbar(";!" + JSON.stringify(Object.entries(x).slice(0, 2)))
+                    Iob.logSnackbar(
+                      ";!" + JSON.stringify(Object.entries(x).slice(0, 2))
+                    )
                   );
                 },
-                cols: 2,
+                cols: 3,
               },
               {
                 label: "WifiLampe",
                 itype: "$state",
                 name: ".A1:EAIR1.AirQuality",
-                cols: 2,
+                cols: 3,
               },
               {
                 itype: "$log",
@@ -442,7 +459,8 @@ export default function config() {
                 rules: [
                   "{return typeof $ === 'string' && $.length>=8 || t('should be at least 8 letters long!')}",
                   {
-                    regexp: "/((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^\\w\\s]).{8,40})/",
+                    regexp:
+                      "/((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^\\w\\s]).{8,40})/",
                     message:
                       "need to include one lower case, one upper case, one number and one special character at least 8 and maximal 40 characters long!",
                   },
@@ -477,7 +495,8 @@ export default function config() {
                   "uniqueTableRule",
                   {
                     regexp: "/^[\\w\\$@/:-]+$/i",
-                    message: "Only letters, numbers and `$ @ / : _ -` are allowed",
+                    message:
+                      "Only letters, numbers and `$ @ / : _ -` are allowed",
                   },
                 ],
                 sortable: true,
@@ -507,7 +526,8 @@ export default function config() {
                 rules: [
                   {
                     regexp: "/^(([\\dA-F]{2}:){5}[\\dA-F]{2})?$/i",
-                    message: "Need to be a mac address (like 01:23:45:56:78:9a)",
+                    message:
+                      "Need to be a mac address (like 01:23:45:56:78:9a)",
                   },
                 ],
               },
@@ -519,7 +539,8 @@ export default function config() {
                 tooltip: "enable device poll",
                 sortable: false,
                 width: "3%",
-                convertOld: "(this.props.value || this.props.value===undefined)",
+                convertOld:
+                  "(this.props.value || this.props.value===undefined)",
                 color: "primary",
               },
               {
@@ -603,12 +624,16 @@ export default function config() {
                     clickable: true,
                     sortable: false,
                     width: "75%",
-                    iselect: ($, props, Iob) => Object.keys(Iob.getStore.stateNames).sort(),
+                    iselect: ($, props, Iob) =>
+                      Object.keys(Iob.getStore.stateNames).sort(),
                     convertOld: "stringToArrayComma",
                     dropZone: ["adapterState", "chipsGroup"],
                     dragZone: "chipsGroup",
                     dropAction: (e, that, Iob) =>
-                      that.doChangeValue((that.state.value || []).concat(e.dropped.stateName), e),
+                      that.doChangeValue(
+                        (that.state.value || []).concat(e.dropped.stateName),
+                        e
+                      ),
                     isOverProps: { style: { backgroundColor: "#C6F6C6" } },
                   },
                 ],
@@ -638,11 +663,15 @@ export default function config() {
                     clickable: true,
                     sortable: false,
                     width: "45%",
-                    iselect: ($, props, Iob) => Object.keys(Iob.getStore.stateNames).sort(),
+                    iselect: ($, props, Iob) =>
+                      Object.keys(Iob.getStore.stateNames).sort(),
                     dropZone: ["adapterState", "chipsGroup"],
                     dragZone: "chipsGroup",
                     dropAction: (e, that, Iob) =>
-                      that.doChangeValue((that.state.value || []).concat(e.dropped.stateName), e),
+                      that.doChangeValue(
+                        (that.state.value || []).concat(e.dropped.stateName),
+                        e
+                      ),
                     isOverProps: { style: { backgroundColor: "#C6F6C6" } },
                     convertOld: "stringToArrayComma",
                   },
@@ -654,10 +683,14 @@ export default function config() {
                     align: "center",
                     sortable: false,
                     width: "auto",
-                    iselect: ($, props, Iob) => Object.keys(Iob.getStore.stateNames).sort(),
+                    iselect: ($, props, Iob) =>
+                      Object.keys(Iob.getStore.stateNames).sort(),
                     dropZone: ["adapterState", "chipsGroup"],
                     dropAction: (e, that, Iob) =>
-                      that.doChangeValue((that.state.value || []).concat(e.dropped.stateName), e),
+                      that.doChangeValue(
+                        (that.state.value || []).concat(e.dropped.stateName),
+                        e
+                      ),
                     isOverProps: { style: { backgroundColor: "#C6F6C6" } },
                     convertOld: "stringToArrayComma",
                   },
@@ -787,7 +820,8 @@ export default function config() {
                 itype: "$textarea",
                 align: "left",
                 defaultValue: "$",
-                placeholder: "Please enter the formula here, '$' is the simplest!",
+                placeholder:
+                  "Please enter the formula here, '$' is the simplest!",
                 sortable: true,
                 width: "55%",
               },
@@ -822,12 +856,13 @@ export default function config() {
         icon: "view_list",
         //        hideItem: "!this.props.inative.debug",
         items: [
-/*           {
+          /*           {
             itype: "$log",
             pageSize: 25,
             cols: 12,
           },
- */        ],
+ */
+        ],
       },
     ],
     translation: {

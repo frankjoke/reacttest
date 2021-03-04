@@ -365,7 +365,7 @@ class InputField extends React.Component {
     super(props);
     const {
       classes,
-      options = [],
+      options,
       id = "inputField" + cid++,
       label,
       error,
@@ -390,7 +390,7 @@ class InputField extends React.Component {
       showPasswd: false,
       inputValue: "",
       //      defaultValue,
-      options,
+      options: InputField.getOptions(options),
       error,
       errorString,
       multiple: chips || multiple || false,
@@ -401,6 +401,25 @@ class InputField extends React.Component {
     if (!dragZone && chips && canRearrange)
       this.state.dragZone = "chips-drop-" + this.key;
     //    const nconf = ConfigSettings.transformConfig(props.configPage);
+  }
+
+  static getOptions(options) {
+    if (Array.isArray(options)) return options;
+    if (typeof options === "string") {
+      const osplit =
+        options.indexOf("|") >= 0 && options.indexOf(";") < 0 ? "|" : ";";
+      const isobj = options.indexOf("=") >= 0;
+      if (isobj) {
+        return options.split(
+          osplit.map((i) => {
+            let [label, value] = i.split("=").map((j) => j.trim());
+            if (!value) value = label;
+            return { label, value };
+          })
+        );
+      } else return options.split(osplit).map((i) => i.trim());
+    }
+    return [];
   }
   static getDerivedStateFromProps(props, state) {
     let newState = null;
@@ -415,7 +434,7 @@ class InputField extends React.Component {
       //      console.log("Prop value changed!", state.opvalue, props.value, state.value);
       newState = {
         value,
-        options,
+        options: InputField.getOptions(options),
         o_value: value,
         o_options: options,
         error,
@@ -425,15 +444,16 @@ class InputField extends React.Component {
     return newState;
   }
 
-  doChange(nval) {
+  doChange(nval, e, reason) {
     const value = this.state.value;
+    if (typeof nval === "object" && nval.value !== undefined) nval = nval.value;
     if (JSON.stringify(value) == JSON.stringify(nval)) return;
     //    console.log("doCHange", nval, value);
     const onChange = this.props.onChange;
     //    this.setState({ value: nval });
     onChange &&
       onChange({
-        target: { value: nval },
+        target: { value: nval, e, reason },
       });
   }
 
@@ -515,8 +535,7 @@ class InputField extends React.Component {
           : typeof defaultValue === "string"
           ? defaultValue
           : "";
-    const useOptions =
-      Array.isArray(this.props.options) && this.props.options.length;
+    const useOptions = Array.isArray(options) && options.length;
     const offsetWidth =
       (this.myInput.current && this.myInput.current.offsetWidth) ||
       window.innerWidth / 4;
@@ -587,7 +606,8 @@ class InputField extends React.Component {
               //                console.log(`'${dragZone}'`, props, isDragging, dragHandle, dragValue)
             }
             onDoubleClick={(e) =>
-              console.log(option) && this.setState({ inputValue: option })
+              console.log("chipDoubleClick", option) ||
+              this.setState({ inputValue: option })
             }
             onDelete={(e) =>
               this.doChange(
@@ -621,6 +641,7 @@ class InputField extends React.Component {
         <Autocomplete
           id={this.key}
           value={value}
+          disabled={disabled}
           //          inputValue={inputValue}
           label={label}
           size={size}
@@ -630,26 +651,30 @@ class InputField extends React.Component {
           disableClearable={disableClearable || !multiple}
           multiple={multiple}
           noOptionsText={noOptionsText}
-          getOptionLabel={
-            getOptionLabel ||
-            ((o) =>
-              /* console.log(`getOptionLabel '${o}'`, id) || */ typeof o ===
-              "string"
-                ? o
-                : o.label)
-          }
-          getOptionSelected={
-            getOptionSelected ||
-            ((o, t) =>
-              /* console.log(`getOptionSelected '${o}', '${t}'`, id) || */ typeof o ===
-              "string"
-                ? o == t
-                : o.value == t)
-          }
-          onChange={(e, v) =>
-            console.log("acomplete onchANGE", id, e.target.value, v) ||
-            (typeof onChange === "function" && onChange(e, v))
-          }
+          getOptionLabel={(o) => {
+            if (getOptionLabel) return getOptionLabel(o, options);
+            //            console.log(`getOptionLabel '${o}'`, options);
+            if (typeof o === "object" && o.label !== undefined) return o.label;
+            for (const opt of options)
+              if (typeof opt === "string" && o == opt) return o;
+              else if (opt.value == o) return opt.label;
+            console.log(`getOptionLabel '${o}'`, options);
+            if (!o && options.length) {
+              const fo = options[0];
+              return typeof fo === "string" ? fo : fo.label;
+            }
+            return "..unknown";
+          }}
+          getOptionSelected={(o, t) => {
+            if (getOptionSelected) return getOptionSelected(o, t, options);
+            //            console.log("getOptionSelected", o, t, options);
+            return typeof o === "string" ? o === t : o.value === t;
+          }}
+          onChange={(e, v, reason) => {
+            //            console.log("acomplete onchANGE", id, e, e.target.value, v, reason);
+            this.doChange(v, e, reason);
+            //            onChange && onChange(e, v, reason);
+          }}
           renderTags={(value, getTagProps) =>
             value.map((option, index) => {
               if (!chips) return undefined;
@@ -679,6 +704,7 @@ class InputField extends React.Component {
                   label={label}
                   fullWidth={fullWidth}
                   onChange={(e) =>
+                    //                    console.log("onChange TextField", e) ||
                     this.setState({ inputValue: e.target.value })
                   }
                   onKeyUp={(e) =>
@@ -693,7 +719,7 @@ class InputField extends React.Component {
             })
           }
           {...more}
-          onChange={(e, v) => this.doChange(v)}
+          //          onChange={(e, v) => this.doChange(v)}
         />
         {endAdornment ? endAdornment : null}
       </>
@@ -701,6 +727,7 @@ class InputField extends React.Component {
       <Input
         value={multiple ? inputValue : value}
         type={showPasswd ? "text" : this.type}
+        disabled={disabled}
         id={this.key}
         label={label}
         startAdornment={!useOptions && ias}
@@ -766,6 +793,7 @@ class InputField extends React.Component {
         {...{ required, size, margin, disabled, fullWidth }}
         hiddenLabel={!label}
         error={nerror}
+        style={{ marginTop: "4px" }}
       >
         {!useOptions && label ? (
           <InputLabel htmlFor={this.key}>{label}</InputLabel>
@@ -924,6 +952,22 @@ class UButton extends React.Component {
     return (disabled && sw) || AddTooltip(tooltip, sw);
   }
 }
+
+function RButton(props) {
+  const { value, onChange, ...rest } = props;
+  const [checked, setChecked] = useState(!!value);
+  return (
+    <TButton
+      icon={checked ? "radio_button_checked" : "radio_button_unchecked"}
+      onClick={(e) => {
+        onChange && onChange(!checked);
+        setChecked(!checked);
+      }}
+      {...rest}
+    />
+  );
+}
+
 function TButton(props) {
   const {
     tooltip,
@@ -1213,6 +1257,7 @@ export {
   IButton,
   AddTooltip,
   AddTooltip2,
+  RButton,
   useSingleAndDoubleClick,
   ScrollTop,
   MakeDroppable,

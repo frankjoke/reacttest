@@ -3,7 +3,13 @@ import React from "react";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
 //import InputChips from "./InputChips";
 //import ChipInput from "material-ui-chip-input";
-import { styles, TButton, AutocompleteSelect, AddTooltip2 } from "./UiComponents";
+import {
+  styles,
+  TButton,
+  AutocompleteSelect,
+  AddTooltip2,
+  InputField,
+} from "./UiComponents";
 import { Iob, t, connect } from "./Iob";
 import {
   AppBar,
@@ -65,7 +71,12 @@ class ConfigLog extends React.Component {
       adapterLog: props.adapterLog,
       page: 0,
       columns: [
-        { headerName: t("Time"), field: "tss", headerName: "Time", width: "10%" },
+        {
+          headerName: t("Time"),
+          field: "tss",
+          headerName: "Time",
+          width: "10%",
+        },
         {
           headerName: t("Severity"),
           field: "severity",
@@ -73,7 +84,12 @@ class ConfigLog extends React.Component {
           width: "7%",
           align: "center",
         },
-        { headerName: t("Message"), field: "message", headerName: "Message", width: "83%" },
+        {
+          headerName: t("Message"),
+          field: "message",
+          headerName: "Message",
+          width: "83%",
+        },
       ],
       ...ConfigLog._updateFilter("", props),
     };
@@ -82,11 +98,15 @@ class ConfigLog extends React.Component {
 
   static getDerivedStateFromProps(props, state) {
     let newState = null;
-    const { adapterLog, filter } = state;
+    const { adapterLog, filter, ofilter } = state;
     //    console.log("derivedState:", state.opvalue, props.value, state.value);
-    if (props.adapterLog != adapterLog) {
+    if (props.adapterLog != adapterLog || filter != ofilter) {
       //      console.log("Prop value changed!", state.opvalue, props.value, state.value);
-      newState = { adapterLog: props.adapterLog, ...ConfigLog._updateFilter(filter, props, state) };
+      newState = {
+        ofilter: filter,
+        adapterLog: props.adapterLog,
+        ...ConfigLog._updateFilter(filter, props, state),
+      };
     }
     return newState;
   }
@@ -149,62 +169,70 @@ class ConfigLog extends React.Component {
               </TableRow>
             </TableHead>
             <TableBody>
-              {(pageSize > 0 ? rows.slice(page * pageSize, page * pageSize + pageSize) : rows).map(
-                (row, ri) => {
-                  let color = "";
-                  switch (row.severity) {
-                    case "error":
-                      color = "#f8bbd0";
-                      break;
-                    case "info":
-                      if (row.message.indexOf("debug:") < 0) color = lightBlue[50];
-                      else color = "#fafafa";
-                      break;
-                    case "warn":
-                      color = "#ffe0b2";
-                      break;
-                    case "debug":
-                      color = "#fafafa";
-                      break;
-                    default:
-                      color = "#ffffff";
-                      break;
-                  }
-                  return (
-                    <TableRow key={"h" + ri} hover style={{ backgroundColor: color }}>
-                      {columns.map((c, ci) => {
-                        const rri = page * pageSize + ri;
-                        const key = `r${rri}c${ci}`;
-                        const {
-                          headerName,
-                          sortable,
-                          align,
-                          defaultValue,
-                          size = "small",
-                          margin = "none",
-                          ...icitem
-                        } = c;
-                        delete icitem.class;
-                        const citem = { size, margin, ...icitem };
-
-                        return (
-                          <TableCell
-                            key={key}
-                            component="td"
-                            scope="row"
-                            padding="none"
-                            size="small"
-                            align={c.align || "left"}
-                            style={{ padding: "0px 8px" }}
-                          >
-                            <Typography variant="body2">{row[c.field]}</Typography>
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  );
+              {(pageSize > 0
+                ? rows.slice(page * pageSize, page * pageSize + pageSize)
+                : rows
+              ).map((row, ri) => {
+                let color = "";
+                switch (row.severity) {
+                  case "error":
+                    color = "#f8bbd0";
+                    break;
+                  case "info":
+                    if (row.message.indexOf("debug:") < 0)
+                      color = lightBlue[50];
+                    else color = "#fafafa";
+                    break;
+                  case "warn":
+                    color = "#ffe0b2";
+                    break;
+                  case "debug":
+                    color = "#fafafa";
+                    break;
+                  default:
+                    color = "#ffffff";
+                    break;
                 }
-              )}
+                return (
+                  <TableRow
+                    key={"h" + ri}
+                    hover
+                    style={{ backgroundColor: color }}
+                  >
+                    {columns.map((c, ci) => {
+                      const rri = page * pageSize + ri;
+                      const key = `r${rri}c${ci}`;
+                      const {
+                        headerName,
+                        sortable,
+                        align,
+                        defaultValue,
+                        size = "small",
+                        margin = "none",
+                        ...icitem
+                      } = c;
+                      delete icitem.class;
+                      const citem = { size, margin, ...icitem };
+
+                      return (
+                        <TableCell
+                          key={key}
+                          component="td"
+                          scope="row"
+                          padding="none"
+                          size="small"
+                          align={c.align || "left"}
+                          style={{ padding: "0px 8px" }}
+                        >
+                          <Typography variant="body2">
+                            {row[c.field]}
+                          </Typography>
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>
@@ -247,30 +275,40 @@ class ConfigLog extends React.Component {
               &nbsp;{t("{0} log", adapterInstance)}
             </Typography>
             <div style={{ flexGrow: 1 }} />
-            <AddTooltip2 tooltip={t("set the debug level within running adapter only!")}>
+            <AddTooltip2
+              tooltip={t("set the debug level within running adapter only!")}
+            >
               <Typography variant="subtitle2" noWrap>
                 &nbsp;{t("set log level:")}&nbsp;
               </Typography>
             </AddTooltip2>
-            <AutocompleteSelect
+            <InputField
               style={{ minWidth: 100 }}
-              color="inherit"
+              //              color="secondary"
               size="small"
-              options={"debug|info|warn|error|silly"}
+              options={"debug|info|warn|error|silly".split("|")}
               disableClearable
               disabled={!adapterStatus.alive}
-              value={Iob.getStateValue(".logLevel") || instanceConfig.common.loglevel}
-              onChange={(e, value) => Iob.setStateValue(".logLevel", value)}
+              value={
+                Iob.getStateValue(".logLevel") || instanceConfig.common.loglevel
+              }
+              onChange={(e) => Iob.setStateValue(".logLevel", e.target.value)}
             />
             <div style={{ flexGrow: 1 }} />
             <Icon style={{ paddingRight: "30px" }}>filter_alt</Icon>
             <TextField
               value={filter}
               placeholder={t("Filter log report")}
-              onChange={(e) => ConfigList._updateFilter(e.target.value, this.props, this.state)}
+              onChange={
+                (e) =>
+                  console.log(e.target.value, filter) ||
+                  this.setState({ filter: e.target.value })
+                //                ConfigLog._updateFilter(e.target.value, this.props, this.state)
+              }
             />
             <Typography variant="subtitle2" noWrap>
-              &nbsp;{totalLen == filteredLen ? t("all") : filteredLen}&nbsp;{t("of")}&nbsp;
+              &nbsp;{totalLen == filteredLen ? t("all") : filteredLen}&nbsp;
+              {t("of")}&nbsp;
               {totalLen ? totalLen : t("none")}
             </Typography>
             <div style={{ flexGrow: 1 }} />
@@ -302,6 +340,18 @@ class ConfigLog extends React.Component {
 }
 
 export default connect((state) => {
-  const { adapterLog, adapterInstance, adapterStatus, instanceConfig, adapterStates } = state;
-  return { adapterLog, adapterInstance, adapterStatus, instanceConfig, adapterStates };
+  const {
+    adapterLog,
+    adapterInstance,
+    adapterStatus,
+    instanceConfig,
+    adapterStates,
+  } = state;
+  return {
+    adapterLog,
+    adapterInstance,
+    adapterStatus,
+    instanceConfig,
+    adapterStates,
+  };
 })(ConfigLog);

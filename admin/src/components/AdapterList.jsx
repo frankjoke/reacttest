@@ -225,13 +225,7 @@ const AdapterEntry = (props) => {
             )}
           </>
         }
-        avatar={
-          <Avatar
-            src={icon}
-            variant="square"
-            style={{ width: "70px", height: "70px" }}
-          />
-        }
+        avatar={<img src={icon} width="64px" heigth="64px" />}
         action={
           <IButton
             tooltip={t("configure adapter instance")}

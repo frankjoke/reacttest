@@ -15,13 +15,19 @@ class ConfigList extends React.Component {
     super(props);
     this.classes = props.classes;
     this.state = {};
-//    console.log(props);
+    //    console.log(props);
     //    const nconf = ConfigSettings.transformConfig(props.configPage);
   }
 
   render() {
     //    console.log(this.props.adapterLog);
-    const { page, inative, index: ikey = "", attr = "", onUpdateValue } = this.props;
+    const {
+      page,
+      inative,
+      index: ikey = "",
+      attr = "",
+      onUpdateValue,
+    } = this.props;
 
     return (
       <Container maxWidth={false} disableGutters style={{ overflow: "hidden" }}>
@@ -55,10 +61,16 @@ class ConfigList extends React.Component {
                   //          console.log("hideItem", key, hideItem, res);
                   if (res) return null;
                 } catch (e) {
-                  Iob.logSnackbar("error; error in 'hideItem' for " + key + ":" + e);
+                  Iob.logSnackbar(
+                    "error; error in 'hideItem' for " + key + ":" + e
+                  );
                 }
               else if (typeof hideItem === "boolean" && hideItem) return null;
-              else if (typeof hideItem === "function" && hideItem(this.props, Iob)) return null;
+              else if (
+                typeof hideItem === "function" &&
+                hideItem(this.props, Iob)
+              )
+                return null;
 
               let configItem;
               if (rest.itype == "$divider")
@@ -83,17 +95,25 @@ class ConfigList extends React.Component {
               );
               return [
                 vdivider == "start" ? (
-                  <Divider key={key + "v"} orientation="vertical" flexItem></Divider>
+                  <Divider
+                    key={key + "v"}
+                    orientation="vertical"
+                    flexItem
+                  ></Divider>
                 ) : null,
                 noGrid ? (
                   configItem
                 ) : (
-                  <Grid item {...split} key={key}>
+                  <Grid item {...split} key={key} style={{ padding: "4px" }}>
                     {configItem}
                   </Grid>
                 ),
                 vdivider == "end" ? (
-                  <Divider key={key + "v"} orientation="vertical" flexItem></Divider>
+                  <Divider
+                    key={key + "v"}
+                    orientation="vertical"
+                    flexItem
+                  ></Divider>
                 ) : null,
               ];
             })}

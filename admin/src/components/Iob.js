@@ -809,7 +809,7 @@ class Iob {
         item = item.toLowerCase();
         if (item.indexOf(text) > -1) return true;
       }
-      if (typeof item === "object")
+      if (item && typeof item === "object")
         for (const [i, v] of Object.entries(item))
           if (find(v, text)) return true;
       return false;
@@ -1074,6 +1074,16 @@ class Iob {
           storeHandler("updateAdapterObjects", obj, 30);
         });
 
+        socket.subscribeObject(
+          "system.adapter." + adapterInstance + "*",
+          (id, newObj, oldObj) => {
+            const obj = { id, newObj, oldObj };
+            Iob.emitEvent("objectChange", obj);
+            if (obj.id == instanceId) Iob.setInstanceConfig(obj.newObj);
+            storeHandler("updateAdapterObjects", obj, 30);
+          }
+        );
+
         socket.subscribeState(adapterInstance + "*", (id, state) => {
           const obj = { id, state };
           storeHandler("updateAdapterStates", obj, 50);
@@ -1264,7 +1274,7 @@ class Iob {
   static _findStateName(name) {
     const adapterObjects = Object.assign({}, Iob.getStore.adapterObjects);
     const { adapterStates, adapterInstance } = Iob.getStore;
-    if (name.startsWith(".")) name = store.adapterInstance + name;
+    if (name.startsWith(".")) name = adapterInstance + name;
     let state = adapterStates[name];
     if (!state) {
       name = "system.adapter." + name;
@@ -1293,7 +1303,7 @@ class Iob {
 
   static setStateValue(oname, value) {
     const { state, name } = Iob._findStateName(oname);
-    //    console.log("setStateValue", name, state, value);
+    //    console.log("setStateValue", oname, name, state, value);
     if (state) Iob.commandSend("setState", name, value);
   }
 

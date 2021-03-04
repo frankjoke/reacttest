@@ -29,6 +29,7 @@ import configtool from "../../assets/config.json";
 //import { config } from "chai";
 //import { isNoSubstitutionTemplateLiteral } from "typescript";
 //import { isNotEmittedStatement } from "typescript";
+import CommandDialog from "./CommandDialog";
 
 class ConfigSettings extends React.Component {
   constructor(props) {
@@ -110,45 +111,41 @@ class ConfigSettings extends React.Component {
       readme = `https://translate.google.com/translate?sl=auto&tl=${lang}&u=${encodeURIComponent(
         readme
       )}`;
-
+    const mstyle = {
+      margin: "0px 6px",
+    };
     return (
-      <React.Fragment>
-        <Paper elevation={0} variant="outlined">
-          <Avatar
-            src={"./" + configPage.iconName || instanceConfig.common.icon}
-            variant="square"
-          />
-        </Paper>
+      <>
+        <img
+          src={"./" + configPage.iconName || instanceConfig.common.icon}
+          width="48px"
+          height="48px"
+        />
         <Typography variant="h6" color="inherit" noWrap>
-          &nbsp;&nbsp;{adapterInstance}&nbsp;
+          &nbsp;{adapterInstance}&nbsp;
         </Typography>
         <Typography variant="subtitle2" color="inherit" noWrap>
-          &nbsp;v{instanceConfig.common.version}&nbsp;&nbsp;
+          &nbsp;v{instanceConfig.common.version}&nbsp;
         </Typography>
-        {AddTooltip(
-          t("Open Readme"),
-          <IconButton
-            edge="start"
-            className={this.classes.menuButton}
-            color="inherit"
-            aria-label="menu"
-            href={readme}
-            target="_"
-          >
-            <Icon color="inherit">help_outline</Icon>
-          </IconButton>
-        )}
+        <IButton
+          tooltip={t("Open Readme")}
+          color="inherit"
+          target="_"
+          icon="help_outline"
+          src={readme}
+          style={mstyle}
+        />
         <IButton
           tooltip={
             !adapterStatus.status ? t("start adapter") : t("stop adapter")
           }
           style={{
-            margin: "0px 10px",
             color: !adapterStatus.alive
               ? "red"
               : adapterStatus.connected
               ? "green"
               : "orange",
+            ...mstyle,
           }}
           onClick={(e) => Iob.enableDisableAdapter(!adapterStatus.alive)}
           icon={!adapterStatus.status ? "play_circle" : "pause_circle"}
@@ -157,13 +154,11 @@ class ConfigSettings extends React.Component {
         <IButton
           disabled={!adapterStatus.alive}
           tooltip={t("restart adapter")}
-          style={{
-            margin: "0px 10px",
-          }}
+          style={mstyle}
           onClick={(e) => Iob.setLoglevel()}
           icon={"replay"}
         />
-      </React.Fragment>
+      </>
     );
   }
 
@@ -321,6 +316,7 @@ class ConfigSettings extends React.Component {
                     icon={icon ? <Icon>{icon}</Icon> : null}
                     label={label}
                     value={index}
+                    style={{ padding: "0px 0px ", minWidth: "100px" }}
                   />
                 );
                 return AddTooltip(tooltip, tab, key);
@@ -331,6 +327,7 @@ class ConfigSettings extends React.Component {
           </Toolbar>
         </AppBar>
         <ScrollTop />
+        <CommandDialog />
         {page.label === "Adapters" ? (
           <AdapterList page={page} tab={tab} />
         ) : (

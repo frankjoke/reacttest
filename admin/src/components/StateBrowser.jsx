@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from "react";
 //import { withStyles, makeStyles } from "@material-ui/core/styles";
 //import GenericApp from "@iobroker/adapter-react/GenericApp";
@@ -5,6 +6,7 @@ import React from "react";
 //import ChipInput from "material-ui-chip-input";
 import {
   styles,
+  RButton,
   TButton,
   IButton,
   InputField,
@@ -30,6 +32,7 @@ import {
   TableBody,
   TableCell,
   TableRow,
+  Avatar,
 } from "@material-ui/core";
 import { TreeView, TreeItem } from "@material-ui/lab";
 import EditState from "./EditState";
@@ -37,6 +40,7 @@ import EditState from "./EditState";
 
 //import { useDrag } from "react-dnd"; //import { config } from "chai";
 import { lightBlue } from "@material-ui/core/colors";
+import ObjectBrowser from "./ObjectBrowser";
 //import { isNotEmittedStatement } from "typescript";
 
 function SnDialog(props) {
@@ -89,13 +93,11 @@ function SnDialog(props) {
       }}
     >
       <br />
-      <TButton
+      <RButton
         label={t("Id also")}
+        value={myrename}
         tooltip={t("switch on to rename also state id or name only")}
-        icon={myrename ? "radio_button_checked" : "radio_button_unchecked"}
-        onClick={(e) => {
-          setRename(!myrename);
-        }}
+        onChange={(e) => setRename(e)}
         color="secondary"
       />
       <br />
@@ -173,10 +175,13 @@ class StateBrowser extends React.Component {
   }
 
   static _updateFilter(props, state = {}) {
-    const states = Object.entries(props.adapterObjects || {}).sort((a, b) =>
-      a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0
-    );
+    const ao = props.adapterObjects || {};
+    const as = props.adapterStates || {};
+    let states = Object.entries(ao);
+    for (const key of Object.keys(as))
+      if (!ao[key]) states.push([key, as[key]]);
 
+    states = states.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
     let { filteredLen, rowsFiltered, expanded, filter } = state;
     if (!states) return {};
     let totalLen = states.length;
@@ -186,22 +191,33 @@ class StateBrowser extends React.Component {
       rowsFiltered = states.filter((i) => Iob.customFilter(i, filter));
     else rowsFiltered = states;
     const titems = [];
+    const aaname = Iob.getStore.adapterName;
     for (const [key] of rowsFiltered) {
       let akey = key.split(".");
+      let aname = akey[0];
       akey = [akey.slice(0, 2).join("."), ...akey.slice(2)];
-      if (akey[0] === "system.adapter" && akey[2].match(/^\d+$/))
+      if (akey[0] === "system.adapter" && akey[2].match(/^\d+$/)) {
+        aname = akey[1];
         akey = [akey[0], akey[1] + "." + akey[2], ...akey.slice(3)];
+      }
       const treew = titems;
       const treen = 1;
+      let icon =
+        aname == aaname
+          ? `/adapter/${aname}/${Iob.getStore.instanceConfig.common.icon}`
+          : "";
       for (const name of akey) {
         let found = treew.find((i) => i.item == name);
         if (!found) {
           const id = akey.slice(0, treen).join(".");
-          const obj = props.adapterObjects[id];
-          const common = obj && obj.common;
+          const obj = ao[id] || as[id];
           const value = Iob.getState(id);
+          const common = (obj && obj.common) || (value && value._common);
           //          console.log(id, key, common, value);
           //          if (value._common) console.log(value);
+          if (common && common.icon) console.log(icon, common.icon);
+          icon =
+            common && common.icon ? `/adapter/${aname}/${common.icon}` : icon;
           found = {
             id,
             item: name,
@@ -214,6 +230,7 @@ class StateBrowser extends React.Component {
                 ? value._name
                 : "",
             items: [],
+            icon,
             level: treen - 1,
             name: Iob.trimL(name, 35),
           };
@@ -221,7 +238,7 @@ class StateBrowser extends React.Component {
             found.stateName = Iob.getTranslatedDesc(found.stateName);
           if (id == key && value) found.value = value;
           treew.push(found);
-        }
+        } else icon = found.icon;
         treew = found.items;
         ++treen;
       }
@@ -232,13 +249,14 @@ class StateBrowser extends React.Component {
       if (!Array.isArray(tree)) return [];
       //      console.log(level, tree);
       for (const i of tree) {
-        const { id, item, name, stateName, value, items } = i;
+        const { id, item, name, stateName, value, items, icon } = i;
         const r = {
           id,
           name,
           value,
           stateName,
           level,
+          icon,
           expandable: !!(items && items.length),
           isexpanded: expanded && expanded.indexOf(id) >= 0,
         };
@@ -330,7 +348,7 @@ class StateBrowser extends React.Component {
   }
 
   renderRow(row, ri) {
-    const { expandable, isexpanded, id, level, name, stateName } = row;
+    const { expandable, isexpanded, id, level, icon, name, stateName } = row;
     const {
       expanded,
       page,
@@ -347,7 +365,8 @@ class StateBrowser extends React.Component {
       size: "small",
       style: { padding: "0px 0px" },
     };
-
+    let localhost = Iob.getStore.location;
+    localhost = localhost.protocol + "//" + localhost.host;
     function toggleExpand(that) {
       let nexpand;
       if (isexpanded)
@@ -444,16 +463,29 @@ class StateBrowser extends React.Component {
           </Dtyp>
         </TableCell>
         <TableCell {...cellProps} align="center">
-          <IButton
-            icon="content_copy"
-            size="small"
-            tooltip={t("copy id to clipboard.")}
-            onClick={(e) => {
-              Iob.copyToClipboard(id);
-              Iob.logSnackbar("info;copied '{0}' to clipboard!", id);
-            }}
-            style={{ marginLeft: 8, marginRight: 8 }}
-          />
+          {!icon ? (
+            <IButton
+              icon="content_copy"
+              size="small"
+              tooltip={t("copy id to clipboard.")}
+              onClick={(e) => {
+                Iob.copyToClipboard(id);
+                Iob.logSnackbar("info;copied '{0}' to clipboard!", id);
+              }}
+              style={{ marginLeft: 8, marginRight: 8 }}
+            />
+          ) : (
+            <AddTooltip2
+              tooltip={t("copy id to clipboard.")}
+              onClick={(e) => {
+                Iob.copyToClipboard(id);
+                Iob.logSnackbar("info;copied '{0}' to clipboard!", id);
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <img src={localhost + icon} width="16px" height="16px" />
+            </AddTooltip2>
+          )}
         </TableCell>
         <TableCell {...cellProps}>
           <MakeDraggable
@@ -530,31 +562,13 @@ class StateBrowser extends React.Component {
             <Typography variant="subtitle2" noWrap>
               &nbsp;{t("States")}&nbsp;&nbsp;
             </Typography>
-            {/*
-            <div style={{ flexGrow: 1 }} />
-             <Typography variant="subtitle2" noWrap>
-              &nbsp;{t("running log level:")}&nbsp;
-            </Typography>
-            <AutocompleteSelect
-              style={{ minWidth: 100 }}
-              color="inherit"
-              size="small"
-              options={"debug|info|warn|error|silly"}
-              disableClearable
-              disabled={!adapterStatus.alive}
-              value={Iob.getStateValue(".logLevel") || instanceConfig.common.loglevel}
-              onChange={(e, value) => Iob.setStateValue(".logLevel", value)}
-            />
-          */}
-            <TButton
+            <RButton
               label={t("single")}
               tooltip={t(
                 "switch between single open tree or allow multiple open trees"
               )}
-              icon={
-                singlemode ? "radio_button_checked" : "radio_button_unchecked"
-              }
-              onClick={(e) => this.setState({ singlemode: !singlemode })}
+              value={singlemode}
+              onChange={(e) => this.setState({ singlemode: !singlemode })}
               color="inherit"
             />
             <div style={{ flexGrow: 1 }} />
@@ -582,14 +596,6 @@ class StateBrowser extends React.Component {
               {totalLen ? totalLen : t("none")}
             </Typography>
             <div style={{ flexGrow: 1 }} />
-            {/*             <TButton
-              icon="delete_sweep"
-              label={t("Clear log")}
-              tooltip={t("Clear adapter log and leave only last entry")}
-              color="inherit"
-              onClick={(e) => Iob.setStore.clearAdapterLog(1)}
-            ></TButton>
- */}
             <TButton
               icon={folded ? "keyboard_arrow_down" : "keyboard_arrow_left"}
               tooltip={t("fold/unfold data")}
