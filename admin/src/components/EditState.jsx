@@ -141,6 +141,7 @@ class EditState extends React.PureComponent {
               size={size}
               iconOn="check_box"
               iconOff="check_box_outline_blank"
+              iconIndeterminate="indeterminate_check_box"
               checked={!!val}
               disabled={!write}
               onChange={(e) => this.onChangeValue(!val, e)}

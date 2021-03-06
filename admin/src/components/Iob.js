@@ -975,27 +975,27 @@ class Iob {
     } else Iob.logSnackbar("error;inative not loaded {0}", e);
   }
 
-  static onConnectionReady(iConfig) {
-    function storeHandler(storeEntry, payload, time = 100) {
-      if (!Iob.storetimeouts[storeEntry])
-        Iob.storetimeouts[storeEntry] = { tmp: [], timeout: null, last: null };
-      const stateEntry = Iob.storetimeouts[storeEntry];
-      const { tmp, timeout, last } = stateEntry;
-      if (JSON.stringify(last) != JSON.stringify(payload)) {
-        tmp.push(payload);
-        stateEntry.last = payload;
-        //        console.log(payload);
-      }
-      if (tmp.length == 1 && !timeout)
-        stateEntry.timeout = setTimeout(() => {
-          stateEntry.timeout = null;
-          const fun = Iob.setStore[storeEntry];
-          //        console.log(storeEntry, fun, stateEntry.tmp);
-          fun(tmp);
-          stateEntry.tmp = [];
-        }, time);
+  static storeHandler(storeEntry, payload, time = 100) {
+    if (!Iob.storetimeouts[storeEntry])
+      Iob.storetimeouts[storeEntry] = { tmp: [], timeout: null, last: null };
+    const stateEntry = Iob.storetimeouts[storeEntry];
+    const { tmp, timeout, last } = stateEntry;
+    if (JSON.stringify(last) != JSON.stringify(payload)) {
+      tmp.push(payload);
+      stateEntry.last = payload;
+      //        console.log(payload);
     }
+    if (tmp.length == 1 && !timeout)
+      stateEntry.timeout = setTimeout(() => {
+        stateEntry.timeout = null;
+        const fun = Iob.setStore[storeEntry];
+        //        console.log(storeEntry, fun, stateEntry.tmp);
+        fun(tmp);
+        stateEntry.tmp = [];
+      }, time);
+  }
 
+  static onConnectionReady(iConfig) {
     const socket = Iob.connection;
     const setStore = Iob.setStore;
     const { adapterInstance, instanceId } = Iob.getStore;
@@ -1003,7 +1003,7 @@ class Iob {
 
     socket.registerLogHandler((message) => {
       message.tss = Iob.timeStamp(message.ts);
-      storeHandler("updateAdapterLog", message, 50);
+      Iob.storeHandler("updateAdapterLog", message, 50);
     });
     const { protocol, hostname, port } = Iob.getStore.location;
     const serverName = `${protocol || "http:"}//${hostname || "localhost"}${
@@ -1071,7 +1071,7 @@ class Iob {
           const obj = { id, newObj, oldObj };
           Iob.emitEvent("objectChange", obj);
           if (obj.id == instanceId) Iob.setInstanceConfig(obj.newObj);
-          storeHandler("updateAdapterObjects", obj, 30);
+          Iob.storeHandler("updateAdapterObjects", obj, 30);
         });
 
         socket.subscribeObject(
@@ -1080,13 +1080,13 @@ class Iob {
             const obj = { id, newObj, oldObj };
             Iob.emitEvent("objectChange", obj);
             if (obj.id == instanceId) Iob.setInstanceConfig(obj.newObj);
-            storeHandler("updateAdapterObjects", obj, 30);
+            Iob.storeHandler("updateAdapterObjects", obj, 30);
           }
         );
 
         socket.subscribeState(adapterInstance + "*", (id, state) => {
           const obj = { id, state };
-          storeHandler("updateAdapterStates", obj, 50);
+          Iob.storeHandler("updateAdapterStates", obj, 50);
           Iob.emitEvent("stateChange", obj);
         });
 
@@ -1094,7 +1094,7 @@ class Iob {
           /* instanceId + "*" */ "system.adapter.*",
           (id, state) => {
             const obj = { id, state };
-            storeHandler("updateAdapterStates", obj, 50);
+            Iob.storeHandler("updateAdapterStates", obj, 50);
             Iob.emitEvent("stateChange", obj);
           }
         );
@@ -1648,6 +1648,22 @@ class Iob {
     return null;
   }
 
+  static getObject(id) {
+    const ao = Iob.getStore.adapterObjects;
+    if (ao[id]) return ao[id];
+    Iob.connection.getObject(id).then(
+      (o) => {
+        const obj = { id, newObj: o };
+        Iob.emitEvent("objectChange", obj);
+        if (obj.id == Iob.getStore.instanceId)
+          Iob.setInstanceConfig(obj.newObj);
+        Iob.storeHandler("updateAdapterObjects", obj, 30);
+      },
+      (e) => {}
+    );
+    return null;
+  }
+
   /**
    * Get the icon for the given object.
    * @param {string} id
@@ -1670,7 +1686,7 @@ class Iob {
         return icon;
       } else {
         const parts = id.split(".");
-        if (parts[0] === "system") {
+        if (parts[0] === "system" && parts[1] === "adapter") {
           icon =
             "adapter/" + parts[2] + (icon.startsWith("/") ? "" : "/") + icon;
         } else {

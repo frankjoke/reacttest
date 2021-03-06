@@ -15,6 +15,7 @@ import {
   AddTooltip2,
   IDialog,
   MakeDroppable,
+  FilterField,
 } from "./UiComponents";
 import { Iob, t, connect } from "./Iob";
 import {
@@ -196,7 +197,11 @@ class StateBrowser extends React.Component {
       let akey = key.split(".");
       let aname = akey[0];
       akey = [akey.slice(0, 2).join("."), ...akey.slice(2)];
-      if (akey[0] === "system.adapter" && akey[2].match(/^\d+$/)) {
+      if (
+        akey[0] === "system.adapter" &&
+        typeof akey[2] === "string" &&
+        akey[2].match(/^\d+$/)
+      ) {
         aname = akey[1];
         akey = [akey[0], akey[1] + "." + akey[2], ...akey.slice(3)];
       }
@@ -211,13 +216,16 @@ class StateBrowser extends React.Component {
         if (!found) {
           const id = akey.slice(0, treen).join(".");
           const obj = ao[id] || as[id];
+          if (!(obj && obj.common)) Iob.getObject(id);
           const value = Iob.getState(id);
           const common = (obj && obj.common) || (value && value._common);
           //          console.log(id, key, common, value);
           //          if (value._common) console.log(value);
-          if (common && common.icon) console.log(icon, common.icon);
+          //          if (common && common.icon) console.log(icon, common.icon);
           icon =
-            common && common.icon ? `/adapter/${aname}/${common.icon}` : icon;
+            Iob.getObjectIcon(id, obj) || (common && common.icon)
+              ? `/adapter/${aname}/${common.icon}`
+              : icon;
           found = {
             id,
             item: name,
@@ -234,6 +242,7 @@ class StateBrowser extends React.Component {
             level: treen - 1,
             name: Iob.trimL(name, 35),
           };
+          //          if (name == "alive") console.log(found);
           if (typeof found.stateName !== "string")
             found.stateName = Iob.getTranslatedDesc(found.stateName);
           if (id == key && value) found.value = value;
@@ -556,9 +565,9 @@ class StateBrowser extends React.Component {
     //    console.log("chips:", sel, items);
     const sw = (
       <div style={{ width, height, display: "flex", flexFlow: 1 }}>
-        <AppBar position="static">
-          <Toolbar variant="dense">
-            <Icon>view_list</Icon>
+        <AppBar position="sticky">
+          <Toolbar variant="dense" disableGutters>
+            <Icon>source</Icon>
             <Typography variant="subtitle2" noWrap>
               &nbsp;{t("States")}&nbsp;&nbsp;
             </Typography>
@@ -572,23 +581,10 @@ class StateBrowser extends React.Component {
               color="inherit"
             />
             <div style={{ flexGrow: 1 }} />
-            <Icon style={{ paddingRight: "30px" }}>filter_alt</Icon>
-            <InputField
-              value={filter}
-              placeholder={t("Filter states")}
-              onChange={(e) => this.setState({ filter: e.target.value })}
-              endAdornment={
-                filter ? (
-                  <IButton
-                    size="small"
-                    icon="close"
-                    onClick={(e) => this.setState({ filter: "" })}
-                  />
-                ) : null
-              }
-              onKeyDown={(e) =>
-                e.keyCode == 27 ? this.setState({ filter: "" }) : null
-              }
+            <FilterField
+              filter={filter}
+              onChange={(v) => this.setState({ filter: v })}
+              disabled={folded}
             />
             <Typography variant="subtitle2" noWrap>
               &nbsp;{totalLen == filteredLen ? t("all") : filteredLen}&nbsp;

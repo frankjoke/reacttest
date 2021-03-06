@@ -270,7 +270,10 @@ class ConfigSettings extends React.Component {
     return (
       //      <div className={this.props.classes.tab}>
       <React.Fragment>
-        <AppBar position="sticky" style={{ position: "fixed !important" }}>
+        <AppBar
+          position="sticky"
+          style={{ position: "fixed !important", zIndex: "2000" }}
+        >
           <Toolbar variant="dense">
             {this.renderToolbarAdapter()}
             <div style={{ flexGrow: 1 }} />

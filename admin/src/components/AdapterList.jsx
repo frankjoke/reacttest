@@ -200,6 +200,7 @@ const AdapterEntry = (props) => {
               style={{
                 display: "flex",
                 alignItems: "center",
+                background: newVersion ? "pink" : undefined,
               }}
             >
               {newVersion ? (

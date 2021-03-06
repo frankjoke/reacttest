@@ -53,14 +53,20 @@ class ConfigTable extends React.Component {
 
   render() {
     const { columns = [], rows = [] } = this.props;
-    const { icon, label, size = "small", key = this.getKey(), ...rest } = this.props.item;
+    const {
+      icon,
+      label,
+      size = "small",
+      key = this.getKey(),
+      ...rest
+    } = this.props.item;
     const drest = { size, key, ...rest };
     const { width, height, folded } = this.state;
     //    console.log("chips:", sel, items);
     const sw = (
       <div style={{ width, height }}>
         <AppBar position="static">
-          <Toolbar variant="dense">
+          <Toolbar variant="dense" disableGutters>
             {icon && <Icon>{icon}</Icon>}
             {label && (
               <Typography variant="h6" noWrap>
@@ -130,66 +136,69 @@ class ConfigTable extends React.Component {
               </TableRow>
             </TableHead>
             <TableBody>
-              {(pageSize > 0 ? rows.slice(page * pageSize, page * pageSize + pageSize) : rows).map(
-                (row, ri) => (
-                  <TableRow key={this.getKey("h" + ri)} hover>
-                    {columns.map((c, ci) => {
-                      const rri = page * pageSize + ri;
-                      const key = this.getKey(`r${rri}c${ci}`);
-                      const {
-                        headerName,
-                        sortable,
-                        align,
-                        defaultValue,
-                        size = "small",
-                        margin = "none",
-                        ...icitem
-                      } = c;
-                      delete icitem.class;
-                      const citem = { ...icitem, size, margin };
-                      return (
-                        <TableCell
-                          key={key}
-                          component="td"
-                          scope="row"
-                          size="small"
-                          align={c.align || "left"}
-                          style={{ padding: "0px 2px" }}
-                        >
-                          <ConfigItem
-                            item={citem}
-                            index={key}
-                            table={rows}
-                            attr={`${this.props.attr}.${rri}.${c.field || "$undefined"}`}
-                            field={c.field}
-                            inative={row}
-                            settings={this.props.settings}
-                            value={row[c.field]}
-                            settings={this.props.settings}
-                            itype={c.itype}
-                          />
-                          {/* "" + row[c.field] */}
-                        </TableCell>
-                      );
-                    })}
-                    <TableCell align="center" padding="none">
-                      <IButton
-                        color="error"
-                        tooltip={t("delete table row")}
-                        icon="delete_forever"
-                        onClick={(e) => {
-                          console.log(e, row);
-                          Iob.getDialog({
-                            type: "deleteTableEntry",
-                            text: t("Delete row with item '{0}'", row.name),
-                          }).then((r) => (r ? this.deleteRow(ri) : null));
-                          //                Iob.logSnackbar("warning;rename not implemented '{0}'", row);
-                        }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                )
-              )}
+              {(pageSize > 0
+                ? rows.slice(page * pageSize, page * pageSize + pageSize)
+                : rows
+              ).map((row, ri) => (
+                <TableRow key={this.getKey("h" + ri)} hover>
+                  {columns.map((c, ci) => {
+                    const rri = page * pageSize + ri;
+                    const key = this.getKey(`r${rri}c${ci}`);
+                    const {
+                      headerName,
+                      sortable,
+                      align,
+                      defaultValue,
+                      size = "small",
+                      margin = "none",
+                      ...icitem
+                    } = c;
+                    delete icitem.class;
+                    const citem = { ...icitem, size, margin };
+                    return (
+                      <TableCell
+                        key={key}
+                        component="td"
+                        scope="row"
+                        size="small"
+                        align={c.align || "left"}
+                        style={{ padding: "0px 2px" }}
+                      >
+                        <ConfigItem
+                          item={citem}
+                          index={key}
+                          table={rows}
+                          attr={`${this.props.attr}.${rri}.${
+                            c.field || "$undefined"
+                          }`}
+                          field={c.field}
+                          inative={row}
+                          settings={this.props.settings}
+                          value={row[c.field]}
+                          settings={this.props.settings}
+                          itype={c.itype}
+                        />
+                        {/* "" + row[c.field] */}
+                      </TableCell>
+                    );
+                  })}
+                  <TableCell align="center" padding="none">
+                    <IButton
+                      color="error"
+                      tooltip={t("delete table row")}
+                      icon="delete_forever"
+                      onClick={(e) => {
+                        console.log(e, row);
+                        Iob.getDialog({
+                          type: "deleteTableEntry",
+                          text: t("Delete row with item '{0}'", row.name),
+                        }).then((r) => (r ? this.deleteRow(ri) : null));
+                        //                Iob.logSnackbar("warning;rename not implemented '{0}'", row);
+                      }}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>

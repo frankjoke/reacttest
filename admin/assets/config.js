@@ -372,7 +372,9 @@ export default function config() {
                 onClick: (e, value, Iob) => {
                   //            Iob.sendTo("sql.0", "query", "SELECT * FROM datapoints").then((x) =>
                   Iob.sendTo("sql.0", "getEnabledDPs").then((x) =>
-                    Iob.logSnackbar(";!sql result=" + JSON.stringify(x))
+                    Iob.logSnackbar(
+                      `;!sql result for 'getEnabledDPs'=${JSON.stringify(x)}`
+                    )
                   );
                 },
                 /*                
@@ -429,11 +431,6 @@ export default function config() {
                 cols: 3,
               },
               {
-                itype: "$log",
-                pageSize: 25,
-                cols: 12,
-              },
-              {
                 itype: "$objectBrowser",
                 field: "$undefined",
                 label: "inative",
@@ -447,6 +444,11 @@ export default function config() {
 
                   return props.inative;
                 },
+                cols: 12,
+              },
+              {
+                itype: "$log",
+                pageSize: 25,
                 cols: 12,
               },
             ],

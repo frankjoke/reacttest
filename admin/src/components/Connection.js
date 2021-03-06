@@ -880,14 +880,15 @@ class Connection {
    * @returns {ioBroker.GetObjectPromise} The object.
    */
   getObject(id) {
-    if (!this.connected) {
-      return Promise.reject(NOT_CONNECTED);
-    }
-    return new Promise((resolve, reject) =>
-      this._socket.emit("getObject", id, (err, obj) =>
-        err ? reject(err) : resolve(obj)
-      )
-    );
+    return this._sendRecCmd("getObject", id);
+    // if (!this.connected) {
+    //   return Promise.reject(NOT_CONNECTED);
+    // }
+    // return new Promise((resolve, reject) =>
+    //   this._socket.emit("getObject", id, (err, obj) =>
+    //     err ? reject(err) : resolve(obj)
+    //   )
+    // );
   }
   /**
    * Get all instances of the given adapter.

@@ -953,13 +953,73 @@ class UButton extends React.Component {
   }
 }
 
+function FilterField(props) {
+  const { filter, disableClearIcon, onChange, disabled, ...rest } = props;
+  const [myFilter, setFilter] = useState(filter || "");
+
+  function changeFilter(val) {
+    setFilter(val);
+    onChange && onChange(val);
+  }
+  return (
+    /*    <>
+      <Icon style={{ paddingRight: "24px" }} fontSize="small">
+        filter_alt
+      </Icon>
+ */
+    <InputField
+      size="small"
+      //              style={{ maxWidth: 100 }}
+      margin="dense"
+      value={myFilter}
+      placeholder={t("Filter")}
+      disabled={disabled}
+      startAdornment={
+        <Icon style={{ paddingRight: "24px" }} fontSize="small" color="inherit">
+          filter_alt
+        </Icon>
+      }
+      endAdornment={
+        !disableClearIcon &&
+        myFilter && (
+          <Icon
+            fontSize="small"
+            onClick={(e) => changeFilter("")}
+            style={{ cursor: "pointer" }}
+          >
+            close
+          </Icon>
+        )
+      }
+      onChange={
+        (e) => changeFilter(e.target.value)
+        //                  console.log(e.target.value, filter) ||
+        //          this.setState({ filter: e.target.value })
+        //                ConfigLog._updateFilter(e.target.value, this.props, this.state)
+      }
+      onKeyDown={(e) => e.keyCode == 27 && changeFilter("")}
+      {...rest}
+    />
+    //    </>
+  );
+}
+
 function RButton(props) {
-  const { checked, onChange, iconOn, iconOff, ...rest } = props;
+  const {
+    checked,
+    onChange,
+    iconOn,
+    iconOff,
+    iconIndeterminate,
+    ...rest
+  } = props;
   const [isChecked, setChecked] = useState(!!checked);
   return (
     <TButton
       icon={
-        isChecked
+        isChecked === undefined
+          ? iconIndeterminate || "remove_circle_outline"
+          : !!isChecked
           ? iconOn || "radio_button_checked"
           : iconOff || "radio_button_unchecked"
       }
@@ -1270,6 +1330,7 @@ export {
   AddTooltip,
   AddTooltip2,
   RButton,
+  FilterField,
   useSingleAndDoubleClick,
   ScrollTop,
   MakeDroppable,

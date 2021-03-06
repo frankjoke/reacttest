@@ -9,6 +9,7 @@ import {
   AutocompleteSelect,
   AddTooltip2,
   InputField,
+  FilterField,
 } from "./UiComponents";
 import { Iob, t, connect } from "./Iob";
 import {
@@ -269,7 +270,7 @@ class ConfigLog extends React.Component {
     const sw = (
       <div style={{ width, height, display: "flex", flexFlow: 1 }}>
         <AppBar position="static">
-          <Toolbar variant="dense">
+          <Toolbar variant="dense" disableGutters>
             <Icon>speaker_notes</Icon>
             <Typography variant="subtitle2" noWrap>
               &nbsp;{t("{0} log", adapterInstance)}
@@ -279,33 +280,28 @@ class ConfigLog extends React.Component {
               tooltip={t("set the debug level within running adapter only!")}
             >
               <Typography variant="subtitle2" noWrap>
-                &nbsp;{t("set log level:")}&nbsp;
+                &nbsp;{t("level")}&nbsp;
               </Typography>
             </AddTooltip2>
             <InputField
-              style={{ minWidth: 100 }}
+              style={{ minWidth: 60 }}
               //              color="secondary"
               size="small"
+              margin="dense"
               options={"debug|info|warn|error|silly".split("|")}
-              disableClearable
               disabled={!adapterStatus.alive || folded}
+              disableClearable
               value={
                 Iob.getStateValue(".logLevel") || instanceConfig.common.loglevel
               }
               onChange={(e) => Iob.setStateValue(".logLevel", e.target.value)}
             />
             <div style={{ flexGrow: 1 }} />
-            <Icon style={{ paddingRight: "30px" }}>filter_alt</Icon>
-            <TextField
-              value={filter}
-              placeholder={t("Filter log report")}
-              disabled={!adapterStatus.alive || folded}
-              onChange={
-                (e) =>
-                  console.log(e.target.value, filter) ||
-                  this.setState({ filter: e.target.value })
-                //                ConfigLog._updateFilter(e.target.value, this.props, this.state)
-              }
+            <FilterField
+              filter={filter}
+              style={{ maxWidth: 100 }}
+              onChange={(v) => this.setState({ filter: v })}
+              disabled={folded || !adapterStatus.alive}
             />
             <Typography variant="subtitle2" noWrap>
               &nbsp;{totalLen == filteredLen ? t("all") : filteredLen}&nbsp;

@@ -12,6 +12,7 @@ import {
   makeDraggable,
   AddTooltip2,
   IDialog,
+  FilterField,
 } from "./UiComponents";
 import { Iob, t, connect } from "./Iob";
 import {
@@ -149,15 +150,15 @@ class ObjectBrowser extends React.Component {
 
     createList(rootName, value);
     const totalLen = list.length;
-    filteredLen = list.length;
     rowsFiltered = list;
-    //    console.log(totalLen, list, expanded);
+    if (filter) rowsFiltered = list.filter((i) => Iob.customFilter(i, filter)); //    console.log(totalLen, list, expanded);
+    filteredLen = list.length;
     return {
       filter,
       filteredLen,
       rowsFiltered,
       totalLen,
-      rows: list,
+      rows: rowsFiltered,
     };
   }
 
@@ -377,7 +378,7 @@ class ObjectBrowser extends React.Component {
     const sw = (
       <div style={{ width, height, display: "flex", flexFlow: 1 }}>
         <AppBar position="static">
-          <Toolbar variant="dense">
+          <Toolbar variant="dense" disableGutters>
             <Icon>view_list</Icon>
             <Typography variant="subtitle2" noWrap>
               &nbsp;{t("Object")}&nbsp;{label}&nbsp;
@@ -394,23 +395,11 @@ class ObjectBrowser extends React.Component {
               color="inherit"
             />
             <div style={{ flexGrow: 1 }} />
-            <Icon style={{ paddingRight: "30px" }}>filter_alt</Icon>
-            <InputField
-              value={filter}
-              placeholder={t("Filter entries")}
-              onChange={(e) => that.setState({ filter: e.target.value })}
-              endAdornment={
-                filter ? (
-                  <IButton
-                    size="small"
-                    icon="close"
-                    onClick={(e) => that.setState({ filter: "" })}
-                  />
-                ) : null
-              }
-              onKeyDown={(e) =>
-                e.keyCode == 27 ? that.setState({ filter: "" }) : null
-              }
+            <FilterField
+              filter={filter}
+              style={{ maxWidth: 100 }}
+              onChange={(v) => this.setState({ filter: v })}
+              disabled={folded}
             />
             <Typography variant="subtitle2" noWrap>
               &nbsp;{totalLen == filteredLen ? t("all") : filteredLen}&nbsp;
