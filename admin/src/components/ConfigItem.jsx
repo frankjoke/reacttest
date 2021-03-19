@@ -127,9 +127,8 @@ class ConfigItem extends React.Component {
         else if (typeof cmd === "function") fun = cmd;
         if (!fun) {
           Iob.logSnackbar(
-            "warning;on{0} is not a string nor a function '{1}'",
-            event,
-            cmd
+            "warning",
+            t("on {0} is not a string nor a function {1}", event, cmd)
           );
           continue;
         }
@@ -717,7 +716,7 @@ class ConfigItem extends React.Component {
       ...items
     } = item;
     return (
-      <UButton key={key} keyId={key} size={size} color={color} {...items} />
+      <TButton key={key} keyId={key} size={size} color={color} {...items} />
     );
   }
 

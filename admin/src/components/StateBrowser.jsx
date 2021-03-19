@@ -12,7 +12,7 @@ import {
   InputField,
   MakeDraggable,
   makeDraggable,
-  AddTooltip2,
+  AddTooltipChildren,
   IDialog,
   MakeDroppable,
   FilterField,
@@ -357,7 +357,16 @@ class StateBrowser extends React.Component {
   }
 
   renderRow(row, ri) {
-    const { expandable, isexpanded, id, level, icon, name, stateName } = row;
+    const {
+      expandable,
+      isexpanded,
+      id,
+      level,
+      icon,
+      name,
+      stateName,
+      hasCommon,
+    } = row;
     const {
       expanded,
       page,
@@ -374,8 +383,10 @@ class StateBrowser extends React.Component {
       size: "small",
       style: { padding: "0px 0px" },
     };
-    let localhost = Iob.getStore.location;
-    localhost = localhost.protocol + "//" + localhost.host;
+
+    const { adapterObjects, location } = Iob.getStore;
+
+    let localhost = location.protocol + "//" + location.host;
     function toggleExpand(that) {
       let nexpand;
       if (isexpanded)
@@ -431,6 +442,10 @@ class StateBrowser extends React.Component {
             }).then((r) => console.log(r));
       };
     }
+
+    const aobj = adapterObjects[row.id];
+    const common = aobj && aobj.common;
+
     return (
       <TableRow
         key={key}
@@ -461,12 +476,13 @@ class StateBrowser extends React.Component {
               <Typography
                 variant="subtitle2"
                 title={`${row.id}\n${row.stateName}\n${Iob.stringify(
-                  row.value || {},
+                  { ...row.value, _common: common },
                   2,
                   "  "
                 )}`}
+                style={{ opacity: common ? 1 : 0.6 }}
               >
-                <b>{row.name}</b>
+                {common ? <b>{row.name}</b> : row.name}
               </Typography>
             </MakeDraggable>
           </Dtyp>
@@ -484,7 +500,7 @@ class StateBrowser extends React.Component {
               style={{ marginLeft: 8, marginRight: 8 }}
             />
           ) : (
-            <AddTooltip2
+            <AddTooltipChildren
               tooltip={t("copy id to clipboard.")}
               onClick={(e) => {
                 Iob.copyToClipboard(id);
@@ -493,7 +509,7 @@ class StateBrowser extends React.Component {
               style={{ cursor: "pointer" }}
             >
               <img src={localhost + icon} width="16px" height="16px" />
-            </AddTooltip2>
+            </AddTooltipChildren>
           )}
         </TableCell>
         <TableCell {...cellProps}>
@@ -565,7 +581,7 @@ class StateBrowser extends React.Component {
     //    console.log("chips:", sel, items);
     const sw = (
       <div style={{ width, height, display: "flex", flexFlow: 1 }}>
-        <AppBar position="sticky">
+        <AppBar position="static">
           <Toolbar variant="dense" disableGutters>
             <Icon>source</Icon>
             <Typography variant="subtitle2" noWrap>

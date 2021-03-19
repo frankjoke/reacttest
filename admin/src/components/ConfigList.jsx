@@ -62,7 +62,8 @@ class ConfigList extends React.Component {
                   if (res) return null;
                 } catch (e) {
                   Iob.logSnackbar(
-                    "error; error in 'hideItem' for " + key + ":" + e
+                    error,
+                    t("error in hideItem for 0 1", key, e)
                   );
                 }
               else if (typeof hideItem === "boolean" && hideItem) return null;

@@ -822,7 +822,7 @@ function AddTooltip(tooltip, item, key) {
   );
 }
 
-function AddTooltip2({ tooltip, children, ...props }) {
+function AddTooltipChildren({ tooltip, children, ...props }) {
   return (
     (tooltip && (
       <Tooltip title={tooltip} {...props}>
@@ -1112,7 +1112,7 @@ export {
   TButton,
   IButton,
   AddTooltip,
-  AddTooltip2,
+  AddTooltipChildren,
   useSingleAndDoubleClick,
   ScrollTop,
   MakeDroppable,

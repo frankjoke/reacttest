@@ -840,19 +840,15 @@ class UButton extends React.Component {
     super(props);
     const {
       keyId,
-      tooltip = "",
       disabled = false,
-      narrow,
-      icon,
       isOver = false,
       dropLabel = t("drop {0} here", label),
-      dropStyle = { color: "black" },
-      startIcon,
-      endIcon,
+      dropStyle = { color: "darkgreen" },
       label,
       size = "medium",
       ...passThroughProps
     } = props;
+    this.myRef = React.createRef();
     const state = {
       label,
       size,
@@ -864,29 +860,6 @@ class UButton extends React.Component {
       ...passThroughProps,
     };
 
-    const iFontSize = size == "small" || size == "large" ? size : "default";
-    if (startIcon)
-      state.startIcon =
-        typeof startIcon === "string" ? (
-          <Icon fontSize={iFontSize}>{startIcon}</Icon>
-        ) : (
-          startIcon
-        );
-    else if (icon)
-      state.startIcon =
-        typeof icon === "string" ? (
-          <Icon fontSize={iFontSize}>{icon}</Icon>
-        ) : (
-          icon
-        );
-    else if (endIcon)
-      state.endIcon =
-        typeof endIcon === "string" ? (
-          <Icon fontSize={iFontSize}>{endIcon}</Icon>
-        ) : (
-          endIcon
-        );
-
     this.state = state;
   }
 
@@ -894,12 +867,12 @@ class UButton extends React.Component {
     this.setState({ isOver: false });
     if (!files.length) return;
     const file = files[0];
-    //    console.log("onDrop Files:", files, file);
+    console.log("onDrop Files:", files, file);
     const reader = new FileReader();
     reader.onload = (e) => {
       let r = e.target.result;
       const receivedFile = this.props.receivedFile;
-      receivedFile && receivedFile(r, file.path);
+      receivedFile && receivedFile(r, file.name);
     };
     reader.readAsText(file);
   }
@@ -907,14 +880,10 @@ class UButton extends React.Component {
   render() {
     const {
       disabled,
-      narrow,
-      icon,
       receivedFile,
       isOver,
       dropLabel,
       dropStyle,
-      startIcon,
-      endIcon,
       label,
       size,
       ...passThroughProps
@@ -939,14 +908,19 @@ class UButton extends React.Component {
     */
         dropAction={(e) => this.loadTextFromFile(e.files)}
       >
-        <Button
+        <TButton
           {...passThroughProps}
-          startIcon={startIcon}
-          endIcon={endIcon}
-          style={isOver ? dropStyle : null}
-        >
-          {!narrow || isOver ? (isOver ? dropLabel : label) : null}
-        </Button>
+          tooltip={tooltip}
+          style={isOver ? dropStyle : {}}
+          label={isOver ? dropLabel : label}
+          onClick={(e) => this.myRef.current.click(e)}
+        />
+        <input
+          type="file"
+          style={{ display: "none" }}
+          ref={this.myRef}
+          onChange={(e) => this.loadTextFromFile(e.target.files)}
+        />
       </MakeDroppable>
     );
     return (disabled && sw) || AddTooltip(tooltip, sw);
@@ -1098,7 +1072,7 @@ function AddTooltip(tooltip, item, key) {
   );
 }
 
-function AddTooltip2({ tooltip, children, ...props }) {
+function AddTooltipChildren({ tooltip, children, ...props }) {
   return (
     (tooltip && (
       <Tooltip title={tooltip} {...props}>
@@ -1328,7 +1302,7 @@ export {
   TButton,
   IButton,
   AddTooltip,
-  AddTooltip2,
+  AddTooltipChildren,
   RButton,
   FilterField,
   useSingleAndDoubleClick,

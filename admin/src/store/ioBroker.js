@@ -109,17 +109,20 @@ const ioBroker = createSlice({
     },
 
     updateAdapterStates(state, action) {
-      const states = Object.assign({}, state.adapterStates);
-      const adapterObjects = Object.assign({}, state.adapterObjects);
-      const { adapterInstance } = state;
+      //      const adapterObjects = Object.assign({}, state.adapterObjects);
+      //      const adapterObjects = state.adapterObjects;
+      const { adapterInstance, adapterObjects, adapterStates } = state;
+      const states = Object.assign({}, adapterStates);
       for (const { id, state } of action.payload) {
         if (!state) delete states[id];
         else {
           state._id = id;
           if (id.startsWith(adapterInstance + ".") && state) {
-            const ido = Object.assign({}, adapterObjects[id]);
+            //            const ido = Object.assign({}, adapterObjects[id]);
+            const ido = adapterObjects[id];
             if (ido && ido.common) {
               const common = Object.assign({}, ido.common);
+              // const common = ido.common;
               //              console.log(id, state, common);
               if (common.name) {
                 state._common = common;

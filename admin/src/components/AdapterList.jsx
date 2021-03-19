@@ -214,8 +214,8 @@ const AdapterEntry = (props) => {
                   &nbsp;
                 </>
               ) : null}
-              {t("version: {0}", version)}
-              {newVersion && <b>{t(", available: {0}", rversion)}</b>}
+              {t("installed: v{0}", version)}
+              {newVersion && <b>{t(", available: v{0}", rversion)}</b>}
             </div>
             {alive && (
               <>

@@ -10,7 +10,7 @@ import {
   InputField,
   MakeDraggable,
   makeDraggable,
-  AddTooltip2,
+  AddTooltipChildren,
   IDialog,
   FilterField,
 } from "./UiComponents";

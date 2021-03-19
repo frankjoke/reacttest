@@ -7,7 +7,7 @@ import {
   styles,
   TButton,
   AutocompleteSelect,
-  AddTooltip2,
+  AddTooltipChildren,
   InputField,
   FilterField,
 } from "./UiComponents";
@@ -276,13 +276,13 @@ class ConfigLog extends React.Component {
               &nbsp;{t("{0} log", adapterInstance)}
             </Typography>
             <div style={{ flexGrow: 1 }} />
-            <AddTooltip2
+            <AddTooltipChildren
               tooltip={t("set the debug level within running adapter only!")}
             >
               <Typography variant="subtitle2" noWrap>
                 &nbsp;{t("level")}&nbsp;
               </Typography>
-            </AddTooltip2>
+            </AddTooltipChildren>
             <InputField
               style={{ minWidth: 60 }}
               //              color="secondary"

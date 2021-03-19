@@ -153,11 +153,11 @@ export default function config() {
             itype: "$select",
             iselect: ($, props, Iob) =>
               Iob.getStore.ipAddresses
+                .filter((i) => i.family == "ipv4")
                 .concat({ address: "", name: "" })
                 .map((i) => ({ value: i.address, label: i.name })),
             hint: "IP interface to use, default 0.0.0.0 for all",
             field: "interface",
-            native: true,
             defaultValue: "0.0.0.0",
             multiple: false,
             prependIcon: "router",
@@ -873,7 +873,7 @@ export default function config() {
       },
       {
         label: "Adapters",
-        hideItem: "!this.props.inative.debug",
+        //        hideItem: "!this.props.inative.debug",
         tooltip: "only for Test",
         icon: "view_list",
         //        hideItem: "!this.props.inative.debug",

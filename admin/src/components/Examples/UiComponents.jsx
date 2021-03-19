@@ -26,7 +26,9 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@material-ui/core";
-import Autocomplete, { createFilterOptions } from "@material-ui/lab/Autocomplete";
+import Autocomplete, {
+  createFilterOptions,
+} from "@material-ui/lab/Autocomplete";
 //import { LinkedErrors } from "@sentry/browser/dist/integrations";
 //import { config } from "chai";
 //import { isNotEmittedStatement } from "typescript";
@@ -53,16 +55,33 @@ class Loader extends React.Component {
   render() {
     const theme = this.props.themeType || this.props.theme || "light";
     return (
-      <div key={this.props.key} className={"logo-back logo-background-" + theme}>
-        <div className="logo-div" style={{ width: this.size, height: this.size }}>
-          <div className={"logo-top logo-background-" + theme} style={{ left: "37%" }} />
-          <div className={"logo-top logo-background-" + theme} style={{ left: "57%" }} />
+      <div
+        key={this.props.key}
+        className={"logo-back logo-background-" + theme}
+      >
+        <div
+          className="logo-div"
+          style={{ width: this.size, height: this.size }}
+        >
           <div
-            className={"logo-border logo-background-" + theme + " logo-animate-wait"}
+            className={"logo-top logo-background-" + theme}
+            style={{ left: "37%" }}
+          />
+          <div
+            className={"logo-top logo-background-" + theme}
+            style={{ left: "57%" }}
+          />
+          <div
+            className={
+              "logo-border logo-background-" + theme + " logo-animate-wait"
+            }
             style={{ borderWidth: this.size * 0.132 }}
           />
           <div className={"logo-i logo-animate-color-inside-" + theme} />
-          <div className={"logo-i-top logo-animate-color-inside-" + theme} style={{ top: "18%" }} />
+          <div
+            className={"logo-i-top logo-animate-color-inside-" + theme}
+            style={{ top: "18%" }}
+          />
           <div
             className={"logo-i-top logo-animate-color-inside-" + theme}
             style={{ bottom: "18%" }}
@@ -172,7 +191,9 @@ function AutocompleteSelect(props) {
   const { inputProps, getOptionLabel = getOlabel, onChange, ...rest } = props;
   let { renderInput = ri, options = { "": "" }, ...defaultProps } = rest;
   if (typeof options === "string") {
-    const opt = options.split("|").map((i) => ({ label: i.trim(), value: i.trim() }));
+    const opt = options
+      .split("|")
+      .map((i) => ({ label: i.trim(), value: i.trim() }));
     options = opt;
   }
   //  console.log(defaultProps, onChange);
@@ -217,7 +238,7 @@ class InputField extends React.Component {
     const { showPasswd } = this.state;
     let nerror = !!errorString,
       nerrorString = errorString;
-//    if (Array.isArray(rules) && rules.length) debugger;
+    //    if (Array.isArray(rules) && rules.length) debugger;
     if (typeof rules === "function") nerrorString = rules(value, t);
     else if (Array.isArray(rules))
       for (const rule of rules)
@@ -246,13 +267,19 @@ class InputField extends React.Component {
         endAdornment
       );
     return (
-      <FormControl {...{ required, size, margin, disabled }} hiddenLabel={!label} error={nerror}>
+      <FormControl
+        {...{ required, size, margin, disabled }}
+        hiddenLabel={!label}
+        error={nerror}
+      >
         <InputLabel htmlFor={this.key}>{label}</InputLabel>
         <Input
           value={value}
           id={this.key}
           onChange={(e) =>
-            typeof this.props.onChange === "function" ? this.props.onChange(e) : null
+            typeof this.props.onChange === "function"
+              ? this.props.onChange(e)
+              : null
           }
           endAdornment={
             iae && typeof iae === "string" ? (
@@ -315,15 +342,29 @@ function TButton(props) {
     "aria-label": label ? label : "",
     ...passThroughProps,
   };
-  const iFontSize = nprops.size == "small" || nprops.size == "large" ? nprops.size : "default";
+  const iFontSize =
+    nprops.size == "small" || nprops.size == "large" ? nprops.size : "default";
   if (startIcon)
     nprops.startIcon =
-      typeof startIcon === "string" ? <Icon fontSize={iFontSize}>{startIcon}</Icon> : startIcon;
+      typeof startIcon === "string" ? (
+        <Icon fontSize={iFontSize}>{startIcon}</Icon>
+      ) : (
+        startIcon
+      );
   else if (icon)
-    nprops.startIcon = typeof icon === "string" ? <Icon fontSize={iFontSize}>{icon}</Icon> : icon;
+    nprops.startIcon =
+      typeof icon === "string" ? (
+        <Icon fontSize={iFontSize}>{icon}</Icon>
+      ) : (
+        icon
+      );
   else if (endIcon)
     nprops.endIcon =
-      typeof endIcon === "string" ? <Icon fontSize={iFontSize}>{endIcon}</Icon> : endIcon;
+      typeof endIcon === "string" ? (
+        <Icon fontSize={iFontSize}>{endIcon}</Icon>
+      ) : (
+        endIcon
+      );
   const sw = <Button {...nprops}>{!narrow ? label : null}</Button>;
   return (disabled && sw) || AddTooltip(tooltip, sw);
 }
@@ -339,7 +380,7 @@ function AddTooltip(tooltip, item, key) {
   );
 }
 
-function AddTooltip2({ tooltip, children, ...props }) {
+function AddTooltipChildren({ tooltip, children, ...props }) {
   return (
     (tooltip && (
       <Tooltip title={tooltip} {...props}>
@@ -446,18 +487,35 @@ class LoadButton extends React.Component {
 
   render() {
     const { isOver, items, dropLabel, dropStyle } = this.state;
-    const { label, narrow, icon, startIcon, endIcon, ...props } = Object.assign({}, items);
+    const { label, narrow, icon, startIcon, endIcon, ...props } = Object.assign(
+      {},
+      items
+    );
     //    if (isOver) props.color = "secondary";
     //    console.log(props);
-    const iFontSize = props.size == "small" || props.size == "large" ? props.size : "default";
+    const iFontSize =
+      props.size == "small" || props.size == "large" ? props.size : "default";
     if (startIcon)
       props.startIcon =
-        typeof startIcon === "string" ? <Icon fontSize={iFontSize}>{startIcon}</Icon> : startIcon;
+        typeof startIcon === "string" ? (
+          <Icon fontSize={iFontSize}>{startIcon}</Icon>
+        ) : (
+          startIcon
+        );
     else if (icon)
-      props.startIcon = typeof icon === "string" ? <Icon fontSize={iFontSize}>{icon}</Icon> : icon;
+      props.startIcon =
+        typeof icon === "string" ? (
+          <Icon fontSize={iFontSize}>{icon}</Icon>
+        ) : (
+          icon
+        );
     else if (endIcon)
       props.endIcon =
-        typeof endIcon === "string" ? <Icon fontSize={iFontSize}>{endIcon}</Icon> : endIcon;
+        typeof endIcon === "string" ? (
+          <Icon fontSize={iFontSize}>{endIcon}</Icon>
+        ) : (
+          endIcon
+        );
     if (isOver) props.title = isOver;
     const dz = (
       <span>
@@ -514,7 +572,8 @@ class IDialog extends React.Component {
       const nstate = { open: !!setToShow };
       if (typeof setToShow === "object" && setToShow !== null) {
         nstate.show = setToShow;
-        this.callback = typeof setToShow.callback === "function" ? setToShow.callback : null;
+        this.callback =
+          typeof setToShow.callback === "function" ? setToShow.callback : null;
         if (setToShow.inputValue && setToShow.inputValue != this.state.vale)
           nstate.value = setToShow.inputValue;
       }
@@ -572,7 +631,9 @@ class IDialog extends React.Component {
               {...inputProps}
               autoFocus
               value={value}
-              onKeyUp={(e) => (e.key == "Enter" && okOnEnter ? this.handleClose(true, e) : null)}
+              onKeyUp={(e) =>
+                e.key == "Enter" && okOnEnter ? this.handleClose(true, e) : null
+              }
               onChange={(e) => this.setState({ value: e.target.value })}
             />
           )}
@@ -610,7 +671,7 @@ export {
   TButton,
   IButton,
   AddTooltip,
-  AddTooltip2,
+  AddTooltipChildren,
   ScrollTop,
   MakeDroppable,
   MakeDraggable,

@@ -112,7 +112,7 @@ class ConfigSettings extends React.Component {
         readme
       )}`;
     const mstyle = {
-      margin: "0px 6px",
+      margin: "0px 4px",
     };
     return (
       <>
@@ -134,6 +134,7 @@ class ConfigSettings extends React.Component {
           icon="help_outline"
           src={readme}
           style={mstyle}
+          size="large"
         />
         <IButton
           tooltip={
@@ -157,6 +158,7 @@ class ConfigSettings extends React.Component {
           style={mstyle}
           onClick={(e) => Iob.setLoglevel()}
           icon={"replay"}
+          size="large"
         />
       </>
     );
@@ -175,9 +177,9 @@ class ConfigSettings extends React.Component {
       <React.Fragment>
         <TButton
           tooltip={t("backupConfig")}
-          endIcon="save_alt"
+          icon="save_alt"
           color="inherit"
-          size="large"
+          size="medium"
           onClick={(e) =>
             Iob.saveFile(
               { native: inative },
@@ -206,24 +208,23 @@ class ConfigSettings extends React.Component {
         />
         <UButton
           tooltip={t("restoreConfig")}
-          endIcon="system_update_alt"
+          icon="system_update_alt"
           color="inherit"
-          size="large"
-          dropStyle={{ color: "darkred" }}
+          size="medium"
+          dropStyle={{ color: "darkgreen" }}
           dropLabel={t("drop single file")}
           receivedFile={(value, file) => {
             //            Iob.logSnackbar("info;file loaded: {0}", file.path);
             let native = null;
-            debugger;
             try {
               native = JSON.parse(value);
             } catch (e) {
-              Iob - logSnackbar("error;cannotParseNative", e);
+              Iob.logSnackbar("error", t("cannotParseNative 0", e));
             }
             if (native && native.native) {
               Iob.setStore.setInative(native.native);
-              Iob.logSnackbar("success;config file loaded: {0}", file);
-            } else Iob.logSnackbar("error;cannotParseNative", file);
+              Iob.logSnackbar("success", t("config file loaded", file));
+            } else Iob.logSnackbar("error", t("cannotParseNative {0}", file));
           }}
           narrow={narrowWidth}
         />

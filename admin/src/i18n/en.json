@@ -7,7 +7,7 @@
   "Message": "Message",
   "Severity": "Severity",
   "key": "key",
-  "copyToClipboard": "copy to clipboad %s",
+  "copyToClipboard": "copy to clipboad {0}",
   "Open Readme": "Open Readme",
   "ra_Save Config": "Save config file",
   "ra_Load Config": "load config file",
@@ -15,10 +15,14 @@
   "ra_cancel": "Cancel",
   "rt_Saveconfig": "Save config to ioBroker",
   "backupConfig": "Backup config to file",
-  "restoreConfig": "Restore config from file",
-  "cannotParseNative": "cannot parse native file: %s",
+  "restoreConfig": "Restore or drop config from file",
+  "cannotParseNative": "cannot parse native file: {0}",
   "ttSaveClose": "Save config and go back to admin",
   "raSaveclose": "Save and close",
   "ra_Save": "Save",
-  "dcancel": "cancel"
+  "dcancel": "cancel",
+  "config file loaded": "Config file '{0}' loaded",
+  "error in hideItem for 0 1": "Error in 'hideItem' for {0} {1}",
+  "drop single file": "drop single file",
+  "cannotParseNative 0": "cannot parse native {0}"
 }

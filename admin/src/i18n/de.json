@@ -13,12 +13,15 @@
   "ra_cancel": "Abbruch",
   "rt_Saveconfig": "Speichere Konfiguration in ioBroker",
   "backupConfig": "Backup Konfiguratuion in Datei",
-  "restoreConfig": "Konfiguration aus Datei laden",
+  "restoreConfig": "Konfiguration aus Datei hier laden oder droppen",
   "cannotParseNative": "Kann config-Datei nicht verstehen: %s",
   "ra_Save": "Speichern",
   "ttSaveClose": "speichere Konfiguration und gehe zurück zu Admin",
   "raSaveclose": "Speichern und Schließen",
   "dcancel": "Abbruch",
   "Message": "Meldung",
-  "Empty text": "Leerer Text"
+  "Empty text": "Leerer Text",
+  "config file loaded": "Konfiguration aus {0} geladen",
+  "drop single file": "einzelne Datei droppen",
+  "cannotParseNative 0": "Fehler {0} beim Laden der Konfiguration"
 }

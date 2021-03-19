@@ -1255,25 +1255,36 @@ class Iob {
     return store.$snackbarProvider.closeSnackbar(key);
   }
 
-  static logSnackbar(text, ...args) {
-    const st = text.split(";");
+  static logSnackbar(type, text, ...args) {
     let variant = undefined;
-    if (st.length > 1) {
-      text = st.slice(1).join(";");
-      variant = st[0].trim().toLowerCase();
+    if (
+      ["error", "warning", "info", "success"].indexOf(
+        type.trim().toLowerCase()
+      ) >= 0
+    ) {
+      variant = type;
+    } else {
+      const st = type.split(";");
+      if (st.length > 1) {
+        args = [text, ...args];
+        text = st.slice(1).join(";");
+        variant = st[0].trim().toLowerCase();
+      }
     }
     const key = new Date().getTime() + Math.random();
-    const message = Iob.t(text, ...args);
+    //    const message = Iob.t(text, ...args);
     const options = { variant, key };
     if (variant == "error") {
       options.persist = true;
       console.log("logSnackbar", variant, text);
     }
-    Iob.enqueueSnackbar(message, options);
+    Iob.enqueueSnackbar(text, options);
   }
+
   static _findStateName(name) {
-    const adapterObjects = Object.assign({}, Iob.getStore.adapterObjects);
-    const { adapterStates, adapterInstance } = Iob.getStore;
+    const { adapterStates, adapterInstance, adapterObjects } = Iob.getStore;
+    //    const adapterObjects = Object.assign({}, Iob.getStore.adapterObjects);
+    //    const { adapterStates, adapterInstance } = Iob.getStore;
     if (name.startsWith(".")) name = adapterInstance + name;
     let state = adapterStates[name];
     if (!state) {
@@ -1287,9 +1298,7 @@ class Iob {
   static getState(sname) {
     const { state, name, common } = Iob._findStateName(sname);
     //    console.log(name, state, common);
-    const nstate = Object.assign({}, state, {
-      _id: name,
-    });
+    const nstate = Object.assign({}, state);
     if (common && common.name) nstate._common = common;
     else delete nstate._common;
     return nstate;
