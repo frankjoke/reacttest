@@ -840,6 +840,7 @@ class UButton extends React.Component {
     super(props);
     const {
       keyId,
+      receivedFile,
       disabled = false,
       isOver = false,
       dropLabel = t("drop {0} here", label),
@@ -852,6 +853,7 @@ class UButton extends React.Component {
     const state = {
       label,
       size,
+      receivedFile,
       disabled,
       isOver,
       dropLabel,
@@ -1015,12 +1017,14 @@ function TButton(props) {
     startIcon,
     endIcon,
     label,
+    keyId,
     size = "medium",
     ...passThroughProps
   } = props;
   const nprops = {
     size,
     disabled,
+    id: keyId,
     "aria-label": label ? label : "",
     ...passThroughProps,
   };

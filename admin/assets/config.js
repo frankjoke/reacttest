@@ -275,7 +275,7 @@ export default function config() {
               "{if (e.message.id.endsWith('._NewDeviceScan')) {Iob.logSnackbar('info;'+ (!!e.message.state.val ? 'start device scan now' : 'finished device scan'));} }",
             icon: "perm_scan_wifi",
             size: "large",
-            receivedFile: (a, b) => console.log("receivedFile", a, b),
+            //            receivedFile: (a, b) => console.log("receivedFile", a, b),
             variant: "contained",
             cols: 2,
           },

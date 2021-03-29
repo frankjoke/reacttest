@@ -89,7 +89,10 @@ class EditState extends React.PureComponent {
     const { item, istate, object, iKey, value, id } = this.state;
     const { role, type, write, unit, states } = object || {};
     const { val, ack, ts, q, from } = istate || {};
-    const sw = istate ? istate.val.toString() : "";
+    const sw =
+      istate && istate.val !== null && istate.val !== undefined
+        ? istate.val.toString()
+        : "";
     const usw = Iob.nbsp(sw + (unit ? " " + unit : ""));
     const {
       tooltip,
@@ -115,7 +118,7 @@ class EditState extends React.PureComponent {
     }
     //    style.width = "100%";
     const title = `val=${
-      val !== undefined && val.toString()
+      val != null && val !== undefined && val.toString()
     }\nts=${Iob.timeDiffS(ts)}\nack=${ack}, q=${q}\nfrom=${from}`;
     //    nprops.style = style;
     if (!tooltip) {
@@ -128,7 +131,7 @@ class EditState extends React.PureComponent {
     switch (type) {
       case "boolean":
         sr =
-          role == "button" && write? (
+          role == "button" && write ? (
             <IButton
               color={color}
               icon="touch_app"
