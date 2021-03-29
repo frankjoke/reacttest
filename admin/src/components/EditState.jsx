@@ -128,7 +128,7 @@ class EditState extends React.PureComponent {
     switch (type) {
       case "boolean":
         sr =
-          role == "button" ? (
+          role == "button" && write? (
             <IButton
               color={color}
               icon="touch_app"

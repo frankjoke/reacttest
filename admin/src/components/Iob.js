@@ -1086,7 +1086,7 @@ class Iob {
 
         socket.subscribeState(adapterInstance + "*", (id, state) => {
           const obj = { id, state };
-          Iob.storeHandler("updateAdapterStates", obj, 50);
+          Iob.storeHandler("updateAdapterStates", obj, 30);
           Iob.emitEvent("stateChange", obj);
         });
 
@@ -1094,7 +1094,7 @@ class Iob {
           /* instanceId + "*" */ "system.adapter.*",
           (id, state) => {
             const obj = { id, state };
-            Iob.storeHandler("updateAdapterStates", obj, 50);
+            Iob.storeHandler("updateAdapterStates", obj, 30);
             Iob.emitEvent("stateChange", obj);
           }
         );
