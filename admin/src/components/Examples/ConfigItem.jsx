@@ -812,7 +812,7 @@ class ConfigItem extends React.Component {
     if (typeof disabled === "function") nitem.disabled = disabled(this.props, Iob);
     else if (typeof disabled === "string")
       try {
-        const fun = Iob.makeFunction(disabled, this, "props", "Iob");
+        const fun = Iob.makeFunction(disabled, this, "props,Iob");
         const res = fun(this.props, Iob);
         nitem.disabled = res;
       } catch (e) {

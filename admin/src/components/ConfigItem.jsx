@@ -107,7 +107,7 @@ class ConfigItem extends React.Component {
       for (const cmd of commands) {
         const fun =
           typeof cmd === "string"
-            ? makeFunction(cmd, this, "$", "items", "Iob")
+            ? makeFunction(cmd, this, "$,items,Iob")
             : cmd;
         let res = undefined;
         try {
@@ -123,7 +123,7 @@ class ConfigItem extends React.Component {
       const commands = Array.isArray(item) ? item : [item];
       for (const cmd of commands) {
         let fun;
-        if (typeof cmd === "string") fun = makeFunction(cmd, that, "e", "Iob");
+        if (typeof cmd === "string") fun = makeFunction(cmd, that, "e,Iob");
         else if (typeof cmd === "function") fun = cmd;
         if (!fun) {
           Iob.logSnackbar(
@@ -149,7 +149,7 @@ class ConfigItem extends React.Component {
     function convertFun(item, name, that, dres) {
       let fun;
       if (typeof item === "string")
-        fun = makeFunction(cmd, that, "e", "that", "Iob");
+        fun = makeFunction(cmd, that, "e,that,Iob");
       else if (typeof item === "function") fun = item;
       if (!fun) {
         Iob.logSnackbar(
@@ -183,7 +183,7 @@ class ConfigItem extends React.Component {
       let fun;
       if (typeof onClick === "string") {
         try {
-          fun = makeFunction(onClick, this, "event", "value", "Iob");
+          fun = makeFunction(onClick, this, "event,value,Iob");
         } catch (e) {
           Iob.logSnackbar(
             "error;onClick create function error {0} in function generated from: {1}",
@@ -213,7 +213,7 @@ class ConfigItem extends React.Component {
       //      console.log("convertOld:",convertOld)
       const fun =
         typeof convertOld !== "function"
-          ? makeFunction(convertOld, that, "$", "props", "Iob")
+          ? makeFunction(convertOld, that, "$,props,Iob")
           : convertOld;
       let res = undefined;
       try {
@@ -239,7 +239,7 @@ class ConfigItem extends React.Component {
           let fun = undefined,
             rsel = null;
           try {
-            fun = makeFunction(sel, this, "$", "props", "Iob");
+            fun = makeFunction(sel, this, "$,props,Iob");
             rsel = fun(state.value, this.props, Iob);
             //            console.log("select executed get function:", sel, rsel);
             if (Array.isArray(rsel)) sel = rsel;
@@ -257,7 +257,7 @@ class ConfigItem extends React.Component {
     if (ieval) {
       state.ieval = (Array.isArray(ieval) ? ieval : [ieval]).map((ei) =>
         ei && typeof ei === "string"
-          ? makeFunction(ei, this, "$", "items", "Iob")
+          ? makeFunction(ei, this, "$,items,Iob")
           : ei
       );
     }
@@ -269,7 +269,7 @@ class ConfigItem extends React.Component {
         state.rules = values.map((i) =>
           typeof i === "function"
             ? i.bind(that)
-            : makeFunction(i, that, "$", "t")
+            : makeFunction(i, that, "$,t")
         );
     }
 
@@ -820,7 +820,7 @@ class ConfigItem extends React.Component {
       nitem.disabled = disabled(this.props, Iob);
     else if (typeof disabled === "string")
       try {
-        const fun = Iob.makeFunction(disabled, this, "props", "Iob");
+        const fun = Iob.makeFunction(disabled, this, "props,Iob");
         const res = fun(this.props, Iob);
         nitem.disabled = res;
       } catch (e) {

@@ -55,7 +55,7 @@ class ConfigList extends React.Component {
               const key = `${ikey}/${index}/${items.itype}`;
               if (typeof hideItem === "string")
                 try {
-                  const fun = Iob.makeFunction(hideItem, this, "props", "Iob");
+                  const fun = Iob.makeFunction(hideItem, this, "props,Iob");
                   item.hideItem = fun;
                   const res = fun(this.props, Iob);
                   //          console.log("hideItem", key, hideItem, res);

@@ -31,6 +31,11 @@ import configtool from "../../assets/config.json";
 //import { isNotEmittedStatement } from "typescript";
 import CommandDialog from "./CommandDialog";
 
+//import * as test1 from "react";
+//console.log(test1);
+import("../../../test.mjs").then(x => console.log(x, x.default()))
+
+
 class ConfigSettings extends React.Component {
   constructor(props) {
     super(props);
@@ -295,8 +300,7 @@ class ConfigSettings extends React.Component {
                     const fun = Iob.makeFunction(
                       hideItem,
                       this,
-                      "props",
-                      "Iob"
+                      "props,Iob"
                     );
                     const res = fun(this.props, Iob);
                     //          console.log("hideItem", key, hideItem, res);

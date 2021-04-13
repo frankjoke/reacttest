@@ -32,6 +32,7 @@ const months = [
   "Dec",
 ];
 
+
 store.$i18n = store.$i18n || I18next.createInstance();
 store.$notFoundI18n = store.$notFoundI18n || {};
 store.$connection = store.$connection || null;
@@ -743,7 +744,7 @@ class Iob {
     );
   }
 
-  static makeFunction(from, that, ...args) {
+  static makeFunction(from, that, args="") {
     if (typeof from == "function") return from;
     // else if (Array.isArray(rule)) {
     //   rule = rule.map(i => i.trim());
@@ -773,19 +774,14 @@ class Iob {
         return f.bind(that);
       }
     } else if (typeof from === "string" && from.trim()) {
-      if (that && that.from && typeof that[from] === "function")
+      if (that && that[from] && typeof that[from] === "function")
         return that[from].bind(that);
       if (that && typeof Iob[from] === "function") return Iob[from].bind(that);
-      from = [...args, from.trim()];
+      from = from.trim();
+      from = from.startsWith("return ") || from.startsWith("{") ? from : `return ${from};`; 
       try {
-        let b = from[from.length - 1];
-        b = b.startsWith("return ") || b.startsWith("{") ? b : `return ${b};`;
-        from[from.length - 1] = b;
-        /*         const t = t;
-        const React = React;
- */ const f = new Function(
-          ...from
-        );
+//        console.log("Function:",args, from)
+        const f = new Function(args, from);
         return that ? f.bind(that) : f;
       } catch (e) {
         console.log(
